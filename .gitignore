@@ -8,7 +8,7 @@
 /storage/*.key
 /storage/*
 /storage/pail
-
+/vendor
 Console
 .env
 .env.backup
