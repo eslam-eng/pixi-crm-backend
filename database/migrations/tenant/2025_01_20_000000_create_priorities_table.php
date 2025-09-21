@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        \Artisan::call('tenants:seed', ['--class' => \Database\Seeders\tenant\PrioritySeeder::class]);
+        \Artisan::call('tenants:seed', ['--class' => \Database\Seeders\Tenant\PrioritySeeder::class]);
     }
 
     /**

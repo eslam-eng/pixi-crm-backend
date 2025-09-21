@@ -1,7 +1,7 @@
 <?php
 // database/seeders/AppSettingsSeeder.php
 
-namespace Database\Seeders\tenant;
+namespace Database\Seeders\Tenant;
 
 use App\Models\Tenant\AppSetting;
 use Illuminate\Database\Seeder;

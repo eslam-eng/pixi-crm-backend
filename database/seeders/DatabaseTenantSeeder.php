@@ -2,18 +2,18 @@
 
 namespace Database\Seeders;
 
-use Database\Seeders\tenant\AttributeWithValueProductSeeder;
-use Database\Seeders\tenant\ContactSeeder;
-use Database\Seeders\tenant\DepartmentSeeder;
-use Database\Seeders\tenant\ItemCategorySeeder;
-use Database\Seeders\tenant\ItemSeeder;
-use Database\Seeders\tenant\UserSeeder;
-use Database\Seeders\tenant\OpportunitySeeder;
-use Database\Seeders\tenant\PaymentMethodSeeder;
-use Database\Seeders\tenant\PipelineSeeder;
-use Database\Seeders\tenant\ProductWithVariantSeeder;
-use Database\Seeders\tenant\RolesAndPermissionsSeeder;
-use Database\Seeders\tenant\RoleSeeder;
+use Database\Seeders\Tenant\AttributeWithValueProductSeeder;
+use Database\Seeders\Tenant\ContactSeeder;
+use Database\Seeders\Tenant\DepartmentSeeder;
+use Database\Seeders\Tenant\ItemCategorySeeder;
+use Database\Seeders\Tenant\ItemSeeder;
+use Database\Seeders\Tenant\UserSeeder;
+use Database\Seeders\Tenant\OpportunitySeeder;
+use Database\Seeders\Tenant\PaymentMethodSeeder;
+use Database\Seeders\Tenant\PipelineSeeder;
+use Database\Seeders\Tenant\ProductWithVariantSeeder;
+use Database\Seeders\Tenant\RolesAndPermissionsSeeder;
+use Database\Seeders\Tenant\RoleSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseTenantSeeder extends Seeder

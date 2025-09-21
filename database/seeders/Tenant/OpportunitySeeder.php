@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders\tenant;
+namespace Database\Seeders\Tenant;
 
 use App\Enums\OpportunityStatus;
 use App\Models\Tenant\Lead;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders\tenant;
+namespace Database\Seeders\Tenant;
 
 use App\Enums\ItemType;
 use App\Models\Tenant\ItemCategory;
