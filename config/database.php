@@ -71,8 +71,8 @@ return [
 //            'username' => env('DB_USERNAME', 'root'),
 //            'password' => env('DB_PASSWORD', ''),
             'database' => env('TENANT_DB_DATABASE', ''),
-            'username' => env('TENANT_DB_USERNAME', 'root'),
-            'password' => env('TENANT_DB_PASSWORD', ''),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
 
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
