@@ -25,7 +25,7 @@ class TenantSeeder extends Seeder
             $databaseName = 'barmagiat_crm_tenant';
 
             // check if database already exists
-            $exists = DB::select("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [$databaseName]);
+//            $exists = DB::select("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [$databaseName]);
 
             $acmeTenant = Tenant::create([
                 'id' => 'acme',
