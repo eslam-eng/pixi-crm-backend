@@ -51,7 +51,7 @@ return new class extends Migration
             $table->foreignId('contact_id')->constrained('contacts')->onDelete('cascade');
             $table->enum('identical_contact_type', IdenticalContactType::values())->nullable();
             $table->enum('merge_status', MergeContactType::values())->default(MergeContactType::PENDING->value)->nullable();
-            $table->json('contact_phones')->nullable();
+            $table->string('contact_phone')->nullable();
             // contact info
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();

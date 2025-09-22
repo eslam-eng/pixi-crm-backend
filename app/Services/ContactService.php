@@ -73,6 +73,16 @@ class ContactService extends BaseService
         return $contact->load('contactPhones', 'country', 'city', 'user', 'source');
     }
 
+    public function updateMerge(int $id, ContactDTO $contactDTO)
+    {
+        $contact = $this->findById($id);
+        if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
+            $this->contactPhoneService->store($contactDTO->contact_phones, $contact->id);
+        }
+        $contact->update($contactDTO->toArray());
+        return $contact->load('contactPhones', 'country', 'city', 'user', 'source');
+    }
+
     public function delete(int $id)
     {
         $contact = $this->findById($id);

@@ -138,7 +138,9 @@ Route::middleware([
     Route::get('contacts/merge-list', [\App\Http\Controllers\Api\ContactMergeController::class, 'mergeList']);
     Route::post('contacts/form', [\App\Http\Controllers\Api\ContactMergeController::class, 'form']);
     Route::post('contacts/merge', [\App\Http\Controllers\Api\ContactMergeController::class, 'merge']);
+    Route::post('contacts/merge/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'mergeById']);
     Route::post('contacts/merge-ignore', [\App\Http\Controllers\Api\ContactMergeController::class, 'ignore']);
+    Route::post('contacts/merge-ignore/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'ignoreById']);
     Route::apiResource('contacts', \App\Http\Controllers\Api\ContactController::class);
     Route::prefix('item-attributes')->group(function () {
         Route::get('/', [ItemAttributeController::class, 'index']);

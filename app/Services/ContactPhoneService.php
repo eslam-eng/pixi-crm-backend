@@ -45,8 +45,8 @@ class ContactPhoneService extends BaseService
         foreach ($phones as $phone) {
             $this->model->create([
                 'phone' => $phone['phone'],
-                'is_primary' => $phone['is_primary'],
-                'enable_whatsapp' => $phone['enable_whatsapp'],
+                'is_primary' => $phone['is_primary'] ?? false,
+                'enable_whatsapp' => $phone['enable_whatsapp'] ?? false,
                 'contact_id' => $contactId
             ]);
         }
@@ -91,7 +91,6 @@ class ContactPhoneService extends BaseService
         // Add or update phones
         foreach ($contactPhones as $phoneData) {
             $phoneDTO = ContactPhoneDTO::fromArray($phoneData);
-
             $contact->contactPhones()->updateOrCreate(
                 ['phone' => $phoneDTO->phone],
                 [
