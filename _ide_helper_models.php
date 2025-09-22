@@ -225,6 +225,35 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * @property int $id
+ * @property int $user_id
+ * @property string $token
+ * @property string|null $device_type
+ * @property string|null $device_id
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $last_used_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereDeviceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereDeviceType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereLastUsedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereUserId($value)
+ */
+	class FcmToken extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Client> $clients
  * @property-read int|null $clients_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
@@ -416,6 +445,8 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Contact> $contacts
+ * @property-read int|null $contacts_count
  * @property-read mixed $image_url
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
  * @property-read int|null $media_count
@@ -430,6 +461,8 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
+ * @property-read int|null $leads_count
  * @property-read \App\Models\Tenant\Pipeline|null $pipeline
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Stage filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Stage newModelQuery()
@@ -547,7 +580,10 @@ namespace App\Models\Tenant{
 /**
  * @property-read \App\Models\Tenant\Lead|null $activeLead
  * @property-read \App\Models\City|null $city
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactPhone> $contactPhones
+ * @property-read int|null $contact_phones_count
  * @property-read \App\Models\Country|null $country
+ * @property-read mixed $name
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
  * @property-read int|null $leads_count
  * @property-read \App\Models\Source|null $source
@@ -560,6 +596,41 @@ namespace App\Models\Tenant{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Contact withTag($tag)
  */
 	class Contact extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property \App\Enums\MergeContactType $merge_status
+ * @property \App\Enums\IdenticalContactType $identical_contact_type
+ * @property-read \App\Models\Tenant\Lead|null $activeLead
+ * @property-read \App\Models\City|null $city
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactPhone> $contactPhones
+ * @property-read int|null $contact_phones_count
+ * @property-read \App\Models\Country|null $country
+ * @property-read mixed $name
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
+ * @property-read int|null $leads_count
+ * @property-read \App\Models\Source|null $source
+ * @property-read \App\Models\Tenant\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge withAnyTag($tags)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge withTag($tag)
+ */
+	class ContactMerge extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\Contact|null $contact
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactPhone filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactPhone newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactPhone newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactPhone query()
+ */
+	class ContactPhone extends \Eloquent {}
 }
 
 namespace App\Models\Tenant{
@@ -582,15 +653,37 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property-read \App\Models\Tenant\User|null $assigned_to
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\DealAttachment> $attachments
+ * @property-read int|null $attachments_count
  * @property-read \App\Models\Tenant\Contact|null $contact
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Item> $items
  * @property-read int|null $items_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
  * @property-read \App\Models\Stage|null $stage
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Deal filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Deal newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Deal newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Deal query()
  */
-	class Deal extends \Eloquent {}
+	class Deal extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\Deal|null $deal
+ * @property-read string|null $file_url
+ * @property-read string|null $preview_url
+ * @property-read string|null $thumbnail_url
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Media|null $mediaFile
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DealAttachment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DealAttachment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DealAttachment query()
+ */
+	class DealAttachment extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
 
 namespace App\Models\Tenant{
@@ -602,6 +695,23 @@ namespace App\Models\Tenant{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DealItem query()
  */
 	class DealItem extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read mixed $localized_name
+ * @property-read mixed $translations
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereLocale(string $column, string $locale)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereLocales(string $column, array $locales)
+ */
+	class Department extends \Eloquent {}
 }
 
 namespace App\Models\Tenant{
@@ -651,11 +761,20 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property \App\Enums\ServiceDuration $duration
+ * @property \App\Enums\ItemType $type
+ * @property \App\Enums\ServiceType $service_type
+ * @property-read \App\Models\Tenant\ItemCategory|null $category
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $deals
  * @property-read int|null $deals_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $opportunities
+ * @property-read int|null $opportunities_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ItemVariant> $variants
+ * @property-read int|null $variants_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Item filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Item newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Item newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Item ordered()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Item query()
  */
 	class Item extends \Eloquent {}
@@ -665,11 +784,40 @@ namespace App\Models\Tenant{
 /**
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Item> $items
  * @property-read int|null $items_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ItemAttributeValue> $values
+ * @property-read int|null $values_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemAttribute newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemAttribute newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemAttribute query()
+ */
+	class ItemAttribute extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\ItemAttribute|null $attribute
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ItemVariant> $variants
+ * @property-read int|null $variants_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemAttributeValue newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemAttributeValue newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemAttributeValue query()
+ */
+	class ItemAttributeValue extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ItemCategory> $children
+ * @property-read int|null $children_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Item> $items
+ * @property-read int|null $items_count
  * @method static \Database\Factories\Tenant\ItemCategoryFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory ordered()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory roots()
  */
 	class ItemCategory extends \Eloquent {}
 }
@@ -685,6 +833,20 @@ namespace App\Models\Tenant{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemStatus query()
  */
 	class ItemStatus extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ItemAttributeValue> $attributeValues
+ * @property-read int|null $attribute_values_count
+ * @property-read \App\Models\Tenant\Item|null $item
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemVariant filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemVariant newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemVariant newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemVariant ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemVariant query()
+ */
+	class ItemVariant extends \Eloquent {}
 }
 
 namespace App\Models\Tenant{
@@ -705,6 +867,8 @@ namespace App\Models\Tenant{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Stage> $stages
  * @property-read int|null $stages_count
  * @property-read \App\Models\Tenant\User|null $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ItemVariant> $variants
+ * @property-read int|null $variants_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lead filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lead newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lead newQuery()
@@ -808,16 +972,19 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property-read \App\Models\Tenant\User|null $assignedTo
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\User> $followers
  * @property-read int|null $followers_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
- * @property-read int|null $leads_count
+ * @property-read \App\Models\Tenant\Lead|null $lead
+ * @property-read \App\Models\Tenant\Priority|null $priority
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Reminder> $reminders
  * @property-read int|null $reminders_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TaskReminder> $taskReminders
  * @property-read int|null $task_reminders_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Task filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Task ordered()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task query()
  */
 	class Task extends \Eloquent {}
@@ -850,6 +1017,11 @@ namespace App\Models\Tenant{
  * @property string|null $pm_type
  * @property string|null $pm_last_four
  * @property string|null $trial_ends_at
+ * @property-read \App\Models\Tenant\Department|null $department
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FcmToken> $fcm_tokens
+ * @property-read int|null $fcm_tokens_count
+ * @property string $image
+ * @property-read string $name
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
@@ -971,6 +1143,8 @@ namespace App\Models{
  * @property string|null $pm_type
  * @property string|null $pm_last_four
  * @property string|null $trial_ends_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FcmToken> $fcm_tokens
+ * @property-read int|null $fcm_tokens_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions

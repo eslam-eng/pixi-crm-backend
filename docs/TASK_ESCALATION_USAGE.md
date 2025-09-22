@@ -22,6 +22,7 @@ use App\Settings\TasksSettings;
 
 $tasksSettings = new TasksSettings();
 $tasksSettings->enable_escalation = true;
+$tasksSettings->enable_priority = true;
 $tasksSettings->escalation_time_hours = 48; // 48 hours
 $tasksSettings->save();
 ```

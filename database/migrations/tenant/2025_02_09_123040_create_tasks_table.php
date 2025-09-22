@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description');
             $table->foreignId('task_type_id')->constrained('task_types')->onDelete('cascade');
             $table->enum('status', TaskStatusEnum::values())->default(TaskStatusEnum::PENDING->value);
-            $table->foreignId('priority_id')->constrained('priorities');
+            $table->foreignId('priority_id')->nullable()->constrained('priorities');
             $table->date('due_date');
             $table->time('due_time');
             $table->foreignId('assigned_to_id')->constrained('users');

@@ -40,6 +40,7 @@ class SettingRequest extends FormRequest
         switch ($setting) {
             // Tasks Settings
             case 'enable_escalation':
+            case 'enable_priority':
             case 'notify_manager':
             case 'mail_notification':
             case 'system_notification':
