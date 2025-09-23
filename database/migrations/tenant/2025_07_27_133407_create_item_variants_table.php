@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('item_variants', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained();
-            $table->string('sku')->nullable()->unique();
+            $table->foreignId('product_id')->constrained();
+            $table->string('sku')->unique();
             $table->decimal('price', 10, 2);
             $table->integer('stock')->nullable()->default(0);
             $table->timestamps();

@@ -20,7 +20,7 @@ return new class extends Migration
 
             // basic info
             $table->string('deal_name');
-            $table->foreignId('lead_id')->constrained('leads');
+            $table->foreignId('contact_id')->constrained('contacts');
             $table->date('sale_date');
 
 

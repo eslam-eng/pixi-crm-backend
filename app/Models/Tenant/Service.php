@@ -2,40 +2,31 @@
 
 namespace App\Models\Tenant;
 
+use App\Enums\ServiceDuration;
+use App\Enums\ServiceType;
 use App\Traits\Filterable;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Model;
 
-class Item extends Model
+class Service extends Model
 {
     use Filterable;
     protected $fillable =
     [
-        'name',
-        'description',
-        'price',
+        'service_type',
+        'duration',
         'category_id',
-        'itemable_type',
-        'itemable_id',
     ];
 
     protected $casts = [
-        'price' => 'float',
+        'service_type' => ServiceType::class,
+        'duration' => ServiceDuration::class,
     ];
 
-    public function itemable()
+    // Polymorphic relationship (reverse)
+    public function item(): MorphOne
     {
-        return $this->morphTo();
-    }
-
-    // Accessor for specific attributes
-    public function getIsProductAttribute()
-    {
-        return $this->itemable_type === 'product';
-    }
-
-    public function getIsServiceAttribute()
-    {
-        return $this->itemable_type === 'service';
+        return $this->morphOne(Item::class, 'itemable');
     }
 
     public function deals()

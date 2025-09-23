@@ -3,40 +3,42 @@
 namespace App\Models\Tenant;
 
 use App\Traits\Filterable;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Model;
 
-class Item extends Model
+class Product extends Model
 {
     use Filterable;
     protected $fillable =
     [
-        'name',
-        'description',
-        'price',
+        'sku',
+        'stock',
         'category_id',
-        'itemable_type',
-        'itemable_id',
+        'has_variants',
     ];
 
     protected $casts = [
-        'price' => 'float',
+        'has_variants' => 'boolean',
     ];
 
-    public function itemable()
+    // Polymorphic relationship (reverse)
+    public function item(): MorphOne
     {
-        return $this->morphTo();
+        return $this->morphOne(Item::class, 'itemable');
     }
 
-    // Accessor for specific attributes
-    public function getIsProductAttribute()
+    // Product variants
+    public function variants()
     {
-        return $this->itemable_type === 'product';
+        return $this->hasMany(ItemVariant::class);
     }
 
-    public function getIsServiceAttribute()
+    // Helper methods
+    public function hasVariants()
     {
-        return $this->itemable_type === 'service';
+        return $this->has_variants && $this->variants()->count() > 0;
     }
+
 
     public function deals()
     {
@@ -58,8 +60,8 @@ class Item extends Model
         return $query->orderBy('created_at', 'asc');
     }
 
-    public function variants()
-    {
-        return $this->hasMany(ItemVariant::class);
-    }
+    // public function variants()
+    // {
+    //     return $this->hasMany(ItemVariant::class);
+    // }
 }

@@ -32,7 +32,7 @@ class DealService extends BaseService
      */
     public function paginate(Request $request, array $relationships = [])
     {
-        $defaultRelationships = ['items', 'lead'];
+        $defaultRelationships = ['items', 'stage.pipeline', 'contact.source'];
         $relationships = array_merge($defaultRelationships, $relationships);
 
         // Apply filters using Filterable trait
@@ -52,7 +52,8 @@ class DealService extends BaseService
     {
         return $this->model
             ->with([
-                'lead',
+                'contact',
+                'stage.pipeline',
                 'assigned_to',
                 'items',
                 'attachments'
@@ -126,7 +127,7 @@ class DealService extends BaseService
                 $this->handleAttachments($deal, $dealDTO->attachments);
             }
 
-            return $deal->load('items', 'attachments');
+            return $deal->load('items', 'stage.pipeline', 'attachments');
         });
     }
 
@@ -168,7 +169,7 @@ class DealService extends BaseService
                 $this->handleAttachments($deal, $dealDTO->attachments);
             }
 
-            return $deal->load('items', 'attachments');
+            return $deal->load('items', 'stage.pipeline', 'attachments');
         });
     }
 
