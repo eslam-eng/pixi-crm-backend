@@ -77,6 +77,7 @@ class UserSeeder extends Seeder
                 'email' => 'agent2@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '23401567890',
+                'department_id' => 1,
             ]
         )->syncRoles('agent');
     }

@@ -214,6 +214,10 @@ Route::middleware([
             Route::post('switcher', [TenantSettingController::class, 'switcher']);
             Route::post('change-value', [TenantSettingController::class, 'changeValue']);
         });
+
+        Route::apiResource('payment-methods', PaymentMethodController::class);
+        Route::patch('/payment-methods/{id}/set-default', [PaymentMethodController::class, 'setDefault']);
+        Route::patch('/payment-methods/{id}/set-checked', [PaymentMethodController::class, 'setChecked']);
     });
 
 
@@ -261,9 +265,7 @@ Route::middleware([
     Route::put('loss-reasons/{lossReasonId}', [\App\Http\Controllers\Api\LossReasonController::class, 'update']);
     Route::delete('loss-reasons/{lossReasonId}', [\App\Http\Controllers\Api\LossReasonController::class, 'destroy']);
 
-    Route::apiResource('payment-methods', PaymentMethodController::class);
-    Route::patch('/payment-methods/{id}/set-default', [PaymentMethodController::class, 'setDefault']);
-    Route::patch('/payment-methods/{id}/set-checked', [PaymentMethodController::class, 'setChecked']);
+
     Route::get('/locations/countries', [\App\Http\Controllers\Api\LocationController::class, 'getCountries']);
     Route::get('/locations/countries/{countryId}/cities', [\App\Http\Controllers\Api\LocationController::class, 'getCities']);
     Route::get('/locations/cities/{cityId}/areas', [\App\Http\Controllers\Api\LocationController::class, 'getAreas']);

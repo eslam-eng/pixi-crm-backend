@@ -34,7 +34,7 @@ class DatabaseTenantSeeder extends Seeder
             ContactSeeder::class,
             ItemCategorySeeder::class,
             ItemSeeder::class,
-            // PaymentMethodSeeder::class,
+            PaymentMethodSeeder::class,
             AttributeWithValueProductSeeder::class,
             ProductWithVariantSeeder::class,
             OpportunitySeeder::class,

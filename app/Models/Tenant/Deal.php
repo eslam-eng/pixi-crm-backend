@@ -16,7 +16,7 @@ class Deal extends Model implements HasMedia
     protected $fillable = [
         'deal_type',
         'deal_name',
-        'contact_id',
+        'lead_id',
         'sale_date',
         'discount_type',
         'discount_value',
@@ -25,21 +25,18 @@ class Deal extends Model implements HasMedia
         'payment_method_id',
         'notes',
         'assigned_to_id',
-        'stage_id',
+   
         'total_amount',
         'partial_amount_paid',
         'partial_amount_due',
     ];
 
-    public function contact()
+    public function lead()
     {
-        return $this->belongsTo(Contact::class);
+        return $this->belongsTo(Lead::class);
     }
 
-    public function stage()
-    {
-        return $this->belongsTo(Stage::class);
-    }
+
     public function assigned_to()
     {
         return $this->belongsTo(User::class,'assigned_to_id');
