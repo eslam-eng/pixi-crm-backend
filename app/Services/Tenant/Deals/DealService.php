@@ -126,7 +126,7 @@ class DealService extends BaseService
                 $this->handleAttachments($deal, $dealDTO->attachments);
             }
 
-            return $deal->load('items', 'stage.pipeline', 'attachments');
+            return $deal->load('items', 'lead', 'attachments');
         });
     }
 
