@@ -15,7 +15,6 @@ class ItemVariantResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // dd($this);
         $attrsLoaded = $this->relationLoaded('attributeValues');
         $hasAttrs    = $attrsLoaded && $this->attributeValues->isNotEmpty();
 

@@ -32,7 +32,7 @@ class DealService extends BaseService
      */
     public function paginate(Request $request, array $relationships = [])
     {
-        $defaultRelationships = ['items', 'stage.pipeline', 'contact.source'];
+        $defaultRelationships = ['items', 'lead'];
         $relationships = array_merge($defaultRelationships, $relationships);
 
         // Apply filters using Filterable trait
@@ -52,8 +52,7 @@ class DealService extends BaseService
     {
         return $this->model
             ->with([
-                'contact',
-                'stage.pipeline',
+                'lead',
                 'assigned_to',
                 'items',
                 'attachments'
@@ -94,7 +93,7 @@ class DealService extends BaseService
     {
         // Validate deal settings
         $this->validateDealSettings($dealDTO);
-        
+
 
         return DB::transaction(function () use ($dealDTO) {
             $items = $dealDTO->items ?? [];
@@ -116,8 +115,8 @@ class DealService extends BaseService
             $totalAmount = $this->afterTax($afterDiscount, $dealDTO->tax_rate ?? 0);
 
             // Create deal
-            $dealDTO->total_amount = $totalAmount ;
-            $deal = $this->model->create( Arr::except($dealDTO->toArray(), ['items','attachments']));
+            $dealDTO->total_amount = $totalAmount;
+            $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Attach items
             $deal->items()->attach($itemsData['pivot']);
@@ -138,7 +137,7 @@ class DealService extends BaseService
 
         return DB::transaction(function () use ($dealDTO, $dealId) {
             $deal = $this->model->findOrFail($dealId);
-            
+
             $items = $dealDTO->items ?? [];
 
             if (empty($items)) {
@@ -158,8 +157,8 @@ class DealService extends BaseService
             $totalAmount = $this->afterTax($afterDiscount, $dealDTO->tax_rate ?? 0);
 
             // Update deal
-            $dealDTO->total_amount = $totalAmount ;
-            $deal->update( Arr::except($dealDTO->toArray(), ['items','attachments']));
+            $dealDTO->total_amount = $totalAmount;
+            $deal->update(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Sync items (remove old, add new)
             $deal->items()->sync($itemsData['pivot']);
@@ -169,7 +168,7 @@ class DealService extends BaseService
                 $this->handleAttachments($deal, $dealDTO->attachments);
             }
 
-            return $deal->load('items', 'stage.pipeline', 'attachments');
+            return $deal->load('items', 'attachments');
         });
     }
 
@@ -199,14 +198,14 @@ class DealService extends BaseService
         // Validate discount settings
         if ($dealDTO->discount_value && $dealDTO->discount_value > 0) {
             // Using settings loaded above
-            
+
             // Check if discounts are enabled
             if (!$settings->enable_discounts) {
                 throw ValidationException::withMessages([
                     'discount_value' => ['Discounts are not enabled in the system settings.']
                 ]);
             }
-            
+
             // Check maximum discount percentage if discount type is percentage
             if ($dealDTO->discount_type === 'percentage') {
                 if ($dealDTO->discount_value > $settings->maximum_discount_percentage) {
@@ -216,7 +215,6 @@ class DealService extends BaseService
                 }
             }
         }
-        
     }
 
     private function mergeItems(array $items): array

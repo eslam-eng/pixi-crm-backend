@@ -10,7 +10,7 @@ class DealDTO extends BaseDTO
     public function __construct(
         public string $deal_name,
         public ?string $deal_type = null,
-        public ?int $contact_id = null,
+        public ?int $lead_id = null,
         public ?string $sale_date = null,
         public ?string $discount_type = null,
         public ?float $discount_value = null,
@@ -32,7 +32,7 @@ class DealDTO extends BaseDTO
         return new self(
             deal_name: $request->input('deal_name'),
             deal_type: $request->input('deal_type'),
-            contact_id: $request->input('contact_id'),
+            lead_id: $request->input('lead_id'),
             sale_date: $request->input('sale_date'),
             discount_type: $request->input('discount_type'),
             discount_value: $request->input('discount_value'),
@@ -55,7 +55,7 @@ class DealDTO extends BaseDTO
         return [
             'deal_name' => $this->deal_name,
             'deal_type' => $this->deal_type,
-            'contact_id' => $this->contact_id,
+            'lead_id' => $this->lead_id,
             'sale_date' => $this->sale_date,
             'discount_type' => $this->discount_type,
             'discount_value' => $this->discount_value,
@@ -78,7 +78,7 @@ class DealDTO extends BaseDTO
         return new self(
             deal_name: Arr::get($data, 'deal_name'),
             deal_type: Arr::get($data, 'deal_type'),
-            contact_id: Arr::get($data, 'contact_id'),
+            lead_id: Arr::get($data, 'lead_id'),
             sale_date: Arr::get($data, 'sale_date'),
             discount_type: Arr::get($data, 'discount_type'),
             discount_value: Arr::get($data, 'discount_value'),
