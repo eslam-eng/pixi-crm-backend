@@ -11,7 +11,9 @@ use App\Models\Filters\ItemFilter;
 use App\Models\Tenant\ItemAttribute;
 use App\Models\Tenant\ItemAttributeValue;
 use App\Models\Tenant\ItemVariant;
+use App\Notifications\Tenant\CreateNewItemNotification;
 use App\Services\BaseService;
+use App\Services\Tenant\Users\UserService;
 use Illuminate\Support\Facades\DB;
 
 class ItemService extends BaseService
@@ -19,6 +21,7 @@ class ItemService extends BaseService
     public function __construct(
         public Item $model,
         public ItemAttribute $itemAttribute,
+        public UserService $userService,
     ) {}
 
     public function getModel(): Item
@@ -64,8 +67,13 @@ class ItemService extends BaseService
             $item = $this->model->create($itemDTO->toServiceArray());
         } elseif ($itemDTO->type == ItemType::PRODUCT->value) {
             $item = $this->model->create($itemDTO->toProductArray());
+            $variant = $item->variants()->create($itemDTO->toArrayVariant());
         }
-        $variant = $item->variants()->create($itemDTO->toArrayVariant());
+
+        $admins = $this->userService->getModel()->role('admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new CreateNewItemNotification($item));
+        }
         return $variant->load('item.category');
     }
 

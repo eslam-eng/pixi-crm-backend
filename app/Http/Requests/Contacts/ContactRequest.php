@@ -39,7 +39,7 @@ class ContactRequest extends FormRequest
             'status' => ['nullable', Rule::enum(ContactStatus::class)],
             'source_id' => 'nullable|exists:sources,id',
             'campaign_name' => 'nullable|string|max:255',
-            
+
             // communication preferences
             'contact_method' => ['nullable', Rule::enum(ContactMethods::class)],
             'email_permission' => 'nullable|boolean',
@@ -127,7 +127,7 @@ class ContactRequest extends FormRequest
 
             // Check if phone exists in database (for updates)
             if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
-                $contactId = $this->route('contact')->id;
+                $contactId = $this->route('contact_id');
                 // dd($contactId);
                 $exists = \DB::table('contact_phones')
                     ->where('phone', $phoneNumber)
