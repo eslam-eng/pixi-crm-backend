@@ -4,6 +4,7 @@ namespace App\Http\Resources\Opportunity;
 
 use App\Http\Resources\ContactResource;
 use App\Http\Resources\ItemProductVariantResource;
+use App\Http\Resources\ItemResource;
 use App\Http\Resources\StageResource;
 use App\Http\Resources\Tenant\Items\ItemPovitResource;
 use App\Http\Resources\Tenant\Users\UserResource;
@@ -32,7 +33,7 @@ class OpportunityResource extends JsonResource
             'description' => $this->description,
             'contact' => $this->whenLoaded('contact', fn() => new ContactResource($this->contact)),
             'stage' => $this->whenLoaded('stage', fn() => new StageResource($this->stage)),
-            'items' => $this->whenLoaded('variants', fn() => ItemProductVariantResource::collection($this->variants)),
+            'items' => $this->whenLoaded('items', fn() => ItemResource::collection($this->items)),
         ];
     }
 }

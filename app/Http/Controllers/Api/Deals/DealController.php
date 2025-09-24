@@ -56,11 +56,6 @@ class DealController extends Controller
                 message: 'Deal created successfully',
                 code: 201
             );
-        } catch (ValidationException $e) {
-            return apiResponse(
-                message: $e->errors(),
-                code: 422
-            );
         } catch (\Exception $e) {
             return apiResponse(
                 message: $e->getMessage(),

@@ -21,14 +21,8 @@ class ItemVariantResource extends JsonResource
         return [
             'id' => $this->id,
             'sku' => $this->when($this->sku !== null, $this->sku),
-            'name' => $this->item->name,
-            'description' => $this->item->description,
-            'type' => $this->item->type,
-            'service_type' => $this->when($this->item->service_type, $this->item->service_type),
-            'duration' => $this->when($this->item->duration, $this->item->duration),
             'stock' => $this->when($this->stock !== null, $this->stock),
             'price' => $this->price,
-            'category' => new ItemCategoryDDLResource($this->item->category),
             'attributes' => $this->when($hasAttrs, function () {
                 return $this->attributeValues->mapWithKeys(function ($attributeValue) {
                     return [
