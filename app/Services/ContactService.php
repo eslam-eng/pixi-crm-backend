@@ -6,6 +6,8 @@ use App\Models\Tenant\Contact;
 use App\QueryFilters\ContactFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\DTO\Contact\ContactDTO;
+use App\Notifications\Tenant\CreateNewContactNotification;
+use App\Services\Tenant\Users\UserService;
 use Excel;
 
 class ContactService extends BaseService
@@ -13,6 +15,7 @@ class ContactService extends BaseService
     public function __construct(
         public Contact $model,
         public ContactPhoneService $contactPhoneService,
+        public UserService $userService,
     ) {}
 
     public function getModel(): Contact
@@ -52,6 +55,8 @@ class ContactService extends BaseService
         // Create the contact
         $contact = $this->model->create($contactDTO->toArray());
         $this->contactPhoneService->store($contactDTO->contact_phones, $contact->id);
+        $user = $this->userService->getModel()->where('id', $contact->user_id)->first();
+        $user->notify(new CreateNewContactNotification($contact));
 
         $contact->load('country', 'city', 'user', 'source', 'contactPhones');
         return $contact;
