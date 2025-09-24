@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
 
 use App\Http\Requests\Item\UpdateProductVariantRequest;
@@ -13,6 +14,7 @@ use App\Models\Tenant\ItemAttribute;
 use App\Models\Tenant\ItemAttributeValue;
 use App\Models\Tenant\ItemVariant;
 use App\Services\Tenant\ItemVariantService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -23,28 +25,39 @@ class ItemVariantController extends Controller
     /**
      * Display a listing of the variants for a product.
      */
-    public function index(Item $item)
+    public function index(int $itemId)
     {
-        $variants = $this->itemVariantService->index(itemId: $item->id, withRelations: ['attributeValues.attribute'], perPage: $filters['per_page'] ?? 10);
-        $data = ItemProductVariantResource::collection($variants)->response()->getData(true);
-        return apiResponse($data, 'Product variants retrieved successfully', Response::HTTP_OK);
-    }
 
-    public function getAll(Request $request)
-    {
-        $filters = array_filter(request()->query(), function ($value) {
-            return $value !== null && $value !== '';
-        });
-
-        if ($request->has('ddl')) {
-            $variants = $this->itemVariantService->getAllVariant(filters: $filters, withRelations: ['item.category', 'attributeValues.attribute']);
-            $data = ItemVariantResource::collection($variants);
-        } else {
-            $variants = $this->itemVariantService->getAllVariant(filters: $filters, withRelations: ['item.category', 'attributeValues.attribute'], perPage: $filters['per_page'] ?? 10);
-            $data = ItemVariantResource::collection($variants)->response()->getData(true);
+        try {
+            DB::beginTransaction();
+            $variants = $this->itemVariantService->index(itemId: $itemId, perPage: $filters['per_page'] ?? 10);
+            $data = ItemProductVariantResource::collection($variants)->response()->getData(true);
+            DB::commit();
+            return apiResponse($data, 'Product variants retrieved successfully', Response::HTTP_OK);
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            return apiResponse(message: 'Product variants not found', code: Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return apiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        return apiResponse($data, 'Item variants retrieved successfully', Response::HTTP_OK);
     }
+
+    // public function getAll(Request $request)
+    // {
+    //     $filters = array_filter(request()->query(), function ($value) {
+    //         return $value !== null && $value !== '';
+    //     });
+
+    //     if ($request->has('ddl')) {
+    //         $variants = $this->itemVariantService->getAllVariant(filters: $filters, withRelations: ['item.category', 'attributeValues.attribute']);
+    //         $data = ItemVariantResource::collection($variants);
+    //     } else {
+    //         $variants = $this->itemVariantService->getAllVariant(filters: $filters, withRelations: ['item.category', 'attributeValues.attribute'], perPage: $filters['per_page'] ?? 10);
+    //         $data = ItemVariantResource::collection($variants)->response()->getData(true);
+    //     }
+    //     return apiResponse($data, 'Item variants retrieved successfully', Response::HTTP_OK);
+    // }
 
     /**
      * Display the specified variant.

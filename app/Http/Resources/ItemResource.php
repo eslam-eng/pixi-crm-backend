@@ -19,14 +19,12 @@ class ItemResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'sku' => $this->when($this->sku !== null, $this->sku),
             'price' => $this->price,
-            'type' => $this->type,
-            'quantity' => $this->when($this->quantity !== null, $this->quantity),
-            'duration' => $this->when($this->duration !== null, $this->duration),
             'category' => $this->whenLoaded('category', fn() => new ItemCategoryDDLResource($this->category)),
-            'variants_count' => $this->variants->count(),
-            'variants' => ItemProductVariantResource::collection($this->whenLoaded('variants')),
+            'itemable_type' => $this->itemable_type,
+            'itemable' => $this->itemable_type === 'product' ?
+                $this->whenLoaded('itemable', fn() => new ProductResource($this->itemable)) :
+                $this->whenLoaded('itemable', fn() => new ServiceResource($this->itemable)),
         ];
     }
 }

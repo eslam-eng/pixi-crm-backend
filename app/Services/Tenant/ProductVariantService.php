@@ -2,66 +2,55 @@
 
 namespace App\Services\Tenant;
 
-use App\Models\Tenant\Item;
 use App\Models\Tenant\ItemAttribute;
 use App\Models\Tenant\ItemAttributeValue;
 use App\Models\Tenant\ItemVariant;
-use Illuminate\Support\Facades\DB;
+use App\Models\Tenant\Product;
 
 class ProductVariantService
 {
-    public function createVariantsBulk(Item $product, array $variantsData)
+    public function createVariantsBulk(Product $product, array $variantsData)
     {
-        DB::beginTransaction();
-
-        try {
-            $createdVariants = [];
-
-            foreach ($variantsData as $variantData) {
-                $variant = $this->createSingleVariant($product, $variantData);
-                $createdVariants[] = $variant;
-            }
-
-            DB::commit();
-            return $createdVariants;
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
+        $createdVariants = [];
+        foreach ($variantsData as $variantData) {
+            $variant = $this->createSingleVariant($product, $variantData);
+            $createdVariants[] = $variant;
         }
+
+        return $createdVariants;
     }
 
-    private function createSingleVariant(Item $product, array $variantData)
+    private function createSingleVariant(Product $product, array $variantData)
     {
-        // Create variant
-        $variant = ItemVariant::create([
-            'item_id' => $product->id,
+        $variant = $product->variants()->create([
             'sku' => $this->generateVariantSku($product, $variantData['attributes']),
             'price' => $variantData['price'],
             'stock' => $variantData['stock'] ?? 0
         ]);
 
         // Attach attribute values
-        foreach ($variantData['attributes'] as $attributeSlug => $valueSlug) {
-            $attribute = ItemAttribute::where('slug', $attributeSlug)->firstOrFail();
-            $attributeValue = ItemAttributeValue::where('attribute_id', $attribute->id)
-                ->where('slug', $valueSlug)
-                ->firstOrFail();
+        foreach ($variantData['attributes'] as $attribute) {
+            $attributeInstanceId = ItemAttribute::where('id', $attribute['attribute_id'])->value('id');
+            $attributeValueId = ItemAttributeValue::where('item_attribute_id', $attributeInstanceId)
+                ->where('id', $attribute['value_id'])
+                ->value('id');
 
-            $variant->attributeValues()->attach($attributeValue->id, [
-                'attribute_id' => $attribute->id
+            $variant->attributeValues()->attach($attributeValueId, [
+                'item_attribute_id' => $attributeInstanceId
             ]);
         }
 
-        return $variant;
+        return true;
     }
 
-    private function generateVariantSku(Item $product, array $attributes)
+    private function generateVariantSku(Product $product, array $attributes)
     {
+        // dd($attributes);
         $suffix = collect($attributes)
-            ->map(fn($value) => strtoupper(substr($value, 0, 2)))
+            ->map(fn($attribute) => strtoupper(substr($attribute['value_id'], 0, 2)))
             ->join('-');
 
-        $sku = $product->base_sku . '-' . $suffix;
+        $sku = $product->sku . '-' . $suffix;
 
         // Ensure uniqueness
         $counter = 1;
@@ -72,15 +61,5 @@ class ProductVariantService
         }
 
         return $sku;
-    }
-
-    public function getAvailableAttributesForProduct(Item $product)
-    {
-        return $product->attributes()
-            ->with(['values' => function ($query) {
-                $query->orderBy('sort_order');
-            }])
-            ->orderBy('sort_order')
-            ->get();
     }
 }

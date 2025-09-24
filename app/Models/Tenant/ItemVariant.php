@@ -9,11 +9,11 @@ class ItemVariant extends Model
 {
     use Filterable;
 
-    protected $fillable = ['item_id', 'sku', 'price', 'stock'];
+    protected $fillable = ['product_id', 'sku', 'price', 'stock'];
 
-    public function item()
+    public function product()
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function attributeValues()

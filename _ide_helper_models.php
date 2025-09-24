@@ -580,8 +580,6 @@ namespace App\Models\Tenant{
 /**
  * @property-read \App\Models\Tenant\Lead|null $activeLead
  * @property-read \App\Models\City|null $city
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactMerge> $contactMerges
- * @property-read int|null $contact_merges_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactPhone> $contactPhones
  * @property-read int|null $contact_phones_count
  * @property-read \App\Models\Country|null $country
@@ -604,11 +602,22 @@ namespace App\Models\Tenant{
 /**
  * @property \App\Enums\MergeContactType $merge_status
  * @property \App\Enums\IdenticalContactType $identical_contact_type
- * @property-read \App\Models\Tenant\Contact|null $contact
+ * @property-read \App\Models\Tenant\Lead|null $activeLead
+ * @property-read \App\Models\City|null $city
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactPhone> $contactPhones
+ * @property-read int|null $contact_phones_count
+ * @property-read \App\Models\Country|null $country
+ * @property-read mixed $name
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
+ * @property-read int|null $leads_count
+ * @property-read \App\Models\Source|null $source
+ * @property-read \App\Models\Tenant\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge withAnyTag($tags)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge withTag($tag)
  */
 	class ContactMerge extends \Eloquent {}
 }
