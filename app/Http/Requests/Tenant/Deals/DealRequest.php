@@ -22,7 +22,7 @@ class DealRequest extends FormRequest
         return [
             'deal_type' => ['required', Rule::in(DealTypeEnum::values())],
             'deal_name' => 'required|string|max:255',
-            'contact_id' => 'required|exists:contacts,id',
+            'lead_id' => 'required|exists:leads,id',
             'sale_date' => 'required|date',
             'discount_type' => ['nullable', Rule::in(DiscountTypeEnum::values())],
             'discount_value' => 'nullable|numeric',

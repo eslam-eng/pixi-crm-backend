@@ -47,6 +47,11 @@ class Contact extends Model
         'contact_phones' => 'array',
     ];
 
+    public function contactMerges(): HasMany
+    {
+        return $this->hasMany(ContactMerge::class, 'contact_id');
+    }
+
     /**
      * Get the full name by combining first_name and last_name
      */

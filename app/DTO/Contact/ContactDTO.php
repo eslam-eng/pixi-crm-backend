@@ -167,4 +167,41 @@ class ContactDTO extends BaseDTO
             notes: Arr::get($data, 'notes'),
         );
     }
+
+    public static function fromMergeArray(array $data): self
+    {
+        return new self(
+            first_name: Arr::get($data, 'first_name'),
+            last_name: Arr::get($data, 'last_name'),
+            email: Arr::get($data, 'email'),
+            contact_phones: Arr::get($data, 'contact_phone', '') ? [
+                [
+                    'phone' => Arr::get($data, 'contact_phone', ''),
+                    'is_primary' => false,
+                    'enable_whatsapp' => false,
+                ]
+            ] : [],
+            job_title: Arr::get($data, 'job_title'),
+            department: Arr::get($data, 'department'),
+            status: Arr::get($data, 'status'),
+            source_id: Arr::get($data, 'source_id'),
+            contact_method: Arr::get($data, 'contact_method'),
+            campaign_name: Arr::get($data, 'campaign_name'),
+            email_permission: Arr::get($data, 'email_permission'),
+            phone_permission: Arr::get($data, 'phone_permission'),
+            whatsapp_permission: Arr::get($data, 'whatsapp_permission'),
+            company_name: Arr::get($data, 'company_name'),
+            website: Arr::get($data, 'website'),
+            industry: Arr::get($data, 'industry'),
+            company_size: Arr::get($data, 'company_size'),
+            address: Arr::get($data, 'address'),
+            country_id: Arr::get($data, 'country_id'),
+            city_id: Arr::get($data, 'city_id'),
+            state: Arr::get($data, 'state'),
+            zip_code: Arr::get($data, 'zip_code'),
+            user_id: Arr::get($data, 'user_id'),
+            tags: Arr::get($data, 'tags'),
+            notes: Arr::get($data, 'notes'),
+        );
+    }
 }

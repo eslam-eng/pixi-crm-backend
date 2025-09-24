@@ -18,7 +18,7 @@ class DealResource extends JsonResource
             'id' => $this->id,
             'deal_type' => $this->deal_type,
             'deal_name' => $this->deal_name,
-            'contact_id' => $this->contact_id,
+            'lead_id' => $this->lead_id,
             'sale_date' => $this->sale_date,
             'discount_type' => $this->discount_type,
             'discount_value' => $this->discount_value,
@@ -27,7 +27,6 @@ class DealResource extends JsonResource
             'payment_method_id' => $this->payment_method_id,
             'notes' => $this->notes,
             'assigned_to_id' => $this->assigned_to_id,
-            'stage_id' => $this->whenLoaded('stage', fn() => new StageResource($this->stage)),
             'total_amount' => $this->total_amount,
             // Map over related items, include pivot data
             'items' => $this->whenLoaded('items', function () {
