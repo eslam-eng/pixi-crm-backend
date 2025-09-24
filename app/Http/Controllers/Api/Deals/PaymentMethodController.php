@@ -7,6 +7,7 @@ use App\Exceptions\GeneralException;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Tenant\Deals\PaymentMethodResource;
 use App\Models\Tenant\PaymentMethod;
 use App\Services\Tenant\Deals\PaymentMethodService;
 use Illuminate\Http\Request;
@@ -23,13 +24,16 @@ class PaymentMethodController extends Controller
     {
         try {
             $paymentMethods = PaymentMethod::query();
-            if($request->has('ddl')){
+            if ($request->has('ddl')) {
                 $paymentMethods->where('is_checked', true);
+            } else {
+                $paymentMethods = $paymentMethods->orderBy('id', 'asc')
+                    ->orderBy('name')
+                    ->get();
+                $paymentMethods = PaymentMethodResource::collection($paymentMethods);
             }
-            $paymentMethods = $paymentMethods->orderBy('id', 'asc')
-                ->orderBy('name')
-                ->get();
-            
+
+
             return ApiResponse($paymentMethods, 'Payment methods retrieved successfully', 200);
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
@@ -47,7 +51,7 @@ class PaymentMethodController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|max:255',
             ]);
-            $data['is_manual_added'] = true ;
+            $data['is_manual_added'] = true;
             PaymentMethod::create($data);
             DB::commit();
             return ApiResponse(message: 'payment method created successfully', code: 201);
@@ -59,7 +63,7 @@ class PaymentMethodController extends Controller
         }
     }
 
-        /**
+    /**
      * Set a priority as default.
      */
     public function setDefault(int $id)
@@ -78,7 +82,7 @@ class PaymentMethodController extends Controller
         }
     }
 
-        /**
+    /**
      * Set a priority as default.
      */
     public function setChecked(int $id)
@@ -94,6 +98,21 @@ class PaymentMethodController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return apiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(int $id)
+    {
+        try {
+            $this->paymentMethodService->destroy($id);
+            return ApiResponse(message: 'Payment method deleted successfully', code: 200);
+        } catch (GeneralException $e) {
+            return ApiResponse(message: $e->getMessage(), code: $e->getCode());
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
         }
     }
 }

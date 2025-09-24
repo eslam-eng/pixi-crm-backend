@@ -91,9 +91,10 @@ class PaymentMethodService extends BaseService
             DB::beginTransaction();
             
             $PaymentMethod = $this->findById($id);
-            // Check if PaymentMethod is being used by tasks
-            if ($PaymentMethod->tasks()->exists()) {
-                throw new GeneralException(__('app.cannot_delete_PaymentMethod_used_by_tasks'));
+            
+            // Check if the payment method can be deleted using model method
+            if (!$PaymentMethod->canDelete()) {
+                throw new GeneralException('This payment method cannot be deleted because it is either a system payment method or has associated deals.');
             }
             
             $result = $PaymentMethod->delete();
