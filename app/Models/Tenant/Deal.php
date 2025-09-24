@@ -25,7 +25,6 @@ class Deal extends Model implements HasMedia
         'payment_method_id',
         'notes',
         'assigned_to_id',
-   
         'total_amount',
         'partial_amount_paid',
         'partial_amount_due',
@@ -36,10 +35,9 @@ class Deal extends Model implements HasMedia
         return $this->belongsTo(Lead::class);
     }
 
-
     public function assigned_to()
     {
-        return $this->belongsTo(User::class,'assigned_to_id');
+        return $this->belongsTo(User::class, 'assigned_to_id');
     }
 
     public function items()

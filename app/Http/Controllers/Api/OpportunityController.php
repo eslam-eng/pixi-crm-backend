@@ -39,10 +39,10 @@ class OpportunityController extends Controller
             return ($value !== null && $value !== false && $value !== '');
         });
         if ($request->has('ddl')) {
-            $opportunities = $this->leadService->index($filters, ['contact.contactPhones', 'city', 'stage', 'variants.item', 'user']);
+            $opportunities = $this->leadService->index($filters, ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'user']);
             $data = OpportunityDDLResource::collection($opportunities);
         } else {
-            $opportunities = $this->leadService->index($filters, ['contact.contactPhones', 'city', 'stage', 'variants.item', 'user'], $filters['per_page'] ?? 10);
+            $opportunities = $this->leadService->index($filters, ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'user'], $filters['per_page'] ?? 10);
             $data = OpportunityResource::collection($opportunities)->response()->getData(true);
         }
         return ApiResponse(message: 'Opportunities retrieved successfully', code: 200, data: $data);

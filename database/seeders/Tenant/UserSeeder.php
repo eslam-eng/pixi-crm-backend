@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
                 'email' => 'admin1@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01569207834',
+                'department_id' => 1,
             ]
         )->syncRoles('admin');
 
@@ -33,6 +34,7 @@ class UserSeeder extends Seeder
                 'email' => 'admin2@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01207834569',
+                'department_id' => 1,
             ]
         )->syncRoles('admin');
 
@@ -44,6 +46,7 @@ class UserSeeder extends Seeder
                 'email' => 'manager1@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01234569078',
+                'department_id' => 1,
             ]
         )->syncRoles('manager');
 
@@ -55,6 +58,7 @@ class UserSeeder extends Seeder
                 'email' => 'manager2@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01234569078',
+                'department_id' => 1,
             ]
         )->syncRoles('manager');
 
@@ -66,6 +70,7 @@ class UserSeeder extends Seeder
                 'email' => 'agent1@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01234567890',
+                'department_id' => 1,
             ]
         )->syncRoles('agent');
 

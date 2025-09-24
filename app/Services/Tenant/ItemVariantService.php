@@ -9,20 +9,20 @@ use App\DTO\Item\ItemDTO;
 use App\Enums\ItemType;
 use App\Models\Filters\ItemFilter;
 use App\Models\Tenant\ItemAttribute;
-use App\Models\Tenant\ItemVariant;
 use App\QueryFilters\Tenant\ItemVariantFilters;
 use App\Services\BaseService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\DB;
 
 class ItemVariantService extends BaseService
 {
     public function __construct(
-        public ItemVariant $model,
+        public Item $model,
         public ItemAttribute $itemAttribute,
     ) {}
 
-    public function getModel(): ItemVariant
+    public function getModel(): Item
     {
         return $this->model;
     }
@@ -59,15 +59,23 @@ class ItemVariantService extends BaseService
 
     public function queryGet(int $itemId, array $filters = [], array $withRelations = []): HasMany
     {
+        // dd($itemId);
         $item = $this->model->query()->findOrFail($itemId);
-        $query = $item->variants()
-            ->with($withRelations);
+        if ($item->isProduct) {
+            $query = $item->itemable
+                ->variants()
+                ->with($withRelations);
+        } else {
+            throw new GeneralException('Item is not a product');
+        }
         return $query;
     }
 
     public function index(int $itemId, array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
+
         $query = $this->queryGet(itemId: $itemId, filters: $filters, withRelations: $withRelations);
+        dd($query->get());
         if ($perPage) {
             return $query->paginate($perPage);
         }

@@ -34,7 +34,6 @@ class DealRequest extends FormRequest
                 Rule::exists('payment_methods', 'id')->where(fn($q) => $q->where('is_checked', 1))
             ],
             'notes' => 'nullable|string|max:255',
-            'stage_id' => 'required|exists:stages,id',
             'partial_amount_paid' => 'required_if:payment_status,partial|nullable|numeric|min:0',
             'partial_amount_due' => 'required_if:payment_status,partial|nullable|numeric|min:0',
             'items' => 'required|array',

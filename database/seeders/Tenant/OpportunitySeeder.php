@@ -28,7 +28,7 @@ class OpportunitySeeder extends Seeder
                     'description' => 'Description',
                 ]
             );
-            $lead->variants()->attach(1, [
+            $lead->items()->attach(1, [
                 'quantity' => 1,
                 'price' => 100,
             ]);

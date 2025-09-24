@@ -18,13 +18,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('sku')->nullable()->unique();
             $table->decimal('price', 10, 2)->nullable();
-            $table->integer('stock')->nullable();
-            $table->enum('service_type', ServiceType::values())->nullable();
-            $table->enum('duration', ServiceDuration::values())->nullable();
             $table->foreignId('category_id')->constrained('item_categories');
-            $table->enum('type', ItemType::values());
+            $table->morphs('itemable'); // This creates itemable_type and itemable_id
             $table->timestamps();
         });
     }
