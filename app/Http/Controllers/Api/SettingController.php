@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\SettingRequest;
 use App\Settings\DealsSettings;
+use App\Settings\NotificationSettings;
 use App\Settings\TasksSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +33,7 @@ class SettingController extends Controller
             $settingsClass = $this->getSettingsClass($group);
 
             if (!$settingsClass) {
-                return apiResponse(message: 'Invalid settings group',code:400);
+                return apiResponse(message: 'Invalid settings group', code: 400);
             }
 
             // Get current setting value and toggle it
@@ -50,7 +51,7 @@ class SettingController extends Controller
             ];
             return apiResponse($data, trans('app.data changed successfully'));
         } catch (\Exception $e) {
-            return apiResponse(message: 'Failed to update setting value: ' . $e->getMessage(),code:500);
+            return apiResponse(message: 'Failed to update setting value: ' . $e->getMessage(), code: 500);
         }
     }
 
@@ -69,24 +70,24 @@ class SettingController extends Controller
             $settingsClass = $this->getSettingsClass($group);
 
             if (!$settingsClass) {
-                return apiResponse(message: 'Invalid settings group',code:400);
+                return apiResponse(message: 'Invalid settings group', code: 400);
             }
 
             // Update the setting
             $settings = app($settingsClass);
-            
+
             // Handle array values - ensure proper array conversion
             $value = $this->prepareValueForSaving($setting, $value, $settings);
-            
+
             $settings->$setting = $value;
             $settings->save();
-            $data =[
+            $data = [
                 'setting' => $setting,
                 'value' => $value
             ];
             return apiResponse($data, trans('app.data changed successfully'));
         } catch (\Exception $e) {
-            return apiResponse(message: 'Failed to update setting value: ' . $e->getMessage(),code:500);
+            return apiResponse(message: 'Failed to update setting value: ' . $e->getMessage(), code: 500);
         }
     }
 
@@ -106,7 +107,7 @@ class SettingController extends Controller
             $settingsClass = $this->getSettingsClass($group);
 
             if (!$settingsClass) {
-                return apiResponse(message: 'Invalid settings group',code:400);
+                return apiResponse(message: 'Invalid settings group', code: 400);
             }
 
             // Get all settings from the group
@@ -114,8 +115,7 @@ class SettingController extends Controller
             $settingsData = $settings->toArray();
             return apiResponse($settingsData, trans('app.data displayed successfully'));
         } catch (\Exception $e) {
-            return apiResponse(message: 'Failed to update setting value: ' . $e->getMessage(),code:500);
-
+            return apiResponse(message: 'Failed to update setting value: ' . $e->getMessage(), code: 500);
         }
     }
 
@@ -127,6 +127,7 @@ class SettingController extends Controller
         $settingsMap = [
             'tasks_settings' => TasksSettings::class,
             'deals_settings' => DealsSettings::class,
+            'notification_settings' => NotificationSettings::class,
             // Add more settings groups as needed
         ];
 
@@ -143,10 +144,10 @@ class SettingController extends Controller
         if ($reflection->hasProperty($setting)) {
             $property = $reflection->getProperty($setting);
             $propertyType = $property->getType();
-            
+
             if ($propertyType) {
                 $typeName = $propertyType->getName();
-                
+
                 // Handle array types
                 if ($typeName === 'array' || $typeName === '?array') {
                     if (is_string($value)) {
@@ -155,7 +156,7 @@ class SettingController extends Controller
                             $value = $decodedValue;
                         }
                     }
-                    
+
                     if (is_array($value)) {
                         // Special handling for default_followers_users - convert to integers
                         if ($setting === 'default_followers_users') {
@@ -163,21 +164,21 @@ class SettingController extends Controller
                                 return [];
                             }
                             // Convert to integers and filter out invalid values (0, negative)
-                            return array_filter(array_map('intval', $value), function($id) {
+                            return array_filter(array_map('intval', $value), function ($id) {
                                 return $id > 0;
                             });
                         }
                         return $value;
                     }
-                    
+
                     // Handle null values for array properties
                     if (is_null($value) && ($typeName === 'array' || $typeName === '?array')) {
                         return null;
                     }
-                    
+
                     return [];
                 }
-                
+
                 // Handle boolean types
                 if ($typeName === 'bool' || $typeName === '?bool') {
                     if (is_string($value)) {
@@ -185,16 +186,14 @@ class SettingController extends Controller
                     }
                     return (bool) $value;
                 }
-                
+
                 // Handle integer types
                 if ($typeName === 'int' || $typeName === '?int') {
                     return (int) $value;
                 }
             }
         }
-        
+
         return $value;
     }
-
 }
-

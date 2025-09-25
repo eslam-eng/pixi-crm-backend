@@ -8,13 +8,15 @@ use Illuminate\Database\Eloquent\Builder;
 use App\DTO\Item\ItemDTO;
 use App\DTO\Item\ProductDTO;
 use App\DTO\Item\ServiceDTO;
-
 use App\Models\Filters\ItemFilter;
 use App\Models\Tenant\ItemAttribute;
+use App\Notifications\Tenant\CreateNewItemNotification;
+use App\Services\Tenant\Users\UserService;
 use App\Models\Tenant\Product;
 use App\Models\Tenant\Service;
 use App\Services\BaseService;
 use App\Services\Tenant\ProductVariantService;
+
 use Illuminate\Support\Facades\DB;
 
 class ItemService extends BaseService
@@ -24,7 +26,9 @@ class ItemService extends BaseService
         public Product $productModel,
         public Service $serviceModel,
         public ItemAttribute $itemAttribute,
+        public UserService $userService,
         public ProductVariantService $productVariantService,
+
     ) {}
 
     public function getModel(): Item
@@ -74,6 +78,10 @@ class ItemService extends BaseService
             $item = $this->createService($commonData, ServiceDTO::fromRequest($request));
         } else {
             throw new \Exception('Invalid item type. Must be "product" or "service"');
+        }
+        $admins = $this->userService->getModel()->role('admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new CreateNewItemNotification($item));
         }
         return $item;
     }

@@ -6,6 +6,10 @@ use App\Models\Tenant\Contact;
 use App\QueryFilters\ContactFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\DTO\Contact\ContactDTO;
+use App\Models\Tenant\User;
+use App\Notifications\Tenant\CreateNewContactNotification;
+use App\Notifications\Tenant\UpdateAssignContactNotification;
+use App\Services\Tenant\Users\UserService;
 use Excel;
 
 class ContactService extends BaseService
@@ -13,6 +17,7 @@ class ContactService extends BaseService
     public function __construct(
         public Contact $model,
         public ContactPhoneService $contactPhoneService,
+        public UserService $userService,
     ) {}
 
     public function getModel(): Contact
@@ -52,7 +57,10 @@ class ContactService extends BaseService
         // Create the contact
         $contact = $this->model->create($contactDTO->toArray());
         $this->contactPhoneService->store($contactDTO->contact_phones, $contact->id);
-
+        $admins = $this->userService->getModel()->role('admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new CreateNewContactNotification($contact));
+        }
         $contact->load('country', 'city', 'user', 'source', 'contactPhones');
         return $contact;
     }
@@ -70,6 +78,17 @@ class ContactService extends BaseService
             $this->contactPhoneService->update($contactDTO->contact_phones, $contact);
         }
         $contact->update($contactDTO->toArray());
+        if ($contact->wasChanged('user_id')) {
+            $oldUser = $contact->user;
+            $admins = $this->userService->getModel()->role('admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new UpdateAssignContactNotification($contact->load('user')));
+            }
+            if ($oldUser) {
+                $oldUser->notify(new UpdateAssignContactNotification($contact->load('user')));
+            }
+        }
+
         return $contact->load('contactPhones', 'country', 'city', 'user', 'source');
     }
 

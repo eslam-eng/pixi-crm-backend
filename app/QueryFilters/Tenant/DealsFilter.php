@@ -18,7 +18,7 @@ class DealsFilter extends QueryFilter
     {
         return $this->builder->where(function ($query) use ($term) {
             $query->where('deal_name', 'LIKE', "%$term%")
-                ->orWhereHas('contact', function ($q) use ($term) {
+                ->orWhereHas('lead', function ($q) use ($term) {
                     $q->where('first_name', 'LIKE', "%$term%")
                         ->orWhere('last_name', 'LIKE', "%$term%")
                         ->orWhere('company_name', 'LIKE', "%$term%");
@@ -42,15 +42,6 @@ class DealsFilter extends QueryFilter
         return $this->builder->where('assigned_to_id', $term);
     }
 
-    /**
-     * Filter by source through contact relationship
-     */
-    public function source_id($term)
-    {
-        return $this->builder->whereHas('contact', function ($query) use ($term) {
-            $query->where('source_id', $term);
-        });
-    }
 
     /**
      * Filter by value range (total_amount)
@@ -137,17 +128,7 @@ class DealsFilter extends QueryFilter
         return $this->builder->where('deal_type', $term);
     }
 
-    /**
-     * Filter by multiple stages
-     */
-    public function stage_ids($term)
-    {
-        if (is_array($term)) {
-            return $this->builder->whereIn('stage_id', $term);
-        }
-
-        return $this->builder->where('stage_id', $term);
-    }
+  
 
     /**
      * Filter by multiple assigned users
@@ -161,19 +142,4 @@ class DealsFilter extends QueryFilter
         return $this->builder->where('assigned_to_id', $term);
     }
 
-    /**
-     * Filter by multiple sources
-     */
-    public function source_ids($term)
-    {
-        if (is_array($term)) {
-            return $this->builder->whereHas('contact', function ($query) use ($term) {
-                $query->whereIn('source_id', $term);
-            });
-        }
-
-        return $this->builder->whereHas('contact', function ($query) use ($term) {
-            $query->where('source_id', $term);
-        });
-    }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApprovalStatusEnum;
 use App\Enums\DealTypeEnum;
 use App\Enums\DiscountTypeEnum;
 use App\Enums\PaymentStatusEnum;
@@ -39,6 +40,10 @@ return new class extends Migration
             
             $table->decimal('partial_amount_paid', 10, 2)->default(0);
             $table->decimal('partial_amount_due', 10, 2)->default(0);
+
+
+            $table->enum('approval_status', ApprovalStatusEnum::values())->default(ApprovalStatusEnum::PENDING->value);
+            $table->foreignId('created_by_id')->constrained('users')->restrictOnDelete();
 
             // Notes
             $table->text('notes')->nullable();

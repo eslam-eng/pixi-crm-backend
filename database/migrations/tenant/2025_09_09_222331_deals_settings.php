@@ -13,7 +13,6 @@ return new class extends SettingsMigration
         $this->migrator->add('deals_settings.attachment_size_limit_mb', 10);
         
         // Feature Toggles
-        $this->migrator->add('deals_settings.auto_assign_deals', true);
         $this->migrator->add('deals_settings.enable_discounts', true);
         $this->migrator->add('deals_settings.maximum_discount_percentage', 20);
         $this->migrator->add('deals_settings.enable_attachments', true);
@@ -21,8 +20,11 @@ return new class extends SettingsMigration
         // Approval Settings
         $this->migrator->add('deals_settings.require_approval_high_value_deals', true);
         $this->migrator->add('deals_settings.approval_threshold_amount', 10000);
+        $this->migrator->add('deals_settings.all_deals_required_approval', false);
         
         // Payment Settings
         $this->migrator->add('deals_settings.enable_partial_payments', true);
+        $this->migrator->add('deals_settings.min_payed_percentage', 20);
+        $this->migrator->add('deals_settings.payment_terms_text', 'Payment is due within 30 days of invoice date. Late payments may incur additional charges.');
     }
 };

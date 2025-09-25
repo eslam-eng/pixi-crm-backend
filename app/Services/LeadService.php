@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Exceptions\GeneralException;
 use App\Models\Tenant\Item;
 use App\Models\Tenant\Lead;
+use App\Notifications\Tenant\UpdateAssignOpportunityNotification;
+use App\Services\Tenant\Users\UserService;
 use Auth;
 
 class LeadService extends BaseService
@@ -16,6 +18,7 @@ class LeadService extends BaseService
         public Lead $model,
         public Item $itemModel,
         public StageService $stageService,
+        public UserService $userService,
     ) {}
 
     public function getModel(): Lead
@@ -114,6 +117,17 @@ class LeadService extends BaseService
             $lead->variants()->sync($map, false);
         }
         $lead->update($leadDTO->toArray());
+
+        if ($lead->wasChanged('assigned_to_id')) {
+            $currentUser = $lead->user;
+            $managers = $this->userService->getModel()->role('manager')->get();
+            foreach ($managers as $manager) {
+                $manager->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
+            }
+            if ($currentUser) {
+                $currentUser->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
+            }
+        }
         return $lead->load('variants.item');
     }
 

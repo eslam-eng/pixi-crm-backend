@@ -3,7 +3,7 @@
 namespace App\Notifications\Tenant;
 
 use App\Models\Tenant\Task;
-use App\Settings\TasksSettings;
+use App\Settings\NotificationSettings;
 use App\Traits\NotifyFcm;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -35,7 +35,7 @@ class TaskReminderNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        $settings = new TasksSettings();
+        $settings = new NotificationSettings();
         $channels = [];
         if ($settings->mail_notification) {
             $channels[] = 'mail';
