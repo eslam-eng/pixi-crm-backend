@@ -229,6 +229,7 @@ Route::middleware([
 
     Route::apiResource('deals', DealController::class);
     Route::get('deals/get/statistics', [DealController::class, 'statistics']);
+    Route::post('deals/{id}/change/approval-status', [DealController::class, 'changeApprovalStatus']);
 
 
     Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList'])->middleware('auth:sanctum');

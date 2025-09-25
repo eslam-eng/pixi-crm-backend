@@ -43,6 +43,7 @@ class SettingRequest extends FormRequest
             case 'enable_priority':
             case 'notify_manager':
             case 'mail_notification':
+            case 'all_deals_required_approval':
             case 'system_notification':
                 $rules[] = 'required';
                 $rules[] = 'boolean';

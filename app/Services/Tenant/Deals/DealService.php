@@ -3,7 +3,9 @@
 namespace App\Services\Tenant\Deals;
 
 use App\DTO\Tenant\DealDTO;
+use App\Enums\ApprovalStatusEnum;
 use App\Enums\DealType;
+use App\Enums\RolesEnum;
 use App\Models\Tenant\Deal;
 use App\Models\Tenant\DealAttachment;
 use App\Models\Tenant\Item;
@@ -12,6 +14,7 @@ use App\Services\BaseService;
 use App\Settings\DealsSettings;
 use Arr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -32,7 +35,7 @@ class DealService extends BaseService
      */
     public function paginate(Request $request, array $relationships = [])
     {
-        $defaultRelationships = ['items', 'lead'];
+        $defaultRelationships = ['items', 'lead', 'created_by'];
         $relationships = array_merge($defaultRelationships, $relationships);
 
         // Apply filters using Filterable trait
@@ -94,7 +97,6 @@ class DealService extends BaseService
         // Validate deal settings
         $this->validateDealSettings($dealDTO);
 
-
         return DB::transaction(function () use ($dealDTO) {
             $items = $dealDTO->items ?? [];
 
@@ -113,6 +115,14 @@ class DealService extends BaseService
             $afterDiscount = $this->afterDiscount($total, $dealDTO->discount_value ?? 0, $dealDTO->discount_type ?? 'fixed');
 
             $totalAmount = $this->afterTax($afterDiscount, $dealDTO->tax_rate ?? 0);
+
+            // Get deals settings to determine approval status
+            $settings = app(DealsSettings::class);
+            
+            // Set approval status based on user role and settings
+            if (!$dealDTO->approval_status) {
+                $dealDTO->approval_status = $this->determineApprovalStatus($settings, $totalAmount);
+            }
 
             // Create deal
             $dealDTO->total_amount = $totalAmount;
@@ -211,6 +221,126 @@ class DealService extends BaseService
                 if ($dealDTO->discount_value > $settings->maximum_discount_percentage) {
                     throw ValidationException::withMessages([
                         'discount_value' => ["Discount percentage cannot exceed {$settings->maximum_discount_percentage}%."]
+                    ]);
+                }
+            }
+        }
+
+        // Validate approval requirements
+        $this->validateApprovalRequirements($dealDTO, $settings);
+    }
+
+    /**
+     * Validate approval requirements based on deal settings
+     */
+    /**
+     * Change the approval status of a deal
+     */
+    public function changeApprovalStatus(int $dealId, string $status): Deal
+    {
+        $user = Auth::user();
+        
+        // Check if user has permission to change approval status
+        $this->validateApprovalPermission($user);
+        
+        // Deal existence and status validation is handled in the request
+        $deal = $this->model->with('created_by')->find($dealId);
+        
+        // Check if user is manager and in the same department as deal creator
+        $this->validateDepartmentPermission($user, $deal);
+
+        $deal->update(['approval_status' => $status]);
+        
+        return $deal->load('items', 'lead', 'attachments', 'created_by');
+    }
+
+    /**
+     * Validate if user has permission to change approval status
+     */
+    private function validateApprovalPermission($user): void
+    {
+        if ($user->hasRole(RolesEnum::AGENT->value)) {
+            throw ValidationException::withMessages([
+                'permission' => ['You do not have permission to change approval status. Only managers can perform this action.']
+            ]);
+        }
+        
+        if (!$user->hasRole(RolesEnum::MANAGER->value)) {
+            throw ValidationException::withMessages([
+                'permission' => ['You do not have permission to change approval status. Only managers can perform this action.']
+            ]);
+        }
+    }
+
+    /**
+     * Validate if user is in the same department as deal creator
+     */
+    private function validateDepartmentPermission($user, Deal $deal): void
+    {
+        if ($deal->created_by && $deal->created_by->department_id !== $user->department_id) {
+            throw ValidationException::withMessages([
+                'department' => ['You can only change approval status for deals created by users in your department.']
+            ]);
+        }
+    }
+
+    /**
+     * Determine the approval status based on user role and deals settings
+     */
+    private function determineApprovalStatus(DealsSettings $settings, float $totalAmount): string
+    {
+        $user = Auth::user();
+        
+        // If all deals require approval
+        if ($settings->all_deals_required_approval) {
+            // Managers can approve deals directly, agents need approval
+            if ($user->hasRole(RolesEnum::MANAGER->value) || $user->hasRole(RolesEnum::ADMIN->value)) {
+                return ApprovalStatusEnum::APPROVED->value;
+            } elseif ($user->hasRole(RolesEnum::AGENT->value)) {
+                return ApprovalStatusEnum::PENDING->value;
+            }
+        }
+        
+        // If high-value deals require approval
+        if ($settings->require_approval_high_value_deals && $totalAmount >= $settings->approval_threshold_amount) {
+            // High-value deals require approval regardless of role
+            if ($user->hasRole(RolesEnum::MANAGER->value) || $user->hasRole(RolesEnum::ADMIN->value)) {
+                return ApprovalStatusEnum::APPROVED->value;
+            } elseif ($user->hasRole(RolesEnum::AGENT->value)) {
+                return ApprovalStatusEnum::PENDING->value;
+            }
+        }
+        
+        // For deals below threshold or when no approval required
+        if ($user->hasRole(RolesEnum::MANAGER->value)) {
+            return ApprovalStatusEnum::APPROVED->value;
+        } elseif ($user->hasRole(RolesEnum::AGENT->value)) {
+            return ApprovalStatusEnum::APPROVED->value; // Agents can approve low-value deals
+        }
+        
+        // Default fallback
+        return ApprovalStatusEnum::PENDING->value;
+    }
+
+    private function validateApprovalRequirements(DealDTO $dealDTO, DealsSettings $settings): void
+    {
+        // TODO: Implement approval validation when approval system is fully implemented
+        // For now, this method serves as a placeholder for future approval logic
+        
+        // Check if all deals require approval
+        if ($settings->all_deals_required_approval) {
+            // If all deals require approval, ensure the deal has approval status
+            if (!$dealDTO->approval_status || $dealDTO->approval_status === 'pending') {
+                throw ValidationException::withMessages([
+                    'approval_status' => ['All deals require approval. Please ensure the deal is approved before proceeding.']
+                ]);
+            }
+        } else {
+            // Check if high-value deals require approval
+            if ($settings->require_approval_high_value_deals && $dealDTO->total_amount >= $settings->approval_threshold_amount) {
+                if (!$dealDTO->approval_status || $dealDTO->approval_status === 'pending') {
+                    throw ValidationException::withMessages([
+                        'approval_status' => ["Deals with amount {$dealDTO->total_amount} or higher require approval. Please ensure the deal is approved before proceeding."]
                     ]);
                 }
             }

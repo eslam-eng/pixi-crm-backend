@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Deals;
 
 use App\DTO\Tenant\DealDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tenant\Deals\ChangeApprovalStatusRequest;
 use App\Http\Requests\Tenant\Deals\DealRequest;
-use App\Http\Resources\DealResource;
 use App\Http\Resources\Tenant\Deals\DealListResource;
 use App\Http\Resources\Tenant\Deals\DealShowResource;
 use App\Services\Tenant\Deals\DealService;
@@ -52,7 +52,7 @@ class DealController extends Controller
             $dealDTO = DealDTO::fromRequest($request);
             $deal = $this->dealService->store($dealDTO);
             return apiResponse(
-                data: new DealResource($deal),
+                data: new DealListResource($deal),
                 message: 'Deal created successfully',
                 code: 201
             );
@@ -70,7 +70,7 @@ class DealController extends Controller
             $dealDTO = DealDTO::fromRequest($request);
             $deal = $this->dealService->update($dealDTO, $id);
             return apiResponse(
-                data: new DealResource($deal),
+                data: [],
                 message: 'Deal updated successfully',
                 code: 200
             );
@@ -99,6 +99,28 @@ class DealController extends Controller
             return apiResponse(
                 message: $e->getMessage(),
                 code: 404
+            );
+        }
+    }
+
+    public function changeApprovalStatus(ChangeApprovalStatusRequest $request, int $id)
+    {
+        try {
+            $deal = $this->dealService->changeApprovalStatus($id, $request->input('status'));
+            return apiResponse(
+                data: [],
+                message: 'Deal approval status updated successfully',
+                code: 200
+            );
+        } catch (ValidationException $e) {
+            return apiResponse(
+                message: $e->errors(),
+                code: 422
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                message: $e->getMessage(),
+                code: 500
             );
         }
     }

@@ -13,7 +13,7 @@ class DealsSettings extends Settings
     public int $attachment_size_limit_mb;
     
     // Feature Toggles
-    public bool $auto_assign_deals;
+ 
     public bool $enable_discounts;
     public int $maximum_discount_percentage;
     public bool $enable_attachments;
@@ -21,6 +21,7 @@ class DealsSettings extends Settings
     // Approval Settings
     public bool $require_approval_high_value_deals;
     public int $approval_threshold_amount;
+    public bool $all_deals_required_approval;
     
     // Payment Settings
     public bool $enable_partial_payments;
@@ -40,7 +41,7 @@ class DealsSettings extends Settings
             'attachment_size_limit_mb' => 10,
             
             // Feature Toggles
-            'auto_assign_deals' => true,
+
             'enable_discounts' => true,
             'maximum_discount_percentage' => 20,
             'enable_attachments' => true,
@@ -48,6 +49,7 @@ class DealsSettings extends Settings
             // Approval Settings
             'require_approval_high_value_deals' => true,
             'approval_threshold_amount' => 10000,
+            'all_deals_required_approval' => false,
             
             // Payment Settings
             'enable_partial_payments' => true,
