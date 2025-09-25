@@ -4,33 +4,32 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\Form;
-use App\Services\FormService;
+use App\Services\FormSubmissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 
 
 class FormSubmissionController extends Controller
 {
     public function __construct(
-        private FormService $formService
+        private FormSubmissionService $formSubmissionService
     ) {}
 
     public function submit(Request $request, string $slug): JsonResponse
     {
-        $form = Form::with(['fields', 'actions'])
-            ->where('slug', $slug)
-            ->where('is_active', true)
-            ->first();
+        $form = $this->formSubmissionService->getFormBySlug($slug);
 
         if (!$form) {
-            return response()->json([
-                'message' => 'Form not found or inactive'
-            ], 404);
+            ApiResponse(
+                message: 'Form not found or inactive',
+                code: Response::HTTP_NOT_FOUND
+            );
         }
 
         // Build dynamic validation rules
-        $rules = $this->buildValidationRules($form);
+        $rules = $this->formSubmissionService->buildValidationRules($form);
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
@@ -41,7 +40,7 @@ class FormSubmissionController extends Controller
         }
 
         try {
-            $submission = $this->formService->submitForm(
+            $submission = $this->formSubmissionService->submitForm(
                 $form,
                 $request->only($form->fields->pluck('name')->toArray()),
                 $request->ip(),
@@ -58,7 +57,7 @@ class FormSubmissionController extends Controller
             ];
 
             // Add redirect URL if exists
-            $redirectUrl = $this->formService->getRedirectUrl($form);
+            $redirectUrl = $this->formSubmissionService->getRedirectUrl($form);
             if ($redirectUrl) {
                 $response['data']['redirect_url'] = $redirectUrl;
             }
@@ -89,35 +88,5 @@ class FormSubmissionController extends Controller
         ]);
     }
 
-    private function buildValidationRules(Form $form): array
-    {
-        $rules = [];
 
-        foreach ($form->fields as $field) {
-            $fieldRules = [];
-
-            if ($field->required) {
-                $fieldRules[] = 'required';
-            }
-
-            switch ($field->type) {
-                case 'email':
-                    $fieldRules[] = 'email';
-                    break;
-                case 'number':
-                    $fieldRules[] = 'numeric';
-                    break;
-                case 'file':
-                    $fieldRules[] = 'file';
-                    $fieldRules[] = 'max:2048';
-                    break;
-            }
-
-            if (!empty($fieldRules)) {
-                $rules[$field->name] = $fieldRules;
-            }
-        }
-
-        return $rules;
-    }
 }
