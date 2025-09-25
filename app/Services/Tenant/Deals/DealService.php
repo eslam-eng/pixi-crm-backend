@@ -125,9 +125,9 @@ class DealService extends BaseService
                 $dealDTO->approval_status = $this->determineApprovalStatus($settings, $totalAmount);
             }
 
-            // Calculate partial_amount_due based on payment status
+            // Calculate amount_due based on payment status
             $dealDTO->total_amount = $totalAmount;
-            $dealDTO->partial_amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
+            $dealDTO->amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
 
             // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
@@ -149,8 +149,15 @@ class DealService extends BaseService
         // Validate deal settings
         $this->validateDealSettings($dealDTO);
 
-        return DB::transaction(function () use ($dealDTO, $dealId) {
-            $deal = $this->model->findOrFail($dealId);
+        // Check if deal exists
+        $deal = $this->model->find($dealId);
+        if (!$deal) {
+            throw ValidationException::withMessages([
+                'deal' => ['The specified deal does not exist.']
+            ]);
+        }
+
+        return DB::transaction(function () use ($dealDTO, $deal) {
 
             $items = $dealDTO->items ?? [];
 
@@ -172,7 +179,13 @@ class DealService extends BaseService
 
             // Update deal
             $dealDTO->total_amount = $totalAmount;
-            $dealDTO->partial_amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
+            $dealDTO->amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
+            
+            // Preserve approval_status if not provided in request
+            if (!$dealDTO->approval_status) {
+                $dealDTO->approval_status = $deal->approval_status;
+            }
+            
             $deal->update(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Sync items (remove old, add new)
