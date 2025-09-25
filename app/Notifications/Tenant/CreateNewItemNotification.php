@@ -39,7 +39,7 @@ class CreateNewItemNotification extends Notification
         return (new MailMessage)
             ->subject('New Item Created')
             ->greeting('Hello!')
-            ->line('A new ' . $this->item->type->value . ' has been created: '  . $this->item->name)
+            ->line('A new ' . $this->item->type?->value . ' has been created: '  . $this->item->name)
             ->action('View Item', url('/items/' . $this->item->id))
             ->line('Thank you for using our application!');
     }

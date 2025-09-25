@@ -9,7 +9,9 @@ use App\Enums\PaymentStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Tenant\Deal;
 use App\Models\Tenant\DealAttachment;
+use App\Models\Tenant\DealVariant;
 use App\Models\Tenant\Item;
+use App\Models\Tenant\ItemVariant;
 use App\QueryFilters\Tenant\DealsFilter;
 use App\Services\BaseService;
 use App\Settings\DealsSettings;
@@ -24,6 +26,7 @@ class DealService extends BaseService
     public function __construct(
         public Deal $model,
         public Item $itemModel,
+        public ItemVariant $itemVariantModel,
     ) {}
 
     public function getModel(): Deal
@@ -61,6 +64,7 @@ class DealService extends BaseService
                 'lead',
                 'assigned_to',
                 'items',
+                'variants',
                 'attachments'
             ])
             ->findOrFail($dealId);
@@ -107,13 +111,22 @@ class DealService extends BaseService
                 throw ValidationException::withMessages(['items' => ['At least one item is required.']]);
             }
 
+            $variants = $this->getVariants($items);
+            $mergedVariants = $this->mergeVariants($variants);
+
+            $realItem = $this->getItems($items);
             // Merge duplicate items
-            $mergedItems = $this->mergeItems($items);
+            $mergedItems = $this->mergeItems($realItem);
 
             // Validate and prepare items
             $itemsData = $this->prepareItems($mergedItems);
 
-            $total = collect($itemsData['pivot'])->sum('total');
+            $variantsData = $this->prepareVariants($mergedVariants);
+
+            $item_total = collect($itemsData['pivot'])->sum('total');
+            $variant_total = collect($variantsData['pivot'])->sum('total');
+
+            $total = $item_total + $variant_total;
 
             $afterDiscount = $this->afterDiscount($total, $dealDTO->discount_value ?? 0, $dealDTO->discount_type ?? 'fixed');
 
@@ -131,11 +144,16 @@ class DealService extends BaseService
             $dealDTO->total_amount = $totalAmount;
             $dealDTO->amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
 
+            if($dealDTO->payment_status == PaymentStatusEnum::PAID->value) {
+                $dealDTO->partial_amount_paid = 0;
+            }
             // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Attach items
             $deal->items()->attach($itemsData['pivot']);
+
+            $deal->variants()->attach($variantsData['pivot']);
 
             // Handle attachments if provided
             if ($dealDTO->attachments && count($dealDTO->attachments) > 0) {
@@ -395,7 +413,6 @@ class DealService extends BaseService
     private function prepareItems(array $items): array
     {
         $itemIds = collect($items)->pluck('item_id');
-
         // Lock items and get current data
         $dbItems = $this->itemModel->whereIn('id', $itemIds)
             ->lockForUpdate()
@@ -417,8 +434,53 @@ class DealService extends BaseService
             }
 
             // Check stock
-            if ($dbItem->quantity !== null && $dbItem->quantity < $quantity && $dbItem->type == DealType::PRODUCT_SALE->value) {
-                $errors[] = "Not enough stock for {$dbItem->name}. Available: {$dbItem->quantity}";
+            if ($dbItem->itemable->stock !== null && $dbItem->itemable->stock < $quantity) {
+                $errors[] = "Not enough stock for {$dbItem->name}. Available: {$dbItem->itemable->stock}";
+                continue;
+            }
+
+            $price = (float) $item['price'];
+
+            $pivot[$itemId] = [
+                'quantity' => $quantity,
+                'price' => $price,
+                'total' => $quantity * $price,
+            ];
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages(['items' => $errors]);
+        }
+
+        return compact('pivot');
+    }
+
+    private function prepareVariants(array $items): array
+    {
+        $itemIds = collect($items)->pluck('item_id');
+        // Lock items and get current data
+        $dbItems = $this->itemVariantModel->whereIn('id', $itemIds)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        $pivot = [];
+        $errors = [];
+
+        foreach ($items as $item) {
+            $itemId = $item['item_id'];
+            $quantity = max(1, $item['quantity']);
+
+            $dbItem = $dbItems->get($itemId);
+
+            if (!$dbItem) {
+                $errors[] = "Item ID {$itemId} not found.";
+                continue;
+            }
+
+            // Check stock
+            if ($dbItem->stock !== null && $dbItem->stock < $quantity) {
+                $errors[] = "Not enough stock for {$dbItem->product->item->name}. Available: {$dbItem->stock}";
                 continue;
             }
 
@@ -481,5 +543,30 @@ class DealService extends BaseService
                 ]);
             }
         }
+    }
+
+    private function getVariants(array $items): array
+    {
+        return collect($items)->filter(fn($item) => isset($item['variant_id']))->values()->toArray();
+    }
+
+    private function getItems(array $items): array
+    {
+        return collect($items)
+            ->reject(fn($item) => array_key_exists('variant_id', $item))
+            ->values()
+            ->toArray();
+    }
+
+    private function mergeVariants(array $items): array
+    {
+        return collect($items)
+            ->groupBy('variant_id')
+            ->map(fn($group) => [
+                'item_id' => $group->first()['variant_id'],
+                'quantity' => $group->sum('quantity'),
+                'price' => $group->first()['price']
+            ])
+            ->values()->toArray();
     }
 }
