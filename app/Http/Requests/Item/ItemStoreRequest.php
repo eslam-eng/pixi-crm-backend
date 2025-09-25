@@ -35,7 +35,7 @@ class ItemStoreRequest extends BaseRequest
             $baseRules['variants.*.attributes.*.attribute_id'] = 'required|integer';
             $baseRules['variants.*.attributes.*.value_id'] = 'required|integer';
             $baseRules['variants.*.price'] = 'required|numeric|min:0';
-            $baseRules['variants.*.stock'] = 'nullable|integer|min:0';
+            $baseRules['variants.*.stock'] = 'required|integer|min:0';
         }
 
         // Add service-specific rules if type is service
@@ -70,6 +70,9 @@ class ItemStoreRequest extends BaseRequest
     {
 
         $validator->after(function ($validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return; // base rules failed → skip custom checks
+            }
             $this->validateAttributesExist($validator);
             $this->validateAttributeValuesExist($validator);
             $this->validateUniqueVariantCombinations($validator);
