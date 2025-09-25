@@ -2,10 +2,9 @@
 
 namespace App\Models\Tenant;
 
-use App\Models\Tenant\Contact;
-use App\Models\Stage;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -28,7 +27,23 @@ class Deal extends Model implements HasMedia
         'total_amount',
         'partial_amount_paid',
         'partial_amount_due',
+        'approval_status',
+        'created_by_id',
     ];
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($deal) {
+            if (Auth::check() && !$deal->created_by_id) {
+                $deal->created_by_id = Auth::id();
+            }
+        });
+    }
 
     public function lead()
     {
@@ -38,6 +53,11 @@ class Deal extends Model implements HasMedia
     public function assigned_to()
     {
         return $this->belongsTo(User::class, 'assigned_to_id');
+    }
+
+    public function created_by()
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
     }
 
     public function items()

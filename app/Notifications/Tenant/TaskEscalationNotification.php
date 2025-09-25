@@ -3,12 +3,11 @@
 namespace App\Notifications\Tenant;
 
 use App\Models\Tenant\Task;
+use App\Settings\NotificationSettings;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use App\Settings\TasksSettings;
 
 class TaskEscalationNotification extends Notification
 {
@@ -32,7 +31,7 @@ class TaskEscalationNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        $settings = new TasksSettings();
+        $settings = new NotificationSettings();
         $channels = [];
         if ($settings->mail_notification) {
             $channels[] = 'mail';

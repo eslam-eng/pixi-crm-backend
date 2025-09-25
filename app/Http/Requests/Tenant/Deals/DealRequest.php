@@ -35,7 +35,6 @@ class DealRequest extends FormRequest
             ],
             'notes' => 'nullable|string|max:255',
             'partial_amount_paid' => 'required_if:payment_status,partial|nullable|numeric|min:0',
-            'partial_amount_due' => 'required_if:payment_status,partial|nullable|numeric|min:0',
             'items' => 'required|array',
             'items.*.item_id' => 'required|exists:items,id',
             'items.*.quantity' => 'sometimes|integer',
@@ -52,5 +51,67 @@ class DealRequest extends FormRequest
     {
         $settings = app(DealsSettings::class);
         return $settings->attachment_size_limit_mb * 1024; // Convert MB to KB
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Validate partial payment amount against minimum percentage
+            if ($this->input('payment_status') === PaymentStatusEnum::PARTIAL->value) {
+                $partialAmountPaid = $this->input('partial_amount_paid');
+                $totalAmount = $this->calculateTotalAmount();
+                
+                if ($partialAmountPaid !== null && $totalAmount !== null) {
+                    $settings = app(DealsSettings::class);
+                    $minPercentage = $settings->min_payed_percentage;
+                    $minRequiredAmount = $totalAmount * ($minPercentage / 100);
+                    
+                    if ($partialAmountPaid < $minRequiredAmount) {
+                        $validator->errors()->add('partial_amount_paid', 
+                            "Partial amount paid must be at least {$minPercentage}% of the total amount ({$minRequiredAmount})."
+                        );
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Calculate the total amount from items
+     */
+    private function calculateTotalAmount(): ?float
+    {
+        $items = $this->input('items', []);
+        if (empty($items)) {
+            return null;
+        }
+
+        $total = 0;
+        foreach ($items as $item) {
+            $quantity = $item['quantity'] ?? 1;
+            $price = $item['price'] ?? 0;
+            $total += $quantity * $price;
+        }
+
+        // Apply discount if provided
+        $discountValue = $this->input('discount_value', 0);
+        $discountType = $this->input('discount_type');
+        
+        if ($discountValue > 0) {
+            if ($discountType === 'percentage') {
+                $total = $total - ($total * $discountValue / 100);
+            } else {
+                $total = $total - $discountValue;
+            }
+        }
+
+        // Apply tax
+        $taxRate = $this->input('tax_rate', 0);
+        $total = $total + ($total * $taxRate / 100);
+
+        return $total;
     }
 }

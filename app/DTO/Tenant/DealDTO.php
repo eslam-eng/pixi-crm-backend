@@ -22,6 +22,7 @@ class DealDTO extends BaseDTO
         public ?float $total_amount = null,
         public ?float $partial_amount_paid = null,
         public ?float $partial_amount_due = null,
+        public ?string $approval_status = null,
         public ?array $items = null,
         public ?array $attachments = null,
     ) {}
@@ -43,6 +44,7 @@ class DealDTO extends BaseDTO
             total_amount: $request->input('total_amount'),
             partial_amount_paid: $request->input('partial_amount_paid'),
             partial_amount_due: $request->input('partial_amount_due'),
+            approval_status: $request->input('approval_status'),
             items: $request->input('items'),
             attachments: $request->file('attachments'),
         );
@@ -65,6 +67,7 @@ class DealDTO extends BaseDTO
             'total_amount' => $this->total_amount,
             'partial_amount_paid' => $this->partial_amount_paid,
             'partial_amount_due' => $this->partial_amount_due,
+            'approval_status' => $this->approval_status,
             'items' => $this->items,
             'attachments' => $this->attachments,
         ];
@@ -87,6 +90,7 @@ class DealDTO extends BaseDTO
             total_amount: Arr::get($data, 'total_amount'),
             partial_amount_paid: Arr::get($data, 'partial_amount_paid'),
             partial_amount_due: Arr::get($data, 'partial_amount_due'),
+            approval_status: Arr::get($data, 'approval_status'),
             items: Arr::get($data, 'items'),
             attachments: Arr::get($data, 'attachments'),
         );
