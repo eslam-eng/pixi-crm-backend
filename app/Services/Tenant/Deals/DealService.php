@@ -45,6 +45,8 @@ class DealService extends BaseService
         // Load relationships
         $query->with($relationships);
 
+        $query->orderBy('id', 'desc');
+
         // Paginate results
         return $query->paginate(per_page());
     }
@@ -119,7 +121,7 @@ class DealService extends BaseService
 
             // Get deals settings to determine approval status
             $settings = app(DealsSettings::class);
-            
+
             // Set approval status based on user role and settings
             if (!$dealDTO->approval_status) {
                 $dealDTO->approval_status = $this->determineApprovalStatus($settings, $totalAmount);
@@ -180,12 +182,12 @@ class DealService extends BaseService
             // Update deal
             $dealDTO->total_amount = $totalAmount;
             $dealDTO->amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
-            
+
             // Preserve approval_status if not provided in request
             if (!$dealDTO->approval_status) {
                 $dealDTO->approval_status = $deal->approval_status;
             }
-            
+
             $deal->update(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Sync items (remove old, add new)
@@ -257,18 +259,18 @@ class DealService extends BaseService
     public function changeApprovalStatus(int $dealId, string $status): Deal
     {
         $user = Auth::user();
-        
+
         // Check if user has permission to change approval status
         $this->validateApprovalPermission($user);
-        
+
         // Deal existence and status validation is handled in the request
         $deal = $this->model->with('created_by')->find($dealId);
-        
+
         // Check if user is manager and in the same department as deal creator
         $this->validateDepartmentPermission($user, $deal);
 
         $deal->update(['approval_status' => $status]);
-        
+
         return $deal->load('items', 'lead', 'attachments', 'created_by');
     }
 
@@ -282,7 +284,7 @@ class DealService extends BaseService
                 'permission' => ['You do not have permission to change approval status. Only managers can perform this action.']
             ]);
         }
-        
+
         if (!$user->hasRole(RolesEnum::MANAGER->value)) {
             throw ValidationException::withMessages([
                 'permission' => ['You do not have permission to change approval status. Only managers can perform this action.']
@@ -321,7 +323,7 @@ class DealService extends BaseService
     private function determineApprovalStatus(DealsSettings $settings, float $totalAmount): string
     {
         $user = Auth::user();
-        
+
         // If all deals require approval
         if ($settings->all_deals_required_approval) {
             // Managers can approve deals directly, agents need approval
@@ -331,7 +333,7 @@ class DealService extends BaseService
                 return ApprovalStatusEnum::PENDING->value;
             }
         }
-        
+
         // If high-value deals require approval
         if ($settings->require_approval_high_value_deals && $totalAmount >= $settings->approval_threshold_amount) {
             // High-value deals require approval regardless of role
@@ -341,14 +343,14 @@ class DealService extends BaseService
                 return ApprovalStatusEnum::PENDING->value;
             }
         }
-        
+
         // For deals below threshold or when no approval required
         if ($user->hasRole(RolesEnum::MANAGER->value)) {
             return ApprovalStatusEnum::APPROVED->value;
         } elseif ($user->hasRole(RolesEnum::AGENT->value)) {
             return ApprovalStatusEnum::APPROVED->value; // Agents can approve low-value deals
         }
-        
+
         // Default fallback
         return ApprovalStatusEnum::PENDING->value;
     }
@@ -357,7 +359,7 @@ class DealService extends BaseService
     {
         // TODO: Implement approval validation when approval system is fully implemented
         // For now, this method serves as a placeholder for future approval logic
-        
+
         // Check if all deals require approval
         if ($settings->all_deals_required_approval) {
             // If all deals require approval, ensure the deal has approval status
