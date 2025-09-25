@@ -25,6 +25,8 @@ class DealsSettings extends Settings
     
     // Payment Settings
     public bool $enable_partial_payments;
+    public int $min_payed_percentage;
+    public string $payment_terms_text;
 
     public static function group(): string
     {
@@ -53,6 +55,8 @@ class DealsSettings extends Settings
             
             // Payment Settings
             'enable_partial_payments' => true,
+            'min_payed_percentage' => 20,
+            'payment_terms_text' => 'Payment is due within 30 days of invoice date. Late payments may incur additional charges.',
         ];
     }
 }

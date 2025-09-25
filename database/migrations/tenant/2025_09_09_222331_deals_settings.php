@@ -24,5 +24,7 @@ return new class extends SettingsMigration
         
         // Payment Settings
         $this->migrator->add('deals_settings.enable_partial_payments', true);
+        $this->migrator->add('deals_settings.min_payed_percentage', 20);
+        $this->migrator->add('deals_settings.payment_terms_text', 'Payment is due within 30 days of invoice date. Late payments may incur additional charges.');
     }
 };

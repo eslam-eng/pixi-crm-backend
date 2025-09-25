@@ -5,6 +5,7 @@ namespace App\Services\Tenant\Deals;
 use App\DTO\Tenant\DealDTO;
 use App\Enums\ApprovalStatusEnum;
 use App\Enums\DealType;
+use App\Enums\PaymentStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Tenant\Deal;
 use App\Models\Tenant\DealAttachment;
@@ -124,8 +125,11 @@ class DealService extends BaseService
                 $dealDTO->approval_status = $this->determineApprovalStatus($settings, $totalAmount);
             }
 
-            // Create deal
+            // Calculate partial_amount_due based on payment status
             $dealDTO->total_amount = $totalAmount;
+            $dealDTO->partial_amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
+
+            // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Attach items
@@ -168,6 +172,7 @@ class DealService extends BaseService
 
             // Update deal
             $dealDTO->total_amount = $totalAmount;
+            $dealDTO->partial_amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
             $deal->update(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Sync items (remove old, add new)
@@ -282,6 +287,19 @@ class DealService extends BaseService
                 'department' => ['You can only change approval status for deals created by users in your department.']
             ]);
         }
+    }
+
+    /**
+     * Calculate partial amount due based on payment status
+     */
+    private function calculatePartialAmountDue(string $paymentStatus, float $totalAmount, float $partialAmountPaid = 0): float
+    {
+        return match ($paymentStatus) {
+            PaymentStatusEnum::PARTIAL->value => $totalAmount - $partialAmountPaid,
+            PaymentStatusEnum::PAID->value => 0,
+            PaymentStatusEnum::UNPAID->value => $totalAmount,
+            default => 0,
+        };
     }
 
     /**

@@ -137,6 +137,19 @@ class SettingRequest extends FormRequest
                 $rules[] = 'min:0';
                 break;
                 
+            case 'min_payed_percentage':
+                $rules[] = 'required';
+                $rules[] = 'integer';
+                $rules[] = 'min:0';
+                $rules[] = 'max:100';
+                break;
+                
+            case 'payment_terms_text':
+                $rules[] = 'required';
+                $rules[] = 'string';
+                $rules[] = 'max:1000';
+                break;
+                
             default:
                 $rules[] = 'required';
                 $rules[] = 'string';
