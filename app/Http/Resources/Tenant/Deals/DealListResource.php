@@ -19,12 +19,12 @@ class DealListResource extends JsonResource
             'deal_name' => $this->deal_name,
             'lead_id' => $this->lead->id,
             'contact' => $this->lead->contact?->name,
-            'sale_date' => $this->sale_date,
             'payment_status' => $this->payment_status,
-            'assigned_to' => $this->assigned_to?->name,
-            'stage' => $this->whenLoaded('stage', fn() => $this->stage->name),
             'total_amount' => $this->total_amount,
+            'due_amount' => $this->amount_due,
             'approval_status' => $this->approval_status,
+            'close_date' => $this->created_at->format('Y-m-d'),
+            'assigned_to' => $this->assigned_to?->name,
         
         ];
     }

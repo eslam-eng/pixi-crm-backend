@@ -26,7 +26,7 @@ class Deal extends Model implements HasMedia
         'assigned_to_id',
         'total_amount',
         'partial_amount_paid',
-        'partial_amount_due',
+        'amount_due',
         'approval_status',
         'created_by_id',
     ];
