@@ -29,7 +29,7 @@ class DealShowResource extends JsonResource
             'assigned_to_id' => $this->assigned_to_id,
             'total_amount' => $this->total_amount,
             'partial_amount_paid' => $this->partial_amount_paid,
-            'partial_amount_due' => $this->partial_amount_due,
+            'amount_due' => $this->amount_due,
             'approval_status' => $this->approval_status,
             'created_by_id' => $this->created_by_id,
             

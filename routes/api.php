@@ -175,12 +175,18 @@ Route::middleware([
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);
-
         Route::apiResource('roles', RoleController::class);
 
+        //Tasks routes
         Route::apiResource('tasks', TaskController::class);
         Route::get('/tasks/get/statistics', [TaskController::class, 'statistics']);
         Route::post('/tasks/{id}/change-status', [TaskController::class, 'changeStatus']);
+
+        // Deals routes
+        Route::apiResource('deals', DealController::class);
+        Route::get('deals/get/statistics', [DealController::class, 'statistics']);
+        Route::post('deals/{id}/change/approval-status', [DealController::class, 'changeApprovalStatus']);
+
 
         Route::apiResource('custom-fields', \App\Http\Controllers\Api\CustomFieldController::class);
         // });
@@ -209,6 +215,25 @@ Route::middleware([
             Route::post('switcher', [TenantSettingController::class, 'switcher']);
             Route::post('change-value', [TenantSettingController::class, 'changeValue']);
         });
+        // Deals Settings routes
+        Route::prefix('payment-methods')->group(function () {
+            Route::apiResource('/', PaymentMethodController::class);
+            Route::patch('{id}/set-default', [PaymentMethodController::class, 'setDefault']);
+            Route::patch('{id}/set-checked', [PaymentMethodController::class, 'setChecked']);
+        });
+
+        // Priority routes
+        Route::apiResource('priorities', PriorityController::class);
+        Route::patch('priorities/{priority}/set-default', [PriorityController::class, 'setDefault']);
+        Route::get('priorities-colors', [PriorityColorController::class, 'index']);
+
+        // Priority Color routes
+        Route::get('priority-colors', [PriorityColorController::class, 'index']);
+        Route::get('priority-colors/{id}', [PriorityColorController::class, 'show']);
+
+        // Reminder routes
+        Route::apiResource('reminders', ReminderController::class);
+        Route::patch('reminders/{reminder}/set-default', [ReminderController::class, 'setDefault']);
     });
 
 
@@ -227,9 +252,6 @@ Route::middleware([
         Route::get('/{form}/submissions', [FormSubmissionController::class, 'submissions']);
     });
 
-    Route::apiResource('deals', DealController::class);
-    Route::get('deals/get/statistics', [DealController::class, 'statistics']);
-    Route::post('deals/{id}/change/approval-status', [DealController::class, 'changeApprovalStatus']);
 
 
     Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList'])->middleware('auth:sanctum');
@@ -257,9 +279,7 @@ Route::middleware([
     Route::put('loss-reasons/{lossReasonId}', [\App\Http\Controllers\Api\LossReasonController::class, 'update']);
     Route::delete('loss-reasons/{lossReasonId}', [\App\Http\Controllers\Api\LossReasonController::class, 'destroy']);
 
-    Route::apiResource('payment-methods', PaymentMethodController::class);
-    Route::patch('/payment-methods/{id}/set-default', [PaymentMethodController::class, 'setDefault']);
-    Route::patch('/payment-methods/{id}/set-checked', [PaymentMethodController::class, 'setChecked']);
+
     Route::get('/locations/countries', [\App\Http\Controllers\Api\LocationController::class, 'getCountries']);
     Route::get('/locations/countries/{countryId}/cities', [\App\Http\Controllers\Api\LocationController::class, 'getCities']);
     Route::get('/locations/cities/{cityId}/areas', [\App\Http\Controllers\Api\LocationController::class, 'getAreas']);
@@ -282,19 +302,6 @@ Route::middleware([
         Route::get('/', [TaskTypeController::class, 'index']);
         Route::patch('/{id}/set-default', [TaskTypeController::class, 'setDefault']);
     });
-
-    // Priority routes
-    Route::apiResource('priorities', PriorityController::class);
-    Route::patch('priorities/{priority}/set-default', [PriorityController::class, 'setDefault']);
-    Route::get('priorities-colors', [PriorityColorController::class, 'index']);
-
-    // Priority Color routes
-    Route::get('priority-colors', [PriorityColorController::class, 'index']);
-    Route::get('priority-colors/{id}', [PriorityColorController::class, 'show']);
-
-    // Reminder routes
-    Route::apiResource('reminders', ReminderController::class);
-    Route::patch('reminders/{reminder}/set-default', [ReminderController::class, 'setDefault']);
 
     // FCM Token routes
     Route::prefix('fcm-tokens')->group(function () {

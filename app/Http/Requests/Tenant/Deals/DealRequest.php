@@ -65,6 +65,14 @@ class DealRequest extends FormRequest
                 $totalAmount = $this->calculateTotalAmount();
                 
                 if ($partialAmountPaid !== null && $totalAmount !== null) {
+                    // Check if partial amount paid is greater than total amount
+                    if ($partialAmountPaid > $totalAmount) {
+                        $validator->errors()->add('partial_amount_paid', 
+                            "Partial amount paid cannot exceed the total amount ({$totalAmount})."
+                        );
+                        return;
+                    }
+                    
                     $settings = app(DealsSettings::class);
                     $minPercentage = $settings->min_payed_percentage;
                     $minRequiredAmount = $totalAmount * ($minPercentage / 100);
