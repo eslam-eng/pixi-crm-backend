@@ -188,20 +188,16 @@ class ContactController extends Controller
         return ApiResponse($contactMethods, 'Contact methods retrieved successfully');
     }
 
-    public function update(ContactRequest $request, Contact $contact)
+    public function update(ContactRequest $request, int $contact_id)
     {
         try {
             DB::beginTransaction();
             $contactDTO = ContactDTO::fromRequest($request);
-            $contact = $this->contactService->update($contact->id, $contactDTO);
+            $contact = $this->contactService->update($contact_id, $contactDTO);
             DB::commit();
             return ApiResponse(new ContactResource($contact), 'Contact updated successfully');
-        } catch (GeneralException $e) {
-            DB::rollBack();
-            return ApiResponse(message: $e->getMessage(), code: $e->getCode());
         } catch (Exception $e) {
             DB::rollBack();
-            dd($e);
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
     }
