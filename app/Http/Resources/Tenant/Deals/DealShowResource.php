@@ -32,7 +32,7 @@ class DealShowResource extends JsonResource
             'amount_due' => $this->amount_due,
             'approval_status' => $this->approval_status,
             'created_by_id' => $this->created_by_id,
-            
+
             // Relationships
             'contact' => $this->whenLoaded('contact', function () {
                 return [
@@ -44,7 +44,7 @@ class DealShowResource extends JsonResource
                     'company_name' => $this->contact->company_name,
                 ];
             }),
-            
+
             'stage' => $this->whenLoaded('stage', function () {
                 return [
                     'id' => $this->stage->id,
@@ -57,7 +57,7 @@ class DealShowResource extends JsonResource
                     }),
                 ];
             }),
-            
+
             'assigned_to' => $this->whenLoaded('assigned_to', function () {
                 return [
                     'id' => $this->assigned_to->id,
@@ -65,7 +65,7 @@ class DealShowResource extends JsonResource
                     'email' => $this->assigned_to->email,
                 ];
             }),
-            
+
             'items' => $this->whenLoaded('items', function () {
                 return $this->items->filter()->map(function ($item) {
                     return [
@@ -77,7 +77,19 @@ class DealShowResource extends JsonResource
                     ];
                 });
             }),
-            
+
+            'variants' => $this->whenLoaded('variants', function () {
+                return $this->variants->filter()->map(function ($variant) {
+                    return [
+                        'id' => $variant->id,
+                        'name' => $variant->product->item->name ?? 'Unknown Variant',
+                        'price' => $variant->pivot->price ?? 0,
+                        'quantity' => $variant->pivot->quantity ?? 0,
+                        'total' => $variant->pivot->total ?? 0,
+                    ];
+                });
+            }),
+
             'attachments' => $this->whenLoaded('attachments', function () {
                 return $this->attachments->filter()->map(function ($attachment) {
                     return [

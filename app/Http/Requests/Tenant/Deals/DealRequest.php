@@ -19,6 +19,7 @@ class DealRequest extends FormRequest
 
     public function rules(): array
     {
+
         return [
             'deal_type' => ['required', Rule::in(DealTypeEnum::values())],
             'deal_name' => 'required|string|max:255',
@@ -37,6 +38,7 @@ class DealRequest extends FormRequest
             'partial_amount_paid' => 'required_if:payment_status,partial|nullable|numeric|min:0',
             'items' => 'required|array',
             'items.*.item_id' => 'required|exists:items,id',
+            'items.*.variant_id' => 'nullable|exists:item_variants,id',
             'items.*.quantity' => 'required_unless:deal_type,service_sale|sometimes|integer|min:1',
             'items.*.price' => 'required|numeric',
             'attachments' => 'nullable|array',
@@ -63,28 +65,53 @@ class DealRequest extends FormRequest
             if ($this->input('payment_status') === PaymentStatusEnum::PARTIAL->value) {
                 $partialAmountPaid = $this->input('partial_amount_paid');
                 $totalAmount = $this->calculateTotalAmount();
-                
+
                 if ($partialAmountPaid !== null && $totalAmount !== null) {
                     // Check if partial amount paid is greater than total amount
                     if ($partialAmountPaid > $totalAmount) {
-                        $validator->errors()->add('partial_amount_paid', 
+                        $validator->errors()->add(
+                            'partial_amount_paid',
                             "Partial amount paid cannot exceed the total amount ({$totalAmount})."
                         );
                         return;
                     }
-                    
+
                     $settings = app(DealsSettings::class);
                     $minPercentage = $settings->min_payed_percentage;
                     $minRequiredAmount = $totalAmount * ($minPercentage / 100);
-                    
+
                     if ($partialAmountPaid < $minRequiredAmount) {
-                        $validator->errors()->add('partial_amount_paid', 
+                        $validator->errors()->add(
+                            'partial_amount_paid',
                             "Partial amount paid must be at least {$minPercentage}% of the total amount ({$minRequiredAmount})."
                         );
                     }
                 }
             }
+
+            $items = $this->input('items', []);
+
+            foreach ($items as $index => $item) {
+                if (isset($item['item_id']) && isset($item['variant_id'])) {
+                    $this->validateItemVariantRelation($validator, $index, $item['item_id'], $item['variant_id']);
+                }
+            }
         });
+    }
+
+    /**
+     * Validate that the variant belongs to the specified item
+     */
+    protected function validateItemVariantRelation($validator, $index, $itemId, $variantId)
+    {
+        $variant = \App\Models\Tenant\ItemVariant::find($variantId);
+
+        if ($variant && $variant->product->item->id != $itemId) {
+            $validator->errors()->add(
+                "items.{$index}.variant_id",
+                "The selected variant does not belong to the specified item."
+            );
+        }
     }
 
     /**
@@ -107,7 +134,7 @@ class DealRequest extends FormRequest
         // Apply discount if provided
         $discountValue = $this->input('discount_value', 0);
         $discountType = $this->input('discount_type');
-        
+
         if ($discountValue > 0) {
             if ($discountType === 'percentage') {
                 $total = $total - ($total * $discountValue / 100);

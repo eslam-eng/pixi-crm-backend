@@ -65,6 +65,11 @@ class Deal extends Model implements HasMedia
         return $this->belongsToMany(Item::class, 'deal_items', 'deal_id', 'item_id')->withPivot('quantity', 'price', 'total')->withTimestamps();
     }
 
+    public function variants()
+    {
+        return $this->belongsToMany(ItemVariant::class, 'deal_variants', 'deal_id', 'variant_id')->withPivot('quantity', 'price', 'total')->withTimestamps();
+    }
+
     public function attachments()
     {
         return $this->hasMany(DealAttachment::class);
