@@ -104,6 +104,17 @@ class DealShowResource extends JsonResource
                     ];
                 });
             }),
+
+            'payments' => $this->whenLoaded('payments', function () {
+                return $this->payments->map(function ($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'amount' => $payment->amount,
+                        'pay_date' => $payment->pay_date,
+                        'payment_method' =>  $payment->payment_method->name,
+                    ];
+                });
+            }),
         ];
     }
 }
