@@ -3,6 +3,7 @@
 namespace App\Services\Tenant\Deals;
 
 use App\DTO\Tenant\DealDTO;
+use App\DTO\Tenant\DealPaymentDTO;
 use App\Enums\ApprovalStatusEnum;
 use App\Enums\DealType;
 use App\Enums\PaymentStatusEnum;
@@ -14,6 +15,7 @@ use App\Models\Tenant\Item;
 use App\Models\Tenant\ItemVariant;
 use App\QueryFilters\Tenant\DealsFilter;
 use App\Services\BaseService;
+use App\Services\Tenant\Deals\DealPaymentService;
 use App\Settings\DealsSettings;
 use Arr;
 use Illuminate\Http\Request;
@@ -27,6 +29,7 @@ class DealService extends BaseService
         public Deal $model,
         public Item $itemModel,
         public ItemVariant $itemVariantModel,
+        public DealPaymentService $dealPaymentService,
     ) {}
 
     public function getModel(): Deal
@@ -65,7 +68,8 @@ class DealService extends BaseService
                 'assigned_to',
                 'items',
                 'variants',
-                'attachments'
+                'attachments',
+                'payments.payment_method'
             ])
             ->findOrFail($dealId);
     }
@@ -160,7 +164,21 @@ class DealService extends BaseService
                 $this->handleAttachments($deal, $dealDTO->attachments);
             }
 
-            return $deal->load('items', 'lead', 'attachments');
+            // Create payment record if payment_status is partial and partial_amount_paid > 0
+            if ($dealDTO->payment_status == PaymentStatusEnum::PARTIAL->value && 
+                isset($dealDTO->partial_amount_paid) && 
+                $dealDTO->partial_amount_paid > 0) {
+                
+                $paymentDTO = DealPaymentDTO::fromArray([
+                    'amount' => $dealDTO->partial_amount_paid,
+                    'pay_date' => $dealDTO->sale_date, // Use sale_date as payment date
+                    'payment_method_id' => $dealDTO->payment_method_id,
+                ]);
+                
+                $this->dealPaymentService->addPaymentToDeal($deal->id, $paymentDTO);
+            }
+
+            return $deal->load('items', 'lead', 'attachments', 'payments');
         });
     }
 
