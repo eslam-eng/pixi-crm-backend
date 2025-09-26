@@ -13,7 +13,6 @@ class Deal extends Model implements HasMedia
 {
     use Filterable, InteractsWithMedia;
     protected $fillable = [
-        'deal_type',
         'deal_name',
         'lead_id',
         'sale_date',

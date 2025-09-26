@@ -144,6 +144,9 @@ class DealService extends BaseService
             $dealDTO->total_amount = $totalAmount;
             $dealDTO->amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
 
+            if($dealDTO->payment_status == PaymentStatusEnum::PAID->value) {
+                $dealDTO->partial_amount_paid = 0;
+            }
             // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 

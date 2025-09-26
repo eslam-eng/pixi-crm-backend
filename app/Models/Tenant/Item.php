@@ -62,4 +62,14 @@ class Item extends Model
     {
         return $this->hasMany(ItemVariant::class);
     }
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class, 'itemable_id');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'itemable_id');
+    }
 }

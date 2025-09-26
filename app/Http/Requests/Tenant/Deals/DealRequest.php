@@ -19,9 +19,8 @@ class DealRequest extends FormRequest
 
     public function rules(): array
     {
-
         return [
-            'deal_type' => ['required', Rule::in(DealTypeEnum::values())],
+            // 'deal_type' => ['required', Rule::in(DealTypeEnum::values())],
             'deal_name' => 'required|string|max:255',
             'lead_id' => 'required|exists:leads,id',
             'sale_date' => 'required|date',
@@ -39,7 +38,7 @@ class DealRequest extends FormRequest
             'items' => 'required|array',
             'items.*.item_id' => 'required|exists:items,id',
             'items.*.variant_id' => 'nullable|exists:item_variants,id',
-            'items.*.quantity' => 'required_unless:deal_type,service_sale|sometimes|integer|min:1',
+            'items.*.quantity' => 'sometimes|integer|min:1',
             'items.*.price' => 'required|numeric',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:png,jpg,jpeg,pdf,doc,docx|max:' . $this->getMaxAttachmentSize(),

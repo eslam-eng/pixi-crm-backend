@@ -24,12 +24,19 @@ class ItemFilter extends QueryFilter
 
     public function type($term)
     {
-        return $this->builder->where('type', $term);
+        return $this->builder->where('itemable_type', $term);
     }
 
     public function duration($term)
     {
         return $this->builder->where('duration', $term);
+    }   
+    
+    public function service_type($term)
+    {
+        return $this->builder->whereHas('service', function($query) use ($term) {
+            $query->where('service_type', $term);
+        });
     }
     
     
