@@ -13,7 +13,6 @@ class Deal extends Model implements HasMedia
 {
     use Filterable, InteractsWithMedia;
     protected $fillable = [
-        'deal_type',
         'deal_name',
         'lead_id',
         'sale_date',
@@ -63,6 +62,11 @@ class Deal extends Model implements HasMedia
     public function items()
     {
         return $this->belongsToMany(Item::class, 'deal_items', 'deal_id', 'item_id')->withPivot('quantity', 'price', 'total')->withTimestamps();
+    }
+
+    public function variants()
+    {
+        return $this->belongsToMany(ItemVariant::class, 'deal_variants', 'deal_id', 'variant_id')->withPivot('quantity', 'price', 'total')->withTimestamps();
     }
 
     public function attachments()
