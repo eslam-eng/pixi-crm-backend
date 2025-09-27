@@ -33,6 +33,19 @@ class UserService extends BaseService
         return true;
     }
 
+    public function changeLanguage(int $userId, string $language): bool
+    {
+        $user = $this->findById($userId);
+        $user->update(['lang' => $language]);
+        return true;
+    }   
+    
+    public function getLanguage(int $userId): string
+    {
+        $user = $this->findById($userId);
+        return $user->lang;
+    }
+
     public function getAll(array $filters = [])
     {
         return $this->queryGet($filters)->get();

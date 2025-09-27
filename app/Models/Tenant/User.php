@@ -32,6 +32,7 @@ class User extends Authenticatable
         'last_login_at',
         'department_id',
         'is_active',
+        'lang',
     ];
 
     protected $casts = [

@@ -168,6 +168,9 @@ Route::middleware([
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('authentication/logout', [AuthController::class, 'logout']);
+        Route::get('authentication/get/language', [UserController::class, 'getLanguage']);
+        Route::post('authentication/change/language', [UserController::class, 'changeLanguage']);
+
         Route::get('/user', function () {
             return response()->json(Auth::user());
         });
