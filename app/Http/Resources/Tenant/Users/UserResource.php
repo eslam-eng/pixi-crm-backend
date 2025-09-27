@@ -31,6 +31,7 @@ class UserResource extends JsonResource
             'department' => $this->department?->localized_name,
             'last_login_at' => $this->last_login_at?->translatedFormat('Y-m-d g:i a'),
             'is_active' => $this->is_active,
+            'lang' => $this->lang,
             'role' => $this->whenLoaded('roles', fn() => $this->roles->first()?->name),
         ];
     }
