@@ -74,49 +74,108 @@ class LeadService extends BaseService
 
     public function store(LeadDTO $leadDTO)
     {
-        if ($leadDTO->items) {
-            $leadDTO->deal_value = 0;
-            $map = collect($leadDTO->items)->mapWithKeys(function ($row) use ($leadDTO) {
-                $leadDTO->deal_value += $row['price'] * $row['quantity'];
-                return [
-                    (int) $row['id'] => [
-                        'price'    => (float) $row['price'],
-                        'quantity' => (int) $row['quantity'],
-                    ],
-                ];
-            })->all();
-        }
+        $itemsCol = collect($leadDTO->items ?? [])
+            ->filter(
+                fn($r) =>
+                // filter any row with price and quantity
+                isset($r['price'], $r['quantity']) &&
+                    (int)$r['quantity'] > 0 &&
+                    (float)$r['price'] >= 0
+            );
+
+        $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r['price'] * (int)$r['quantity']);
+
+        // divide the items by the presence of variant_id
+        [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r['variant_id']));
+
+        $variantsPayload = $withVariant
+            ->mapWithKeys(fn($r) => [
+                (int)$r['variant_id'] => [
+                    'price'    => (float)$r['price'],
+                    'quantity' => (int)$r['quantity'],
+                ],
+            ])
+            ->all();
+
+        $itemsPayload = $withItemOnly
+            ->filter(fn($r) => !empty($r['item_id']))
+            ->mapWithKeys(fn($r) => [
+                (int)$r['item_id'] => [
+                    'price'    => (float)$r['price'],
+                    'quantity' => (int)$r['quantity'],
+                ],
+            ])
+            ->all();
+
         $lead = $this->model->create($leadDTO->toArray());
-        if ($leadDTO->items) {
-            $lead->variants()->sync($map, false);
+
+        if (!empty($variantsPayload)) {
+            $lead->variants()->sync($variantsPayload, true);
         }
-        return $lead->load('variants.item');
+
+        if (!empty($itemsPayload)) {
+            $lead->items()->sync($itemsPayload, true);
+        }
+
+        return $lead->load('variants', 'items');
     }
 
     public function show(int $id)
     {
         $lead = $this->findById($id);
-        return $lead->load('contact', 'city', 'stage', 'user', 'variants.item');
+        return $lead->load('contact', 'city', 'stage', 'user', 'variants', 'items.itemable');
     }
 
 
     public function update(int $id, LeadDTO $leadDTO)
     {
         $lead = $this->findById($id);
-        if ($leadDTO->items) {
-            $leadDTO->deal_value = 0;
-            $map = collect($leadDTO->items)->mapWithKeys(function ($row) use ($leadDTO) {
-                $leadDTO->deal_value += $row['price'] * $row['quantity'];
-                return [
-                    (int) $row['id'] => [
-                        'price'    => (float) $row['price'],
-                        'quantity' => (int) $row['quantity'],
-                    ],
-                ];
-            })->all();
-            $lead->variants()->sync($map, false);
-        }
+        $itemsCol = collect($leadDTO->items ?? [])
+            ->filter(
+                fn($r) =>
+                // filter any row with price and quantity
+                isset($r['price'], $r['quantity']) &&
+                    (int)$r['quantity'] > 0 &&
+                    (float)$r['price'] >= 0
+            );
+
+        $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r['price'] * (int)$r['quantity']);
+
+        // divide the items by the presence of variant_id
+        [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r['variant_id']));
+
+        $variantsPayload = $withVariant
+            ->mapWithKeys(fn($r) => [
+                (int)$r['variant_id'] => [
+                    'price'    => (float)$r['price'],
+                    'quantity' => (int)$r['quantity'],
+                ],
+            ])
+            ->all();
+
+        $itemsPayload = $withItemOnly
+            ->filter(fn($r) => !empty($r['item_id']))
+            ->mapWithKeys(fn($r) => [
+                (int)$r['item_id'] => [
+                    'price'    => (float)$r['price'],
+                    'quantity' => (int)$r['quantity'],
+                ],
+            ])
+            ->all();
+
         $lead->update($leadDTO->toArray());
+
+        if (!empty($variantsPayload)) {
+            $lead->variants()->sync($variantsPayload, true);
+        } else {
+            $lead->variants()->detach();
+        }
+
+        if (!empty($itemsPayload)) {
+            $lead->items()->sync($itemsPayload, true);
+        } else {
+            $lead->items()->detach();
+        }
 
         if ($lead->wasChanged('assigned_to_id')) {
             $currentUser = $lead->user;
@@ -128,13 +187,14 @@ class LeadService extends BaseService
                 $currentUser->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
             }
         }
-        return $lead->load('variants.item');
+        return $lead->load('variants', 'items');
     }
 
     public function delete(int $id)
     {
         $lead = $this->findById($id);
         $lead->variants()->detach();
+        $lead->items()->detach();
         return $lead->delete();
     }
 
@@ -143,7 +203,7 @@ class LeadService extends BaseService
         return $this->stageService->queryGet(
             withRelations: [
                 'leads' => function ($query) {
-                    $query->where('assigned_to_id', Auth::user()->id)->with(['user', 'contact', 'variants.item']);
+                    $query->where('assigned_to_id', Auth::user()->id)->with(['user', 'contact', 'variants', 'items']);
                 },
                 'pipeline'
             ],
