@@ -28,9 +28,40 @@ class OpportunityRequest extends FormRequest
             'notes' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:255',
             'items' => 'nullable|array',
-            'items.*.id' => 'required|exists:item_variants,id',
+            'items.*.item_id' => 'required|exists:items,id',
+            'items.*.variant_id' => 'nullable|exists:item_variants,id',
             'items.*.quantity' => ['nullable', 'integer', 'min:1'],
             'items.*.price' => 'nullable|numeric',
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $items = $this->input('items', []);
+            foreach ($items as $index => $item) {
+                if (isset($item['item_id']) && isset($item['variant_id'])) {
+                    $this->validateItemVariantRelation($validator, $index, $item['item_id'], $item['variant_id']);
+                }
+            }
+        });
+    }
+
+    /**
+     * Validate that the variant belongs to the specified item
+     */
+    protected function validateItemVariantRelation($validator, $index, $itemId, $variantId)
+    {
+        $variant = \App\Models\Tenant\ItemVariant::find($variantId);
+
+        if ($variant && $variant->product->item->id != $itemId) {
+            $validator->errors()->add(
+                "items.{$index}.variant_id",
+                "The selected variant does not belong to the specified item."
+            );
+        }
     }
 }
