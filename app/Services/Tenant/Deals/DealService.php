@@ -17,10 +17,12 @@ use App\QueryFilters\Tenant\DealsFilter;
 use App\Services\BaseService;
 use App\Services\Tenant\Deals\DealPaymentService;
 use App\Settings\DealsSettings;
+use App\Notifications\DealPaymentTermsNotification;
 use Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class DealService extends BaseService
@@ -177,6 +179,9 @@ class DealService extends BaseService
                 
                 $this->dealPaymentService->addPaymentToDeal($deal->id, $paymentDTO);
             }
+
+            // Send payment terms email for unpaid or partial payments
+            $this->sendPaymentTermsEmailIfNeeded($deal, $settings);
 
             return $deal->load('items', 'lead', 'attachments', 'payments');
         });
@@ -586,5 +591,52 @@ class DealService extends BaseService
                 'price' => $group->first()['price']
             ])
             ->values()->toArray();
+    }
+    /**
+     * Send payment terms notification when deal payment status is unpaid or partial
+     */
+    private function sendPaymentTermsEmailIfNeeded(Deal $deal, DealsSettings $settings): void
+    {
+        // Check if payment status requires email notification
+        if (!in_array($deal->payment_status, [PaymentStatusEnum::UNPAID->value, PaymentStatusEnum::PARTIAL->value])) {
+            return;
+        }
+
+        try {
+            // Get the lead and its contact
+            $lead = $deal->lead()->with('contact')->first();
+            
+            if (!$lead || !$lead->contact || !$lead->contact->email) {
+                \Log::warning('Cannot send payment terms notification: Lead or contact email not found', [
+                    'deal_id' => $deal->id,
+                    'lead_id' => $lead?->id,
+                    'contact_id' => $lead?->contact?->id,
+                    'contact_email' => $lead?->contact?->email,
+                ]);
+                return;
+            }
+
+            // Send the notification
+            $lead->contact->notify(
+                new DealPaymentTermsNotification(
+                    deal: $deal,
+                    paymentTerms: $settings->payment_terms_text
+                )
+            );
+
+            \Log::info('Payment terms notification sent successfully', [
+                'deal_id' => $deal->id,
+                'contact_id' => $lead->contact->id,
+                'contact_email' => $lead->contact->email,
+                'payment_status' => $deal->payment_status,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send payment terms notification', [
+                'deal_id' => $deal->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
     }
 }
