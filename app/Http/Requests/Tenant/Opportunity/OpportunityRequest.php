@@ -15,7 +15,6 @@ class OpportunityRequest extends FormRequest
 
     public function rules(): array
     {
-        // dd($this->all());
         $required = $this->isMethod('put') ? 'sometimes' : 'required';
         return [
             'contact_id' => $required . '|exists:contacts,id',
