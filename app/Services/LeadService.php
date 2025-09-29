@@ -130,39 +130,41 @@ class LeadService extends BaseService
     public function update(int $id, LeadDTO $leadDTO)
     {
         $lead = $this->findById($id);
-        $itemsCol = collect($leadDTO->items ?? [])
-            ->filter(
-                fn($r) =>
-                // filter any row with price and quantity
-                isset($r['price'], $r['quantity']) &&
-                    (int)$r['quantity'] > 0 &&
-                    (float)$r['price'] >= 0
-            );
+        if ($leadDTO->items) {
+            $itemsCol = collect($leadDTO->items ?? [])
+                ->filter(
+                    fn($r) =>
+                    // filter any row with price and quantity
+                    isset($r['price'], $r['quantity']) &&
+                        (int)$r['quantity'] > 0 &&
+                        (float)$r['price'] >= 0
+                );
 
-        $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r['price'] * (int)$r['quantity']);
+            $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r['price'] * (int)$r['quantity']);
 
-        // divide the items by the presence of variant_id
-        [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r['variant_id']));
+            // divide the items by the presence of variant_id
+            [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r['variant_id']));
 
-        $variantsPayload = $withVariant
-            ->mapWithKeys(fn($r) => [
-                (int)$r['variant_id'] => [
-                    'price'    => (float)$r['price'],
-                    'quantity' => (int)$r['quantity'],
-                ],
-            ])
-            ->all();
+            $variantsPayload = $withVariant
+                ->mapWithKeys(fn($r) => [
+                    (int)$r['variant_id'] => [
+                        'price'    => (float)$r['price'],
+                        'quantity' => (int)$r['quantity'],
+                    ],
+                ])
+                ->all();
 
-        $itemsPayload = $withItemOnly
-            ->filter(fn($r) => !empty($r['item_id']))
-            ->mapWithKeys(fn($r) => [
-                (int)$r['item_id'] => [
-                    'price'    => (float)$r['price'],
-                    'quantity' => (int)$r['quantity'],
-                ],
-            ])
-            ->all();
-
+            $itemsPayload = $withItemOnly
+                ->filter(fn($r) => !empty($r['item_id']))
+                ->mapWithKeys(fn($r) => [
+                    (int)$r['item_id'] => [
+                        'price'    => (float)$r['price'],
+                        'quantity' => (int)$r['quantity'],
+                    ],
+                ])
+                ->all();
+        }
+        
         $lead->update($leadDTO->toArray());
 
         if (!empty($variantsPayload)) {
