@@ -3,20 +3,26 @@
 namespace App\Services\Tenant\Deals;
 
 use App\DTO\Tenant\DealDTO;
+use App\DTO\Tenant\DealPaymentDTO;
 use App\Enums\ApprovalStatusEnum;
 use App\Enums\DealType;
 use App\Enums\PaymentStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Tenant\Deal;
 use App\Models\Tenant\DealAttachment;
+use App\Models\Tenant\DealVariant;
 use App\Models\Tenant\Item;
+use App\Models\Tenant\ItemVariant;
 use App\QueryFilters\Tenant\DealsFilter;
 use App\Services\BaseService;
+use App\Services\Tenant\Deals\DealPaymentService;
 use App\Settings\DealsSettings;
+use App\Notifications\DealPaymentTermsNotification;
 use Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class DealService extends BaseService
@@ -24,6 +30,8 @@ class DealService extends BaseService
     public function __construct(
         public Deal $model,
         public Item $itemModel,
+        public ItemVariant $itemVariantModel,
+        public DealPaymentService $dealPaymentService,
     ) {}
 
     public function getModel(): Deal
@@ -61,7 +69,9 @@ class DealService extends BaseService
                 'lead',
                 'assigned_to',
                 'items',
-                'attachments'
+                'variants',
+                'attachments',
+                'payments.payment_method'
             ])
             ->findOrFail($dealId);
     }
@@ -107,13 +117,22 @@ class DealService extends BaseService
                 throw ValidationException::withMessages(['items' => ['At least one item is required.']]);
             }
 
+            $variants = $this->getVariants($items);
+            $mergedVariants = $this->mergeVariants($variants);
+
+            $realItem = $this->getItems($items);
             // Merge duplicate items
-            $mergedItems = $this->mergeItems($items);
+            $mergedItems = $this->mergeItems($realItem);
 
             // Validate and prepare items
             $itemsData = $this->prepareItems($mergedItems);
 
-            $total = collect($itemsData['pivot'])->sum('total');
+            $variantsData = $this->prepareVariants($mergedVariants);
+
+            $item_total = collect($itemsData['pivot'])->sum('total');
+            $variant_total = collect($variantsData['pivot'])->sum('total');
+
+            $total = $item_total + $variant_total;
 
             $afterDiscount = $this->afterDiscount($total, $dealDTO->discount_value ?? 0, $dealDTO->discount_type ?? 'fixed');
 
@@ -131,18 +150,40 @@ class DealService extends BaseService
             $dealDTO->total_amount = $totalAmount;
             $dealDTO->amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
 
+            if($dealDTO->payment_status == PaymentStatusEnum::PAID->value) {
+                $dealDTO->partial_amount_paid = 0;
+            }
             // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
             // Attach items
             $deal->items()->attach($itemsData['pivot']);
 
+            $deal->variants()->attach($variantsData['pivot']);
+
             // Handle attachments if provided
             if ($dealDTO->attachments && count($dealDTO->attachments) > 0) {
                 $this->handleAttachments($deal, $dealDTO->attachments);
             }
 
-            return $deal->load('items', 'lead', 'attachments');
+            // Create payment record if payment_status is partial and partial_amount_paid > 0
+            if ($dealDTO->payment_status == PaymentStatusEnum::PARTIAL->value && 
+                isset($dealDTO->partial_amount_paid) && 
+                $dealDTO->partial_amount_paid > 0) {
+                
+                $paymentDTO = DealPaymentDTO::fromArray([
+                    'amount' => $dealDTO->partial_amount_paid,
+                    'pay_date' => $dealDTO->sale_date, // Use sale_date as payment date
+                    'payment_method_id' => $dealDTO->payment_method_id,
+                ]);
+                
+                $this->dealPaymentService->addPaymentToDeal($deal->id, $paymentDTO);
+            }
+
+            // Send payment terms email for unpaid or partial payments
+            $this->sendPaymentTermsEmailIfNeeded($deal, $settings);
+
+            return $deal->load('items', 'lead', 'attachments', 'payments');
         });
     }
 
@@ -395,7 +436,6 @@ class DealService extends BaseService
     private function prepareItems(array $items): array
     {
         $itemIds = collect($items)->pluck('item_id');
-
         // Lock items and get current data
         $dbItems = $this->itemModel->whereIn('id', $itemIds)
             ->lockForUpdate()
@@ -417,8 +457,53 @@ class DealService extends BaseService
             }
 
             // Check stock
-            if ($dbItem->quantity !== null && $dbItem->quantity < $quantity && $dbItem->type == DealType::PRODUCT_SALE->value) {
-                $errors[] = "Not enough stock for {$dbItem->name}. Available: {$dbItem->quantity}";
+            if ($dbItem->itemable->stock !== null && $dbItem->itemable->stock < $quantity) {
+                $errors[] = "Not enough stock for {$dbItem->name}. Available: {$dbItem->itemable->stock}";
+                continue;
+            }
+
+            $price = (float) $item['price'];
+
+            $pivot[$itemId] = [
+                'quantity' => $quantity,
+                'price' => $price,
+                'total' => $quantity * $price,
+            ];
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages(['items' => $errors]);
+        }
+
+        return compact('pivot');
+    }
+
+    private function prepareVariants(array $items): array
+    {
+        $itemIds = collect($items)->pluck('item_id');
+        // Lock items and get current data
+        $dbItems = $this->itemVariantModel->whereIn('id', $itemIds)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        $pivot = [];
+        $errors = [];
+
+        foreach ($items as $item) {
+            $itemId = $item['item_id'];
+            $quantity = max(1, $item['quantity']);
+
+            $dbItem = $dbItems->get($itemId);
+
+            if (!$dbItem) {
+                $errors[] = "Item ID {$itemId} not found.";
+                continue;
+            }
+
+            // Check stock
+            if ($dbItem->stock !== null && $dbItem->stock < $quantity) {
+                $errors[] = "Not enough stock for {$dbItem->product->item->name}. Available: {$dbItem->stock}";
                 continue;
             }
 
@@ -480,6 +565,78 @@ class DealService extends BaseService
                     'file_size' => $fileSize,
                 ]);
             }
+        }
+    }
+
+    private function getVariants(array $items): array
+    {
+        return collect($items)->filter(fn($item) => isset($item['variant_id']))->values()->toArray();
+    }
+
+    private function getItems(array $items): array
+    {
+        return collect($items)
+            ->reject(fn($item) => array_key_exists('variant_id', $item))
+            ->values()
+            ->toArray();
+    }
+
+    private function mergeVariants(array $items): array
+    {
+        return collect($items)
+            ->groupBy('variant_id')
+            ->map(fn($group) => [
+                'item_id' => $group->first()['variant_id'],
+                'quantity' => $group->sum('quantity'),
+                'price' => $group->first()['price']
+            ])
+            ->values()->toArray();
+    }
+    /**
+     * Send payment terms notification when deal payment status is unpaid or partial
+     */
+    private function sendPaymentTermsEmailIfNeeded(Deal $deal, DealsSettings $settings): void
+    {
+        // Check if payment status requires email notification
+        if (!in_array($deal->payment_status, [PaymentStatusEnum::UNPAID->value, PaymentStatusEnum::PARTIAL->value])) {
+            return;
+        }
+
+        try {
+            // Get the lead and its contact
+            $lead = $deal->lead()->with('contact')->first();
+            
+            if (!$lead || !$lead->contact || !$lead->contact->email) {
+                \Log::warning('Cannot send payment terms notification: Lead or contact email not found', [
+                    'deal_id' => $deal->id,
+                    'lead_id' => $lead?->id,
+                    'contact_id' => $lead?->contact?->id,
+                    'contact_email' => $lead?->contact?->email,
+                ]);
+                return;
+            }
+
+            // Send the notification
+            $lead->contact->notify(
+                new DealPaymentTermsNotification(
+                    deal: $deal,
+                    paymentTerms: $settings->payment_terms_text
+                )
+            );
+
+            \Log::info('Payment terms notification sent successfully', [
+                'deal_id' => $deal->id,
+                'contact_id' => $lead->contact->id,
+                'contact_email' => $lead->contact->email,
+                'payment_status' => $deal->payment_status,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send payment terms notification', [
+                'deal_id' => $deal->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 }

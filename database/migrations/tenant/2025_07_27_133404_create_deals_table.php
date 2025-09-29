@@ -17,7 +17,6 @@ return new class extends Migration
     {
         Schema::create('deals', function (Blueprint $table) {
             $table->id();
-            $table->enum('deal_type', DealTypeEnum::values());
 
             // basic info
             $table->string('deal_name');

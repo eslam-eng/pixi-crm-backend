@@ -168,6 +168,9 @@ Route::middleware([
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('authentication/logout', [AuthController::class, 'logout']);
+        Route::get('authentication/get/language', [UserController::class, 'getLanguage']);
+        Route::post('authentication/change/language', [UserController::class, 'changeLanguage']);
+
         Route::get('/user', function () {
             return response()->json(Auth::user());
         });
@@ -186,6 +189,9 @@ Route::middleware([
         Route::apiResource('deals', DealController::class);
         Route::get('deals/get/statistics', [DealController::class, 'statistics']);
         Route::post('deals/{id}/change/approval-status', [DealController::class, 'changeApprovalStatus']);
+        
+        // Deal Payments routes
+        Route::post('deals/{dealId}/payments', [\App\Http\Controllers\Api\Deals\DealPaymentController::class, 'store']);
 
 
         Route::apiResource('custom-fields', \App\Http\Controllers\Api\CustomFieldController::class);

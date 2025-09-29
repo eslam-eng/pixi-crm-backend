@@ -3,10 +3,9 @@
 namespace App\Http\Resources\Opportunity;
 
 use App\Http\Resources\ContactResource;
-use App\Http\Resources\ItemProductVariantResource;
+use App\Http\Resources\Opportunity\ItemInOpportunity;
 use App\Http\Resources\ItemResource;
 use App\Http\Resources\StageResource;
-use App\Http\Resources\Tenant\Items\ItemPovitResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -20,8 +19,6 @@ class OpportunityResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
-        // dd($this->variants);
         return [
             'id' => $this->id,
             'status' => $this->status,
@@ -34,6 +31,17 @@ class OpportunityResource extends JsonResource
             'contact' => $this->whenLoaded('contact', fn() => new ContactResource($this->contact)),
             'stage' => $this->whenLoaded('stage', fn() => new StageResource($this->stage)),
             'items' => $this->whenLoaded('items', fn() => ItemResource::collection($this->items)),
+            'items_details' => $this->whenLoaded('items', fn() => ItemInOpportunity::collection($this->items)),
+            'variants' => $this->whenLoaded('variants', function () {
+                return $this->variants->filter()->map(function ($variant) {
+                    return [
+                        'id' => $variant->id,
+                        'name' => $variant->product->item->name ?? 'Unknown Variant',
+                        'price' => $variant->pivot->price ?? 0,
+                        'quantity' => $variant->pivot->quantity ?? 0,
+                    ];
+                });
+            }),
         ];
     }
 }

@@ -39,10 +39,17 @@ class OpportunityController extends Controller
             return ($value !== null && $value !== false && $value !== '');
         });
         if ($request->has('ddl')) {
-            $opportunities = $this->leadService->index($filters, ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'user']);
+            $opportunities = $this->leadService->index(
+                $filters,
+                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user']
+            );
             $data = OpportunityDDLResource::collection($opportunities);
         } else {
-            $opportunities = $this->leadService->index($filters, ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'user'], $filters['per_page'] ?? 10);
+            $opportunities = $this->leadService->index(
+                $filters,
+                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user'],
+                $filters['per_page'] ?? 10
+            );
             $data = OpportunityResource::collection($opportunities)->response()->getData(true);
         }
         return ApiResponse(message: 'Opportunities retrieved successfully', code: 200, data: $data);
@@ -51,7 +58,10 @@ class OpportunityController extends Controller
     public function kanbanList()
     {
         $stagesWithAuthUserLeads = $this->leadService->kanbanList();
-        return ApiResponse(message: 'Opportunities kanban list retrieved successfully', code: 200, data: StageWithOpportunityResource::collection($stagesWithAuthUserLeads));
+        return ApiResponse(
+            message: 'Opportunities kanban list retrieved successfully',
+            data: StageWithOpportunityResource::collection($stagesWithAuthUserLeads)
+        );
     }
 
     public function store(OpportunityRequest $request)

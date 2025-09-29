@@ -11,6 +11,7 @@ use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Users\UserRequest;
 use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
+use App\Http\Requests\Tenant\Users\ChangeLanguageRequest;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use App\Http\Resources\Tenant\Users\UserShowResource;
@@ -169,6 +170,45 @@ class UserController extends Controller
             $user = $this->userService->findById($id);
             $status = $user->is_active ? 'activated' : 'deactivated';
             return ApiResponse([], "User {$status} successfully");
+        } catch (NotFoundException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    /**
+     * Change user language
+     *
+     * @param ChangeLanguageRequest $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function getLanguage(): JsonResponse
+    {
+        try {
+            $id = getAuthUser('api_tenant')->id;
+            $lang = $this->userService->getLanguage($id);
+            return ApiResponse(['lang' => $lang], 'User language retrieved successfully');
+        } catch (NotFoundException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }  
+    /**
+     * Change user language
+     *
+     * @param ChangeLanguageRequest $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function changeLanguage(ChangeLanguageRequest $request): JsonResponse
+    {
+        try {
+            $id = getAuthUser('api_tenant')->id;
+            $this->userService->changeLanguage($id, $request->validated()['lang']);
+            return ApiResponse([], 'User language changed successfully');
         } catch (NotFoundException $e) {
             return ApiResponse(message: $e->getMessage(), code: 404);
         } catch (Exception $e) {
