@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Tenant\Deals;
 
+use App\Enums\BillingCycleEnum;
 use App\Enums\DealTypeEnum;
 use App\Enums\DiscountTypeEnum;
 use App\Enums\PaymentStatusEnum;
@@ -40,6 +41,9 @@ class DealRequest extends FormRequest
             'items.*.variant_id' => 'nullable|exists:item_variants,id',
             'items.*.quantity' => 'sometimes|integer|min:1',
             'items.*.price' => 'required|numeric',
+            'items.*.start_at' => 'nullable|date|after_or_equal:today',
+            'items.*.end_at' => 'nullable|date|after:items.*.start_at',
+            'items.*.billing_cycle' => ['nullable', Rule::in(BillingCycleEnum::values())],
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:png,jpg,jpeg,pdf,doc,docx|max:' . $this->getMaxAttachmentSize(),
         ];
@@ -94,8 +98,78 @@ class DealRequest extends FormRequest
                 if (isset($item['item_id']) && isset($item['variant_id'])) {
                     $this->validateItemVariantRelation($validator, $index, $item['item_id'], $item['variant_id']);
                 }
+                
+                // Validate subscription fields
+                $this->validateSubscriptionFields($validator, $index, $item);
             }
         });
+    }
+
+    /**
+     * Validate subscription fields for an item
+     */
+    protected function validateSubscriptionFields($validator, $index, $item)
+    {
+        $hasStartAt = !empty($item['start_at']);
+        $hasEndAt = !empty($item['end_at']);
+        $hasBillingCycle = !empty($item['billing_cycle']);
+
+        // If any subscription field is provided, all should be provided
+        if ($hasStartAt || $hasEndAt || $hasBillingCycle) {
+            if (!$hasStartAt) {
+                $validator->errors()->add(
+                    "items.{$index}.start_at",
+                    "Start date is required when subscription fields are provided."
+                );
+            }
+            
+            if (!$hasEndAt) {
+                $validator->errors()->add(
+                    "items.{$index}.end_at",
+                    "End date is required when subscription fields are provided."
+                );
+            }
+            
+            if (!$hasBillingCycle) {
+                $validator->errors()->add(
+                    "items.{$index}.billing_cycle",
+                    "Billing cycle is required when subscription fields are provided."
+                );
+            }
+        }
+
+        // Validate date range consistency with billing cycle
+        if ($hasStartAt && $hasEndAt && $hasBillingCycle) {
+            $startAt = \Carbon\Carbon::parse($item['start_at']);
+            $endAt = \Carbon\Carbon::parse($item['end_at']);
+            $billingCycle = BillingCycleEnum::from($item['billing_cycle']);
+            
+            // Calculate expected end date based on billing cycle
+            $expectedEndAt = $this->calculateExpectedEndDate($startAt, $billingCycle);
+            
+            // Allow some flexibility (±2 days) for billing cycle validation
+            $daysDifference = $endAt->diffInDays($expectedEndAt);
+            
+            if ($daysDifference > 2) {
+                $expectedEndAtFormatted = $expectedEndAt->format('Y-m-d');
+                $validator->errors()->add(
+                    "items.{$index}.end_at",
+                    "End date should be approximately {$expectedEndAtFormatted} for {$billingCycle->getLabel()} billing cycle starting from {$startAt->format('Y-m-d')}."
+                );
+            }
+        }
+    }
+
+    /**
+     * Calculate expected end date based on start date and billing cycle
+     */
+    private function calculateExpectedEndDate(\Carbon\Carbon $startAt, BillingCycleEnum $billingCycle): \Carbon\Carbon
+    {
+        return match($billingCycle) {
+            BillingCycleEnum::MONTHLY => $startAt->copy()->addMonth(),
+            BillingCycleEnum::QUARTERLY => $startAt->copy()->addMonths(3),
+            BillingCycleEnum::YEARLY => $startAt->copy()->addYear(),
+        };
     }
 
     /**
