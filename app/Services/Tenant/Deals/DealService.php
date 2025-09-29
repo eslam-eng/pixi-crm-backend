@@ -10,7 +10,8 @@ use App\Enums\PaymentStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Tenant\Deal;
 use App\Models\Tenant\DealAttachment;
-use App\Models\Tenant\DealVariant;
+use App\Models\Tenant\DealItem;
+use App\Models\Tenant\DealItemSubscription;
 use App\Models\Tenant\Item;
 use App\Models\Tenant\ItemVariant;
 use App\QueryFilters\Tenant\DealsFilter;
@@ -150,14 +151,14 @@ class DealService extends BaseService
             $dealDTO->total_amount = $totalAmount;
             $dealDTO->amount_due = $this->calculatePartialAmountDue($dealDTO->payment_status, $totalAmount, $dealDTO->partial_amount_paid ?? 0);
 
-            if($dealDTO->payment_status == PaymentStatusEnum::PAID->value) {
+            if ($dealDTO->payment_status == PaymentStatusEnum::PAID->value) {
                 $dealDTO->partial_amount_paid = 0;
             }
             // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
-            // Attach items
-            $deal->items()->attach($itemsData['pivot']);
+            // Create items individually to handle subscriptions
+            $this->createDealItemsWithSubscriptions($deal, $dealDTO->items);
 
             $deal->variants()->attach($variantsData['pivot']);
 
@@ -167,16 +168,18 @@ class DealService extends BaseService
             }
 
             // Create payment record if payment_status is partial and partial_amount_paid > 0
-            if ($dealDTO->payment_status == PaymentStatusEnum::PARTIAL->value && 
-                isset($dealDTO->partial_amount_paid) && 
-                $dealDTO->partial_amount_paid > 0) {
-                
+            if (
+                $dealDTO->payment_status == PaymentStatusEnum::PARTIAL->value &&
+                isset($dealDTO->partial_amount_paid) &&
+                $dealDTO->partial_amount_paid > 0
+            ) {
+
                 $paymentDTO = DealPaymentDTO::fromArray([
                     'amount' => $dealDTO->partial_amount_paid,
                     'pay_date' => $dealDTO->sale_date, // Use sale_date as payment date
                     'payment_method_id' => $dealDTO->payment_method_id,
                 ]);
-                
+
                 $this->dealPaymentService->addPaymentToDeal($deal->id, $paymentDTO);
             }
 
@@ -605,7 +608,7 @@ class DealService extends BaseService
         try {
             // Get the lead and its contact
             $lead = $deal->lead()->with('contact')->first();
-            
+
             if (!$lead || !$lead->contact || !$lead->contact->email) {
                 \Log::warning('Cannot send payment terms notification: Lead or contact email not found', [
                     'deal_id' => $deal->id,
@@ -630,13 +633,39 @@ class DealService extends BaseService
                 'contact_email' => $lead->contact->email,
                 'payment_status' => $deal->payment_status,
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Failed to send payment terms notification', [
                 'deal_id' => $deal->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+        }
+    }
+
+    /**
+     * Create deal items individually and handle subscriptions
+     */
+    private function createDealItemsWithSubscriptions(Deal $deal, array $items): void
+    {
+        foreach ($items as $item) {
+            // Create the deal item
+            $dealItem = DealItem::create([
+                'deal_id' => $deal->id,
+                'item_id' => $item['item_id'],
+                'quantity' => $item['quantity'] ?? 1,
+                'price' => $item['price'],
+                'total' => $item['total'] ?? ($item['price'] * ($item['quantity'] ?? 1)),
+            ]);
+
+            // Create subscription if subscription data is provided
+            if (isset($item['start_at']) && isset($item['end_at']) && isset($item['billing_cycle'])) {
+                DealItemSubscription::create([
+                    'deal_item_id' => $dealItem->id,
+                    'start_at' => $item['start_at'],
+                    'end_at' => $item['end_at'],
+                    'billing_cycle' => $item['billing_cycle'],
+                ]);
+            }
         }
     }
 }
