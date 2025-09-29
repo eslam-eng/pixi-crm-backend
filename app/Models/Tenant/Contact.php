@@ -10,10 +10,11 @@ use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
 
 class Contact extends Model
 {
-    use Filterable;
+    use Filterable, Notifiable;
     protected $fillable =
     [
         'first_name',
