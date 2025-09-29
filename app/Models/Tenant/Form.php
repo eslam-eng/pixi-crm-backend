@@ -24,11 +24,6 @@ class Form extends Model
         return $this->hasMany(FormField::class)->orderBy('order');
     }
 
-    public function actions(): HasMany
-    {
-        return $this->hasMany(FormAction::class)->where('is_active', true)->orderBy('order');
-    }
-
     public function submissions(): HasMany
     {
         return $this->hasMany(FormSubmission::class);
@@ -37,5 +32,103 @@ class Form extends Model
     public function incrementSubmissions(): void
     {
         $this->increment('submissions_count');
+    }
+
+    // Get fields that should be shown based on current data
+    public function getVisibleFields(array $formData = [])
+    {
+        return $this->fields->filter(function ($field) use ($formData) {
+            return $field->shouldBeShown($formData);
+        });
+    }
+
+    /**
+     * Get validation rules based on current form data
+     */
+    public function getDynamicValidationRules(array $formData = []): array
+    {
+        $rules = [];
+
+        foreach ($this->getVisibleFields($formData) as $field) {
+            $fieldRules = [];
+
+            if ($field['required']) {
+                $fieldRules[] = 'required';
+            } else {
+                $fieldRules[] = 'nullable';
+            }
+
+            // Add type-specific rules
+            switch ($field['type']) {
+                case 'email':
+                    $fieldRules[] = 'email';
+                    break;
+                case 'number':
+                    $fieldRules[] = 'numeric';
+                    break;
+                case 'file':
+                    $fieldRules[] = 'file';
+                    break;
+                case 'select':
+                case 'radio':
+                    if (!empty($field['options'])) {
+                        $fieldRules[] = 'in:' . implode(',', $field['options']);
+                    }
+                    break;
+            }
+
+            $rules[$field['name']] = $fieldRules;
+        }
+
+        return $rules;
+    }
+
+    // Get validation rules based on current form data
+    public function getValidationRules(array $formData = []): array
+    {
+        $rules = [];
+
+        foreach ($this->getVisibleFields($formData) as $field) {
+            $fieldRules = [];
+
+            if ($field->isActuallyRequired($formData)) {
+                $fieldRules[] = 'required';
+            } else {
+                $fieldRules[] = 'nullable';
+            }
+
+            // Add type-specific rules
+            switch ($field->type) {
+                case 'email':
+                    $fieldRules[] = 'email';
+                    break;
+                case 'number':
+                    $fieldRules[] = 'numeric';
+                    break;
+                case 'file':
+                    $fieldRules[] = 'file';
+                    break;
+            }
+
+            $rules[$field->name] = $fieldRules;
+        }
+
+        return $rules;
+    }
+
+    // Get conditional fields
+    public function conditionalFields()
+    {
+        return $this->hasMany(FormField::class)
+            ->where('is_conditional', true)
+            ->orderBy('order');
+    }
+
+    // Get non-conditional fields
+    public function unconditionalFields()
+    {
+        return $this->hasMany(FormField::class)
+            ->where('is_conditional', false)
+            ->orderBy('order');
     }
 }

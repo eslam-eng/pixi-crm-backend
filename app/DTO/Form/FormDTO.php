@@ -7,22 +7,19 @@ use Illuminate\Support\Arr;
 
 class FormDTO extends BaseDTO
 {
-
     /**
      * @param string $title
      * @param ?string $description
      * @param string $slug
-     * @param bool $is_active
+     * @param ?bool $is_active
      * @param ?array $fields
-     * @param ?array $actions
      */
     public function __construct(
         public string $title,
         public ?string $description,
         public string $slug,
-        public bool $is_active,
-        public array $fields,
-        public ?array $actions,
+        public ?bool $is_active,
+        public ?array $fields,
     ) {}
 
     public static function fromRequest($request): BaseDTO
@@ -33,10 +30,8 @@ class FormDTO extends BaseDTO
             slug: $request->slug,
             is_active: $request->is_active,
             fields: $request->fields,
-            actions: $request->actions,
         );
     }
-
 
     /**
      * @param array $data
@@ -50,7 +45,6 @@ class FormDTO extends BaseDTO
             slug: Arr::get($data, 'slug'),
             is_active: Arr::get($data, 'is_active'),
             fields: Arr::get($data, 'fields'),
-            actions: Arr::get($data, 'actions'),
         );
     }
 

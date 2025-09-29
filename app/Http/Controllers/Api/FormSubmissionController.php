@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant\Form;
+use App\Http\Resources\Tenant\FormSubmissionResource;
 use App\Services\FormSubmissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
-
 
 class FormSubmissionController extends Controller
 {
@@ -21,72 +19,45 @@ class FormSubmissionController extends Controller
     {
         $form = $this->formSubmissionService->getFormBySlug($slug);
 
-        if (!$form) {
-            ApiResponse(
-                message: 'Form not found or inactive',
-                code: Response::HTTP_NOT_FOUND
-            );
-        }
-
-        // Build dynamic validation rules
-        $rules = $this->formSubmissionService->buildValidationRules($form);
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
-            $submission = $this->formSubmissionService->submitForm(
-                $form,
-                $request->only($form->fields->pluck('name')->toArray()),
-                $request->ip(),
-                $request->userAgent()
+            // Get current form data for dynamic validation
+            $formData = $request->all();
+            $validationRules = $form->getDynamicValidationRules($formData);
+            // Validate with dynamic rules
+            $validated = $request->validate($validationRules);
+
+            // Create submission
+            $submission = $form->submissions()->create([
+                'data' => $validated,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            $form->increment('submissions_count');
+
+            return ApiResponse(
+                message: 'Form submitted successfully',
+                data: FormSubmissionResource::make($submission),
+                code: Response::HTTP_CREATED
             );
-
-            $response = [
-                'message' => 'Form submitted successfully',
-                'data' => [
-                    'submission_id' => $submission->id,
-                    'form_id' => $form->id,
-                    'submitted_at' => $submission->created_at
-                ]
-            ];
-
-            // Add redirect URL if exists
-            $redirectUrl = $this->formSubmissionService->getRedirectUrl($form);
-            if ($redirectUrl) {
-                $response['data']['redirect_url'] = $redirectUrl;
-            }
-
-            return response()->json($response, 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return ApiResponse(message: 'Validation failed', data: $e->errors(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to submit form',
-                'error' => $e->getMessage()
-            ], 500);
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function submissions(Form $form): JsonResponse
+    public function submissions(int $formId): JsonResponse
     {
-        $submissions = $form->submissions()
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        return response()->json([
-            'message' => 'Submissions retrieved successfully',
-            'data' => $submissions->items(),
-            'meta' => [
-                'current_page' => $submissions->currentPage(),
-                'total' => $submissions->total(),
-                'per_page' => $submissions->perPage(),
-            ]
-        ]);
+        try {
+            $form = $this->formSubmissionService->findById($formId);
+            $submissions = $form->submissions()
+                ->orderBy('created_at', 'desc')
+                ->paginate(15);
+            $data = FormSubmissionResource::collection($submissions)->response()->getData(true);
+            return ApiResponse(message: 'Submissions retrieved successfully', data: $data, code: Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
-
-
 }
