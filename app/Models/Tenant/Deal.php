@@ -73,7 +73,13 @@ class Deal extends Model implements HasMedia
     {
         return $this->hasMany(DealAttachment::class);
     }
-      public function payments()
+
+    public function deal_items()
+    {
+        return $this->hasMany(DealItem::class);
+    }
+
+    public function payments()
     {
         return $this->hasMany(DealPayment::class);
     }

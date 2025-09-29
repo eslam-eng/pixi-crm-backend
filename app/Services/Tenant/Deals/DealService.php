@@ -69,7 +69,8 @@ class DealService extends BaseService
             ->with([
                 'lead',
                 'assigned_to',
-                'items',
+                'deal_items.item',
+                'deal_items.subscription',
                 'variants',
                 'attachments',
                 'payments.payment_method'

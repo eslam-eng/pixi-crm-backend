@@ -45,19 +45,6 @@ class DealShowResource extends JsonResource
                 ];
             }),
 
-            'stage' => $this->whenLoaded('stage', function () {
-                return [
-                    'id' => $this->stage->id,
-                    'name' => $this->stage->name,
-                    'pipeline' => $this->whenLoaded('stage.pipeline', function () {
-                        return [
-                            'id' => $this->stage->pipeline->id,
-                            'name' => $this->stage->pipeline->name,
-                        ];
-                    }),
-                ];
-            }),
-
             'assigned_to' => $this->whenLoaded('assigned_to', function () {
                 return [
                     'id' => $this->assigned_to->id,
@@ -66,14 +53,30 @@ class DealShowResource extends JsonResource
                 ];
             }),
 
-            'items' => $this->whenLoaded('items', function () {
-                return $this->items->filter()->map(function ($item) {
+            'items' => $this->whenLoaded('deal_items', function () {
+                return $this->deal_items->map(function ($dealItem) {
                     return [
-                        'id' => $item->id,
-                        'name' => $item->name ?? 'Unknown Item',
-                        'price' => $item->pivot->price ?? 0,
-                        'quantity' => $item->pivot->quantity ?? 0,
-                        'total' => $item->pivot->total ?? 0,
+                        'id' => $dealItem->item_id,
+                        'name' => $dealItem->item->name ?? 'Unknown Item',
+                        'price' => $dealItem->price,
+                        'quantity' => $dealItem->quantity,
+                        'total' => $dealItem->total,
+                        'subscription' => $this->when(
+                            $dealItem->subscription && $dealItem->subscription->exists,
+                            function () use ($dealItem) {
+                                return [
+                                    'id' => $dealItem->subscription->id,
+                                    'start_at' => $dealItem->subscription->start_at->format('Y-m-d'),
+                                    'end_at' => $dealItem->subscription->end_at->format('Y-m-d'),
+                                    'billing_cycle' => $dealItem->subscription->billing_cycle->value,
+                                    // 'billing_cycle_label' => $dealItem->subscription->billing_cycle->getLabel(),
+                                    // 'is_active' => $dealItem->subscription->isActive(),
+                                    // 'is_expired' => $dealItem->subscription->isExpired(),
+                                    // 'duration_in_days' => $dealItem->subscription->getDurationInDays(),
+                                    // 'next_billing_date' => $dealItem->subscription->getNextBillingDate()?->format('Y-m-d'),
+                                ];
+                            }
+                        ),
                     ];
                 });
             }),
