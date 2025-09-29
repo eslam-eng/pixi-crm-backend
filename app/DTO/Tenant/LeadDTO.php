@@ -38,7 +38,7 @@ class LeadDTO extends BaseDTO
 
     public function toArray(): array
     {
-        return [
+        $data = [
             'contact_id' => $this->contact_id,
             'assigned_to_id' => $this->assigned_to_id,
             'notes' => $this->notes,
@@ -49,6 +49,13 @@ class LeadDTO extends BaseDTO
             'expected_close_date' => $this->expected_close_date,
             'status' => $this->status,
         ];
+
+        // Fields that are allowed to be null in database
+        $nullableFields = ['notes', 'description', 'expected_close_date'];
+
+        return array_filter($data, function ($value, $key) use ($nullableFields) {
+            return in_array($key, $nullableFields) || !is_null($value);
+        }, ARRAY_FILTER_USE_BOTH);
     }
 
     public static function fromArray(array $data): self
