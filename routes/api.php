@@ -19,6 +19,7 @@ use \App\Http\Controllers\Api\Deals\{
 };
 use \App\Http\Controllers\Api\Users\{
     DepartmentController,
+    PermissionController,
     RoleController,
     UserController
 };
@@ -178,6 +179,7 @@ Route::middleware([
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);
+        Route::get('roles/permissions/all', [PermissionController::class, 'index']);
         Route::apiResource('roles', RoleController::class);
 
         //Tasks routes
@@ -189,7 +191,6 @@ Route::middleware([
         Route::apiResource('deals', DealController::class);
         Route::get('deals/get/statistics', [DealController::class, 'statistics']);
         Route::post('deals/{id}/change/approval-status', [DealController::class, 'changeApprovalStatus']);
-        
         // Deal Payments routes
         Route::post('deals/{dealId}/payments', [\App\Http\Controllers\Api\Deals\DealPaymentController::class, 'store']);
 
