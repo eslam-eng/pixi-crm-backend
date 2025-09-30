@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTO\Form\FormDTO;
 use App\Models\Tenant\Form;
 use App\Services\FormService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Form\StoreFormRequest;
-use App\Http\Requests\Form\UpdateFormRequest;
+use App\Http\Requests\Form\FormRequest;
 use App\Http\Resources\Tenant\FormResource;
+use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class FormController extends Controller
 {
@@ -20,65 +20,81 @@ class FormController extends Controller
 
     public function index(): JsonResponse
     {
-        $forms = Form::with(['fields', 'actions'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $forms = $this->formService->index();
+        $data = FormResource::collection($forms)->response()->getData(true);
 
-        return response()->json([
-            'message' => 'Forms retrieved successfully',
-            'data' => FormResource::collection($forms),
-            'meta' => [
-                'current_page' => $forms->currentPage(),
-                'total' => $forms->total(),
-                'per_page' => $forms->perPage(),
-            ]
-        ]);
+        return ApiResponse(message: 'Forms retrieved successfully', data: $data);
     }
 
-    public function store(StoreFormRequest $request): JsonResponse
+    public function store(FormRequest $request): JsonResponse
     {
-        $form = $this->formService->createForm($request->validated());
-
-        return response()->json([
-            'message' => 'Form created successfully',
-            'data' => new FormResource($form->load(['fields', 'actions']))
-        ], 201);
+        try {
+            $form = $this->formService->createForm(FormDTO::fromRequest($request));
+            return ApiResponse(
+                message: 'Form created successfully',
+                data: new FormResource($form),
+                code: Response::HTTP_CREATED
+            );
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public function show(Form $form): JsonResponse
+    public function show(int $formId): JsonResponse
     {
-        return response()->json([
-            'message' => 'Form retrieved successfully',
-            'data' => new FormResource($form->load(['fields', 'actions']))
-        ]);
+        try {
+            $form = $this->formService->findById($formId, withRelations: ['fields' => function ($query) {
+                $query->with('dependsOn')->orderBy('order');
+            }]);
+
+            return response()->json([
+                'success' => true,
+                'data' => new FormResource($form),
+                'message' => 'Form retrieved successfully'
+            ]);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public function update(UpdateFormRequest $request, Form $form): JsonResponse
+    public function update(FormRequest $request, $formId): JsonResponse
     {
-        $form->update($request->validated());
+        try {
+            $formDto = FormDTO::fromRequest($request);
+            $form = $this->formService->update(formDTO: $formDto, id: $formId);
 
-        return response()->json([
-            'message' => 'Form updated successfully',
-            'data' => new FormResource($form->load(['fields', 'actions']))
-        ]);
+            return ApiResponse(
+                message: 'Form updated successfully',
+                data: new FormResource($form->load(['fields']))
+            );
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public function destroy(Form $form): JsonResponse
+    public function destroy(int $formId): JsonResponse
     {
-        $form->delete();
-
-        return response()->json([
-            'message' => 'Form deleted successfully'
-        ]);
+        try {
+            $this->formService->delete($formId);
+            return ApiResponse(
+                message: 'Form deleted successfully'
+            );
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function toggle(Form $form): JsonResponse
     {
-        $form->update(['is_active' => !$form->is_active]);
+        try {
+            $form->update(['is_active' => !$form->is_active]);
 
-        return response()->json([
-            'message' => 'Form status updated successfully',
-            'data' => ['is_active' => $form->is_active]
-        ]);
+            return ApiResponse(
+                message: 'Form status updated successfully',
+                data: ['is_active' => $form->is_active]
+            );
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

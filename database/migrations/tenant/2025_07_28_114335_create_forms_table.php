@@ -1,5 +1,4 @@
 <?php
-// database/migrations/create_forms_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -29,16 +28,12 @@ return new class extends Migration
             $table->boolean('required')->default(false);
             $table->string('placeholder')->nullable();
             $table->integer('order')->default(0);
-            $table->timestamps();
-        });
 
-        Schema::create('form_actions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('form_id')->constrained()->cascadeOnDelete();
-            $table->enum('type', ['redirect', 'email', 'webhook']);
-            $table->json('settings'); // Different settings for each action type
-            $table->boolean('is_active')->default(true);
-            $table->integer('order')->default(0);
+            // Conditional logic columns
+            $table->boolean('is_conditional')->default(false);
+            $table->foreignId('depends_on_field_id')->nullable()->constrained('form_fields')->nullOnDelete();
+            $table->string('depends_on_value')->nullable(); // The value that triggers this field
+            $table->string('condition_type')->default('equals'); // equals, not_equals, contains, etc.
             $table->timestamps();
         });
 
@@ -55,7 +50,6 @@ return new class extends Migration
     public function down()
     {
         Schema::dropIfExists('form_submissions');
-        Schema::dropIfExists('form_actions');
         Schema::dropIfExists('form_fields');
         Schema::dropIfExists('forms');
     }

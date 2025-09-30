@@ -1,5 +1,4 @@
 <?php
-// app/Http/Resources/FormFieldResource.php
 
 namespace App\Http\Resources\Tenant;
 
@@ -19,6 +18,11 @@ class FormFieldResource extends JsonResource
             'required' => $this->required,
             'placeholder' => $this->placeholder,
             'order' => $this->order,
+            'is_conditional' => $this->is_conditional,
+            'depends_on_field_id' => $this->depends_on_field_id,
+            'depends_on_value' => $this->depends_on_value,
+            'condition_type' => $this->condition_type,
+            'depend_on' => $this->whenLoaded('dependsOn', fn() => new FormFieldResource($this->dependsOn)),
         ];
     }
 }

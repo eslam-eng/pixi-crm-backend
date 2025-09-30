@@ -2,157 +2,169 @@
 
 namespace App\Services;
 
+use App\DTO\Form\FormDTO;
 use App\Models\Tenant\Form;
-use App\Models\Tenant\FormSubmission;
+use App\Models\Tenant\FormField;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\FormSubmissionMail;
 
-class FormService
+class FormService extends BaseService
 {
-    public function createForm(array $data): Form
+
+    public function __construct(
+        public Form $model,
+    ) {}
+
+    public function getModel(): Form
     {
-        return DB::transaction(function () use ($data) {
+        return $this->model;
+    }
+
+    public function index(array $filters = [])
+    {
+        $forms = $this->model->with(['fields'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return $forms;
+    }
+
+    public function createForm(FormDTO $formDTO): Form
+    {
+        return DB::transaction(function () use ($formDTO) {
             // Create form
-            $form = Form::create([
-                'title' => $data['title'],
-                'description' => $data['description'] ?? null,
-                'slug' => $data['slug'],
-                'is_active' => $data['is_active'] ?? true,
-            ]);
+            $form = $this->model->create($formDTO->toArray());
 
             // Create fields
-            $fieldsData = collect($data['fields'])->map(function ($field, $index) {
-                return array_merge($field, ['order' => $field['order'] ?? $index]);
+            $fieldsData = collect($formDTO->fields)->map(function ($field, $index) {
+                return array_merge($field, ['order' => $field->order ?? $index]);
             });
 
-            $form->fields()->createMany($fieldsData);
+            $this->processFormFields($form, $fieldsData);
 
-            // Create actions if provided
-            if (!empty($data['actions'])) {
-                $actionsData = collect($data['actions'])->map(function ($action, $index) {
-                    return array_merge($action, [
-                        'order' => $action['order'] ?? $index,
-                        'is_active' => $action['is_active'] ?? true
-                    ]);
-                });
-
-                $form->actions()->createMany($actionsData);
-            }
-
-            return $form;
+            return $form->load(['fields']);
         });
     }
 
-    public function submitForm(Form $form, array $data, string $ipAddress = null, string $userAgent = null): FormSubmission
+    public function show(int $id): Form
     {
-        // Create submission
-        $submission = $form->submissions()->create([
-            'data' => $data,
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent
-        ]);
-
-        // Increment counter
-        $form->incrementSubmissions();
-
-        // Execute actions
-        $this->executeActions($form, $submission);
-
-        return $submission;
+        $form = $this->findById($id);
+        return $form->load(['fields']);
     }
 
-    private function executeActions(Form $form, FormSubmission $submission): void
+    public function update(FormDTO $formDTO, int $id): Form
     {
+        $form = $this->findById($id);
+        $form->update($formDTO->toArray());
 
-        foreach ($form->actions as $action) {
-            try {
-                match ($action->type) {
-                    'email' => $this->sendEmail($action->settings, $submission),
-                    'webhook' => $this->triggerWebhook($action->settings, $submission),
-                    'redirect' => null, // Handled in controller response
-                    default => null
-                };
-            } catch (\Exception $e) {
-                // Log error but don't fail submission
-                \Log::error("Form action failed: " . $e->getMessage(), [
-                    'form_id' => $form->id,
-                    'action_type' => $action->type,
-                    'submission_id' => $submission->id
-                ]);
-            }
+        if ($formDTO->fields) {
+            $form->fields()->delete();
+            $form->fields()->createMany($formDTO->fields);
         }
-    }
 
-    private function sendEmail(array $settings, FormSubmission $submission): void
-    {
-        try {
-            // Validate required settings
-            if (empty($settings['to'])) {
-                throw new \InvalidArgumentException('Email "to" address is required');
-            }
-
-            // Validate email address
-            if (!filter_var($settings['to'], FILTER_VALIDATE_EMAIL)) {
-                throw new \InvalidArgumentException('Invalid email address: ' . $settings['to']);
-            }
-
-            // Queue the email
-            Mail::queue(new FormSubmissionMail($submission, $settings));
-
-            \Log::info('Form submission email queued successfully', [
-                'form_id' => $submission->form_id,
-                'submission_id' => $submission->id,
-                'to' => $settings['to'],
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Failed to queue form submission email', [
-                'form_id' => $submission->form_id,
-                'submission_id' => $submission->id,
-                'error' => $e->getMessage(),
-                'settings' => $settings,
-            ]);
-
-            throw $e; // Re-throw if you want the submission to fail
-        }
-    }
-
-    private function triggerWebhook(array $settings, FormSubmission $submission): void
-    {
-        $url = $settings['url'] ?? null;
-
-        if (!$url) return;
-
-        try {
-            $response = Http::timeout(10)
-                ->retry(3, 100) // Retry 3 times with 100ms delay
-                ->post($url, [
-                    'form_id' => $submission->form_id,
-                    'form_title' => $submission->form->title,
-                    'submission_id' => $submission->id,
-                    'data' => $submission->data,
-                    'submitted_at' => $submission->created_at->toISOString(),
-                    'ip_address' => $submission->ip_address,
-                ]);
-
-            \Log::info('Webhook triggered successfully', [
-                'url' => $url,
-                'status_code' => $response->status(),
-                'submission_id' => $submission->id,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Webhook failed', [
-                'url' => $url,
-                'error' => $e->getMessage(),
-                'submission_id' => $submission->id,
-            ]);
-        }
+        return $form->load(['fields']);
     }
 
     public function getRedirectUrl(Form $form): ?string
     {
         $redirectAction = $form->actions()->where('type', 'redirect')->first();
         return $redirectAction?->settings['url'] ?? null;
+    }
+
+    public function delete(int $id): bool
+    {
+        $form = $this->findById($id);
+        $form->fields()->delete();
+        return $form->delete();
+    }
+
+    public function processFormFields($form, $fieldsData)
+    {
+        $createdFields = [];
+        $pendingFields = [];
+
+        // First pass: Create independent fields
+        foreach ($fieldsData as $fieldData) {
+            if ($this->isIndependentField($fieldData)) {
+                $field = $this->createFormField($form, $fieldData);
+                $createdFields[$field->name] = $field->id;
+                $createdFields[$field->id] = $field->id; // Also index by ID
+            } else {
+                $pendingFields[] = $fieldData;
+            }
+        }
+
+        // Second pass: Process dependent fields
+        $maxIterations = count($pendingFields) * 2; // Prevent infinite loops
+        $iteration = 0;
+
+        while (!empty($pendingFields) && $iteration < $maxIterations) {
+            $remainingFields = [];
+
+            foreach ($pendingFields as $fieldData) {
+                $dependencyId = $this->resolveDependencyId($fieldData, $createdFields);
+
+                if ($dependencyId !== null) {
+                    $fieldData['depends_on_field_id'] = $dependencyId;
+                    $field = $this->createFormField($form, $fieldData);
+                    $createdFields[$field->name] = $field->id;
+                    $createdFields[$field->id] = $field->id;
+                } else {
+                    $remainingFields[] = $fieldData;
+                }
+            }
+
+            $pendingFields = $remainingFields;
+            $iteration++;
+        }
+
+        // If we still have pending fields, there's a circular dependency
+        if (!empty($pendingFields)) {
+            throw new \Exception('Circular dependency detected in form fields');
+        }
+    }
+
+    private function isIndependentField(array $fieldData): bool
+    {
+        return empty($fieldData['depends_on_field_id']) &&
+            empty($fieldData['depends_on_field_name']);
+    }
+
+    private function resolveDependencyId(array $fieldData, array $createdFields): ?int
+    {
+        // Try to resolve by field name first
+        if (!empty($fieldData['depends_on_field_name']) && isset($createdFields[$fieldData['depends_on_field_name']])) {
+            return $createdFields[$fieldData['depends_on_field_name']];
+        }
+
+        // Try to resolve by field ID
+        if (!empty($fieldData['depends_on_field_id']) && isset($createdFields[$fieldData['depends_on_field_id']])) {
+            return $fieldData['depends_on_field_id'];
+        }
+
+        return null;
+    }
+
+    private function createFormField(Form $form, array $fieldData): FormField
+    {
+        $defaults = [
+            'form_id' => $form->id,
+            'is_conditional' => false,
+            'condition_type' => 'equals',
+            'required' => false,
+            'order' => 0,
+            'options' => null,
+            'placeholder' => null,
+            'depends_on_field_id' => null,
+            'depends_on_value' => null,
+        ];
+
+        $fieldData = array_merge($defaults, $fieldData);
+
+        // Auto-set is_conditional if dependency exists
+        if (!empty($fieldData['depends_on_field_id'])) {
+            $fieldData['is_conditional'] = true;
+        }
+
+        return FormField::create($fieldData);
     }
 }
