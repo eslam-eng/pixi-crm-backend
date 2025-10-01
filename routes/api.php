@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AttributeValueController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -172,6 +173,15 @@ Route::middleware([
         Route::get('authentication/get/language', [UserController::class, 'getLanguage']);
         Route::post('authentication/change/language', [UserController::class, 'changeLanguage']);
 
+
+        // Attendance routes
+        Route::group(['prefix' => 'attendances'], function () {
+            Route::post('/punch-in', [AttendanceController::class, 'punchIn']);
+            Route::post('/punch-out', [AttendanceController::class, 'punchOut']);
+            Route::get('/days', [AttendanceController::class, 'index']); // filters
+            Route::get('/clicks', [AttendanceController::class, 'clicks']); // filters
+        });
+
         // Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
@@ -289,6 +299,7 @@ Route::middleware([
     Route::get('/locations/cities/{cityId}/areas', [\App\Http\Controllers\Api\LocationController::class, 'getAreas']);
     Route::apiResource('sources', \App\Http\Controllers\Api\ResourceController::class);
     Route::apiResource('reasons', \App\Http\Controllers\Api\ReasonController::class);
+
 
     // Translatable example routes
     Route::prefix('translatable')->group(function () {
