@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Tenant\User;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,28 +15,15 @@ class Team extends Model
     protected $fillable = [
         'title',
         'leader_id',
-        'source_id',
-        'location_id'
     ];
 
-
-    public function leader(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function leader()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasOne(User::class, 'id', 'leader_id');
     }
 
-    public function location(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function sales()
     {
-        return $this->belongsTo(Location::class);
-    }
-
-    public function source(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Source::class);
-    }
-
-    public function sales(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(User::class,);
+        return $this->hasMany(User::class, 'team_id', 'id');
     }
 }

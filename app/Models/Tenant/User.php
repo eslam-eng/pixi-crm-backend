@@ -32,11 +32,15 @@ class User extends Authenticatable
         'last_login_at',
         'department_id',
         'is_active',
+        'target',
+        'target_type',
+        'job_title',
+        'team_id',
         'lang',
     ];
 
     protected $casts = [
-
+        'target' => 'float',
         'last_login_at' => 'date',
     ];
 

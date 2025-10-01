@@ -172,9 +172,6 @@ Route::middleware([
         Route::get('authentication/get/language', [UserController::class, 'getLanguage']);
         Route::post('authentication/change/language', [UserController::class, 'changeLanguage']);
 
-        Route::get('/user', function () {
-            return response()->json(Auth::user());
-        });
         // Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);

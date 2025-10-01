@@ -14,6 +14,7 @@ use Database\Seeders\Tenant\PipelineSeeder;
 use Database\Seeders\Tenant\ProductWithVariantSeeder;
 use Database\Seeders\Tenant\RolesAndPermissionsSeeder;
 use Database\Seeders\Tenant\RoleSeeder;
+use Database\Seeders\Tenant\TeamSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseTenantSeeder extends Seeder

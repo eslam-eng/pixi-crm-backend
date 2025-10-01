@@ -3,17 +3,21 @@
 namespace App\Services;
 
 use App\DTO\Team\TeamDTO;
-use App\DTO\Tenant\UserDTO;
+use App\Exceptions\GeneralException;
 use App\Models\Team;
-use App\QueryFilters\Tenant\UsersFilters;
+use App\QueryFilters\Tenant\TeamFilters;
 use App\Services\BaseService;
+use App\Services\Tenant\Users\UserService;
+use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
 
 class TeamService extends BaseService
 {
-    public function __construct(private Team $model) {}
+    public function __construct(
+        private Team $model,
+        private UserService $userService
+    ) {}
 
     public function getModel(): Model
     {
@@ -27,8 +31,8 @@ class TeamService extends BaseService
 
     public function queryGet(array $filters = [], array $withRelations = []): builder
     {
-        $users = $this->getQuery()->with($withRelations);
-        return $users->filter(new UsersFilters($filters));
+        $teams = $this->getQuery()->with($withRelations);
+        return $teams->filter(new TeamFilters($filters));
     }
 
     public function datatable(array $filters = [], array $withRelations = []): Builder
@@ -52,53 +56,76 @@ class TeamService extends BaseService
 
     public function store(TeamDTO $teamDTO)
     {
-        $team = $this->getModel()->create([
-            "title" => $teamDTO->title,
-            "leader_id" => $teamDTO->leader_id,
-            "source_id" => $teamDTO->source_id,
-            "location_id" => $teamDTO->location_id
-        ]);
-        $team->sales()->sync($teamDTO->sales_ids);
-        return $team->load('leader', 'location', 'source', 'sales');
+        $team = $this->model->create($teamDTO->toArray());
+        if (filled($teamDTO->sales_ids))
+            $this->syncTeamMembers($team, $teamDTO->sales_ids, $teamDTO->leader_id);
+        return $team->load('leader.roles', 'sales.roles');
     }
 
-    public function update(UserDTO $userDTO, $id)
+    public function update(TeamDTO $teamDTO, int $id)
     {
-        $user = $this->findById($id);
-        $data = $userDTO->toArray();
-        if (!isset($data['password']))
-            $user->update(Arr::except($data, ['password']));
-        else
-            $user->update($data);
+        $team = $this->findById($id);
+        $team->update($teamDTO->toArray());
+        if (filled($teamDTO->sales_ids))
+            $this->syncTeamMembers($team, $teamDTO->sales_ids, $teamDTO->leader_id);
         return true;
     }
 
-    public function updateProfile($id, array $data = [])
-    {
-        $user = $this->findById($id);
-        if (!isset($data['password']))
-            $user->update(Arr::except($data, ['password']));
-        else {
-            $data['password'] = bcrypt($data['password']);
-            $user->update($data);
-        }
-        return true;
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        $user = $this->findById($id);
-        $user->deleteAttachments();
-        $user->roles()->detach();
-        if (count($user->locations) > 0) {
-            $user->locations()->detach();
-        }
-        $user->delete();
-        return true;
+        $team = $this->findById($id);
+
+        if (filled($team->sales))
+            throw new GeneralException(trans('app.team_has_sales'));
+        return $team->delete();
+    }
+
+    private function syncTeamMembers(Team $team, array $incomingIds, ?int $leaderId = null): void
+    {
+        DB::transaction(function () use ($team, $incomingIds, $leaderId) {
+            // 1) Normalize input
+            $incomingIds = collect($incomingIds)
+                ->filter()                 // remove null/empty
+                ->map(fn($v) => (int)$v)
+                ->unique()
+                ->values()
+                ->all();
+
+            // Ensure leader is included (optional but recommended)
+            if ($leaderId) {
+                $incomingIds = collect($incomingIds)->push((int)$leaderId)->unique()->values()->all();
+            }
+
+            // 2) Current members for this team
+            $currentIds = $this->userService->getModel()->where('team_id', $team->id)->pluck('id')->all();
+
+            // 3) Diff
+            $toAttach = array_values(array_diff($incomingIds, $currentIds)); // newly added
+            $toDetach = array_values(array_diff($currentIds, $incomingIds)); // removed
+
+            // 4) Apply (scoped, safe)
+            if (!empty($toAttach)) {
+                $this->userService
+                    ->getModel()
+                    ->whereIn('id', $toAttach)
+                    ->update(['team_id' => $team->id]);
+            }
+            if (!empty($toDetach)) {
+                $this->userService->getModel()
+                    ->whereIn('id', $toDetach)
+                    ->update(['team_id' => null]);
+            }
+
+            // 5) Hard guarantee for leader (in case of races)
+            if ($leaderId) {
+                $this->userService
+                    ->getModel()
+                    ->whereKey($leaderId)
+                    ->update(['team_id' => $team->id]);
+            }
+
+            // Optional: touch the team to update timestamps
+            $team->touch();
+        });
     }
 }

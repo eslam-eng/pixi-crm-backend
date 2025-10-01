@@ -49,13 +49,23 @@ class PermissionService extends BaseService
         return $query->get();
     }
 
+    public function getGroupedPermissions()
+    {
+        $permissions = Permission::query()->get();
+
+        // Group by 'group' field
+        $groupedPermissions = $permissions->groupBy('group');
+
+        return $groupedPermissions;
+    }
+
     /**
      * Apply filters to the query
      */
     private function applyFilters(Builder $query, array $filters): Builder
     {
-        if (isset($filters['group']) && $filters['group']) {
-            $query->where('group',  $filters['group']);
+        if (isset($filters['group_name']) && $filters['group_name']) {
+            $query->where('group',  $filters['group_name']);
         }
         return $query;
     }
