@@ -25,7 +25,8 @@ class PaymentMethodController extends Controller
         try {
             $paymentMethods = PaymentMethod::query();
             if ($request->has('ddl')) {
-                $paymentMethods->where('is_checked', true);
+                $paymentMethods = $paymentMethods->where('is_checked', true)->orderBy('name')->get();
+                $paymentMethods = PaymentMethodResource::collection($paymentMethods);
             } else {
                 $paymentMethods = $paymentMethods->orderBy('id', 'asc')
                     ->orderBy('name')
