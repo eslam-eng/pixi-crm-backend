@@ -18,7 +18,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResourceController extends Controller
 {
-    public function __construct(public ResourceService $resourceService) {}
+    public function __construct(public ResourceService $resourceService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index']);
+    }
 
     public function index(Request $request): \Illuminate\Http\JsonResponse
     {

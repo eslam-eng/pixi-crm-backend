@@ -3,9 +3,12 @@
 namespace App\Services\Tenant\Users;
 
 use App\DTO\Tenant\UserDTO;
+use App\Enums\TargetType;
 use App\Models\Tenant\User;
+use App\Notifications\Tenant\WelcomeNewUserNotification;
 use App\QueryFilters\Tenant\UsersFilters;
 use App\Services\BaseService;
+use App\Settings\UsersSettings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -38,8 +41,8 @@ class UserService extends BaseService
         $user = $this->findById($userId);
         $user->update(['lang' => $language]);
         return true;
-    }   
-    
+    }
+
     public function getLanguage(int $userId): string
     {
         $user = $this->findById($userId);
@@ -74,7 +77,7 @@ class UserService extends BaseService
 
     public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
-        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)->orderBy('id','desc');
+        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)->orderBy('id', 'desc');
         if ($perPage) {
             return $query->paginate($perPage);
         }
@@ -89,6 +92,11 @@ class UserService extends BaseService
         if ($userDTO->role) {
             $user->assignRole($userDTO->role);
         }
+        $settings = app(UsersSettings::class);
+        if ($settings->default_send_email_notifications) {
+            $user->notify(new WelcomeNewUserNotification());
+        }
+
         return $user->load('roles');
     }
 
@@ -97,22 +105,18 @@ class UserService extends BaseService
         $user = $this->findById($id);
         $data = $userDTO->toArray();
 
-        // Remove role from data before updating user
-        $role = $data['role'] ?? null;
-
-        if (!isset($data['password']))
-            $user->update(Arr::except($data, ['password','role']));
-        else
-            $user->update(Arr::except($data, ['role']));
-
-        // Handle role assignment
-            if ($role) {
-                // Remove existing roles and assign new one
-                $user->syncRoles([$role]);
-        
+        if (!isset($data['password'])) {
+            $user->update(Arr::except($data, ['password']));
+        } else {
+            $user->update($data);
         }
 
-        return true;
+        // Handle role assignment
+        if ($userDTO->role) {
+            $user->syncRoles([$userDTO->role]);
+        }
+
+        return $user;
     }
 
     public function updateProfile($id, array $data = [])
@@ -137,8 +141,86 @@ class UserService extends BaseService
         $user = $this->findById($id);
         // $user->deleteAttachments();
         $user->roles()->detach();
-    
+
         $user->delete();
         return true;
+    }
+
+    public function getTarget($user_id)
+    {
+        $user = $this->findById($user_id);
+
+        if (!$user->target || $user->target_type === TargetType::NONE) {
+            return [
+                'target' => 0,
+                'target_type' => $user->target_type,
+                'achieved_amount' => 0,
+                'achievement_percentage' => 0,
+                'is_target_achieved' => false,
+                'deals_count' => 0,
+                'period' => null,
+            ];
+        }
+
+        $period = $this->getTargetPeriod($user->target_type);
+        $deals = $this->getUserDealsForPeriod($user_id, $period);
+
+        $achieved_amount = $deals->sum('total_amount');
+        $achievement_percentage = $user->target > 0 ? ($achieved_amount / $user->target) * 100 : 0;
+        $is_target_achieved = $achieved_amount >= $user->target;
+
+        return [
+            'target' => $user->target,
+            'target_type' => $user->target_type,
+            'achieved_amount' => $achieved_amount,
+            'achievement_percentage' => round($achievement_percentage, 2),
+            'is_target_achieved' => $is_target_achieved,
+            'deals_count' => $deals->count(),
+            'period' => $period,
+            'deals' => $deals->map(function ($deal) {
+                return [
+                    'id' => $deal->id,
+                    'deal_name' => $deal->deal_name,
+                    'total_amount' => $deal->total_amount,
+                    'sale_date' => $deal->sale_date,
+                    'payment_status' => $deal->payment_status,
+                ];
+            }),
+        ];
+    }
+
+    /**
+     * Get target period based on target type
+     */
+    private function getTargetPeriod($targetType)
+    {
+        return match ($targetType) {
+            TargetType::MONTHLY->value => [
+                'start' => now()->startOfMonth(),
+                'end' => now()->endOfMonth(),
+                'label' => now()->format('F Y'),
+            ],
+            TargetType::CALENDAR_QUARTERS->value => [
+                'start' => now()->startOfQuarter(),
+                'end' => now()->endOfQuarter(),
+                'label' => 'Q' . now()->quarter . ' ' . now()->year,
+            ],
+            default => null,
+        };
+    }
+
+    /**
+     * Get user deals for specific period
+     */
+    private function getUserDealsForPeriod($user_id, $period)
+    {
+        if (!$period) {
+            return collect();
+        }
+
+        return $this->model->find($user_id)->deals()
+            ->whereBetween('created_at', [$period['start'], $period['end']])
+            ->where('approval_status', 'approved') // Only count approved deals
+            ->get();
     }
 }

@@ -8,7 +8,6 @@ use App\Services\Tenant\Users\DepartmentService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Tenant\Users\DepartmentDDLResource;
 use App\Http\Resources\Tenant\Users\DepartmentResource;
-use App\Http\Resources\Tenant\Users\UserResource;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller

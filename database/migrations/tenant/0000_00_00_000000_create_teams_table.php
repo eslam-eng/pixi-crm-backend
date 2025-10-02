@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::create('teams', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->foreignId('leader_id')->constrained('users');
-            $table->foreignId('source_id')->constrained('sources');
-            $table->foreignId('location_id')->constrained('locations');
+            $table->unsignedBigInteger('leader_id')->nullable(); // no ->constrained() yet
             $table->timestamps();
+
+            $table->index('leader_id');
         });
     }
 

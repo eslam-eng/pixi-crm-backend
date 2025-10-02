@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Database\Seeders\Tenant\AttributeWithValueProductSeeder;
 use Database\Seeders\Tenant\ContactSeeder;
+use Database\Seeders\Tenant\DealSeeder;
 use Database\Seeders\Tenant\DepartmentSeeder;
 use Database\Seeders\Tenant\ItemCategorySeeder;
 use Database\Seeders\Tenant\ItemSeeder;
@@ -11,8 +12,6 @@ use Database\Seeders\Tenant\UserSeeder;
 use Database\Seeders\Tenant\OpportunitySeeder;
 use Database\Seeders\Tenant\PaymentMethodSeeder;
 use Database\Seeders\Tenant\PipelineSeeder;
-use Database\Seeders\Tenant\ProductWithVariantSeeder;
-use Database\Seeders\Tenant\RolesAndPermissionsSeeder;
 use Database\Seeders\Tenant\RoleSeeder;
 use Illuminate\Database\Seeder;
 
@@ -24,7 +23,6 @@ class DatabaseTenantSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // RolesAndPermissionsSeeder::class,
             RoleSeeder::class,
             CountriesWithCitiesSeeder::class,
             AttributeWithValueProductSeeder::class,
@@ -37,6 +35,7 @@ class DatabaseTenantSeeder extends Seeder
             ItemSeeder::class,
             PaymentMethodSeeder::class,
             OpportunitySeeder::class,
+            DealSeeder::class,
             // ProductWithVariantSeeder::class,
             // ItemStatusSeeder::class,
             // ItemCategorySeeder::class,

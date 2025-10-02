@@ -22,7 +22,10 @@ use Illuminate\Http\JsonResponse;
 
 class StageController extends Controller
 {
-    public function __construct(public StageService $stageService) {}
+    public function __construct(public StageService $stageService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index']);
+    }
 
     public function index(Request $request, $pipelineId): JsonResponse
     {

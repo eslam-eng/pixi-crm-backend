@@ -14,6 +14,10 @@ use Illuminate\Http\Response;
 
 class ItemAttributeValueController extends Controller
 {
+    public function __construct()
+    {
+    }
+
     public function store(CreateAttributeValueRequest $request, ItemAttribute $attribute)
     {
         $attributeValue = $attribute->values()->create($request->validated());

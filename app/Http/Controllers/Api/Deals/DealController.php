@@ -14,8 +14,13 @@ use Illuminate\Validation\ValidationException;
 
 class DealController extends Controller
 {
-
-    public function __construct(public DealService $dealService) {}
+    public function __construct(public DealService $dealService) {
+        $this->middleware('permission:view-deals')->only(['index', 'show']);
+        $this->middleware('permission:create-deals')->only(['store']);
+        $this->middleware('permission:edit-deals')->only(['update']);
+        $this->middleware('permission:delete-deals')->only(['destroy']);
+        $this->middleware('permission:change-approval-status')->only(['changeApprovalStatus']);
+    }
 
     public function index(Request $request)
     {

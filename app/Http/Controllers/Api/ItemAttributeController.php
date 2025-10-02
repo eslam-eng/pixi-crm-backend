@@ -1,10 +1,6 @@
 <?php
-// app/Http/Controllers/AttributeController.php
 
 namespace App\Http\Controllers\Api;
-
-// use App\Http\Requests\CreateAttributeRequest;
-// use App\Http\Requests\UpdateAttributeRequest;
 
 use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
@@ -17,6 +13,10 @@ use Illuminate\Http\Response;
 
 class ItemAttributeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+    }
     public function index()
     {
         $attributes = ItemAttribute::with('values')->orderBy('id', 'desc')->get();

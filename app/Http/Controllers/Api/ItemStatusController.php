@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 
 class ItemStatusController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:manage-settings')->except(['index']);
+    }
 
     public function index(Request $request)
     {

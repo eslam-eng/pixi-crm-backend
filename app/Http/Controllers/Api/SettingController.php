@@ -7,12 +7,16 @@ use App\Http\Requests\Tenant\SettingRequest;
 use App\Settings\DealsSettings;
 use App\Settings\NotificationSettings;
 use App\Settings\TasksSettings;
+use App\Settings\UsersSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class SettingController extends Controller
 {
-    public function __construct() {}
+    public function __construct()
+    {
+        $this->middleware('permission:manage-settings')->except(['changeValue', 'getSettingsByGroup']);
+    }
 
     /**
      * Handle switcher action - toggle boolean settings
@@ -128,6 +132,7 @@ class SettingController extends Controller
             'tasks_settings' => TasksSettings::class,
             'deals_settings' => DealsSettings::class,
             'notification_settings' => NotificationSettings::class,
+            'users_settings' => UsersSettings::class,
             // Add more settings groups as needed
         ];
 

@@ -16,7 +16,13 @@ class FormController extends Controller
 {
     public function __construct(
         private FormService $formService
-    ) {}
+    ) {
+        $this->middleware('permission:view-forms')->only(['index', 'show']);
+        $this->middleware('permission:create-forms')->only(['store']);
+        $this->middleware('permission:edit-forms')->only(['update']);
+        $this->middleware('permission:delete-forms')->only(['destroy']);
+        $this->middleware('permission:toggle-forms')->only(['toggle']);
+    }
 
     public function index(): JsonResponse
     {

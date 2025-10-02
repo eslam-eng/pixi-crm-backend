@@ -21,7 +21,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ContactController extends Controller
 {
-    public function __construct(public ContactService $contactService) {}
+    public function __construct(public ContactService $contactService) {
+        $this->middleware('permission:view-contacts')->only(['index', 'show']);
+        $this->middleware('permission:create-contacts')->only(['store']);
+        $this->middleware('permission:edit-contacts')->only(['update']);
+        $this->middleware('permission:delete-contacts')->only(['destroy']);
+    }
 
     public function get_statistics()
     {

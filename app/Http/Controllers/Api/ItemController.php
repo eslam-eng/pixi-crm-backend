@@ -14,7 +14,13 @@ use Illuminate\Http\Response;
 
 class ItemController extends Controller
 {
-    public function __construct(public ItemService $itemService) {}
+    public function __construct(public ItemService $itemService)
+    {
+        $this->middleware('permission:view-items')->only(['index', 'show']);
+        $this->middleware('permission:create-items')->only(['store']);
+        $this->middleware('permission:edit-items')->only(['update']);
+        $this->middleware('permission:delete-items')->only(['destroy']);
+    }
 
     public function index(Request $request)
     {

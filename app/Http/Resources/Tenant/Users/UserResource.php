@@ -2,21 +2,13 @@
 
 namespace App\Http\Resources\Tenant\Users;
 
-use Carbon\Carbon;
+use App\Http\Resources\TeamDDLResource;
+
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @property int $id
- * @property string $name
- * @property string $email
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property mixed $roles
- */
 class UserResource extends JsonResource
 {
-
     /**
      * Transform the resource into an array.
      *
@@ -26,8 +18,14 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
             'email' => $this->email,
+            'job_title' => $this->job_title,
+            'target' => $this->target,
+            'target_type' => $this->target_type,
+            'phone' => $this->phone,
+            'team' => new TeamDDLResource($this->whenLoaded('team')),
             'department' => $this->department?->localized_name,
             'last_login_at' => $this->last_login_at?->translatedFormat('Y-m-d g:i a'),
             'is_active' => $this->is_active,

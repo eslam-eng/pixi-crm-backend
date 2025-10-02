@@ -2,6 +2,7 @@
 
 namespace App\Services\Tenant\Users;
 
+use App\DTO\Tenant\Role\RoleDTO;
 use App\Services\BaseService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,7 +21,7 @@ class RoleService extends BaseService
     {
         return $this->queryGet($filters)->get();
     }
-    
+
     public function listing(array $filters = [], array $withRelations = [], $perPage = 10): \Illuminate\Contracts\Pagination\CursorPaginator
     {
         return $this->queryGet(filters: $filters, withRelations: $withRelations)->cursorPaginate($perPage);
@@ -29,23 +30,23 @@ class RoleService extends BaseService
     public function queryGet(array $filters = [], array $withRelations = []): Builder
     {
         $query = $this->getQuery()->with($withRelations);
-        
+
         // Apply filters if any
         if (!empty($filters)) {
             $query = $this->applyFilters($query, $filters);
         }
-        
+
         return $query;
     }
 
     public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
         $query = $this->queryGet(filters: $filters, withRelations: $withRelations);
-        
+
         if ($perPage) {
             return $query->paginate($perPage);
         }
-        
+
         return $query->get();
     }
 
@@ -71,5 +72,41 @@ class RoleService extends BaseService
         }
 
         return $query;
+    }
+
+    public function create(RoleDTO $dto)
+    {
+        $role = $this->model->create($dto->toArray());
+        if ($dto->permissions) {
+            $role->syncPermissions($dto->permissions);
+        }
+        return $role;
+    }
+
+    public function update(int $role_id, RoleDTO $dto)
+    {
+        $role = $this->findById($role_id);
+
+        if ($role->is_system) {
+            return throw new \Exception('Cannot modify system roles');
+        }
+        $role->update($dto->toArray());
+        if ($dto->permissions) {
+            $role->syncPermissions($dto->permissions);
+        }
+        return $role;
+    }
+
+    public function destroy(int $role_id)
+    {
+        $role = $this->findById($role_id);
+        if ($role->is_system) {
+            return throw new \Exception('Cannot delete system roles');
+        }
+
+        if ($role->users()->count() > 0) {
+            return throw new \Exception('Cannot delete role with assigned users');
+        }
+        return $role->delete();
     }
 }

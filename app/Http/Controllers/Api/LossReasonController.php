@@ -15,7 +15,10 @@ use Illuminate\Http\JsonResponse;
 
 class LossReasonController extends Controller
 {
-    public function __construct(public LossReasonService $lossReasonService) {}
+    public function __construct(public LossReasonService $lossReasonService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+    }
 
     public function index(Request $request, $pipelineId): JsonResponse
     {

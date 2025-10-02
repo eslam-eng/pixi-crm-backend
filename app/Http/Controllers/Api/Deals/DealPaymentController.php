@@ -14,7 +14,10 @@ class DealPaymentController extends Controller
 {
     public function __construct(
         private DealPaymentService $dealPaymentService
-    ) {}
+    ) {
+        $this->middleware('permission:view-deals')->only(['index']);
+        $this->middleware('permission:manage-settings')->except(['index']);
+    }
 
     /**
      * Add a new payment to a deal
@@ -43,7 +46,6 @@ class DealPaymentController extends Controller
                     'deal' => $deal->fresh(['payments'])
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -71,7 +73,6 @@ class DealPaymentController extends Controller
                 'success' => true,
                 'data' => $payments
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -107,7 +108,6 @@ class DealPaymentController extends Controller
                     'message' => 'Failed to delete payment'
                 ], 500);
             }
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

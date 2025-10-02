@@ -2,21 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Tenant\Users\UserResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @property int $id
- * @property string $name
- * @property string $email
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property mixed $roles
- */
+
 class TeamResource extends JsonResource
 {
-
     /**
      * Transform the resource into an array.
      *
@@ -27,10 +20,8 @@ class TeamResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'leader' => $this->whenLoaded('leader', fn() =>  new UserResource($this->leader)),
-            'source' => $this->whenLoaded('source', fn() => new SourceResource($this->source)),
-            'location' => $this->whenLoaded('location', fn() =>  new LocationResource($this->location)),
-            'sales' => $this->whenLoaded('sales', fn() => new UserCollection($this->sales)),
+            'leader' => new UserResource($this->whenLoaded('leader')),
+            'sales' => UserResource::collection($this->whenLoaded('sales')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

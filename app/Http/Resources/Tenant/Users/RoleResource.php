@@ -17,10 +17,12 @@ class RoleResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'display_name' => ucfirst(str_replace('_', ' ', $this->name)),
+            'description' => $this->description,
             'guard_name' => $this->guard_name,
             'permissions_count' => $this->permissions_count ?? $this->permissions->count(),
             'users_count' => $this->users_count ?? $this->users->count(),
+            'is_system' => $this->is_system,
+            'permissions' => PermissionResource::collection($this->permissions),
         ];
     }
 }
