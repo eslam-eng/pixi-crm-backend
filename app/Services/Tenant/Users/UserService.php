@@ -5,8 +5,10 @@ namespace App\Services\Tenant\Users;
 use App\DTO\Tenant\UserDTO;
 use App\Enums\TargetType;
 use App\Models\Tenant\User;
+use App\Notifications\Tenant\WelcomeNewUserNotification;
 use App\QueryFilters\Tenant\UsersFilters;
 use App\Services\BaseService;
+use App\Settings\UsersSettings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -39,7 +41,7 @@ class UserService extends BaseService
         $user = $this->findById($userId);
         $user->update(['lang' => $language]);
         return true;
-    }   
+    }
 
     public function getLanguage(int $userId): string
     {
@@ -75,7 +77,7 @@ class UserService extends BaseService
 
     public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
-        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)->orderBy('id','desc');
+        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)->orderBy('id', 'desc');
         if ($perPage) {
             return $query->paginate($perPage);
         }
@@ -90,6 +92,11 @@ class UserService extends BaseService
         if ($userDTO->role) {
             $user->assignRole($userDTO->role);
         }
+        $settings = app(UsersSettings::class);
+        if ($settings->default_send_email_notifications) {
+            $user->notify(new WelcomeNewUserNotification());
+        }
+
         return $user->load('roles');
     }
 
@@ -134,7 +141,7 @@ class UserService extends BaseService
         $user = $this->findById($id);
         // $user->deleteAttachments();
         $user->roles()->detach();
-    
+
         $user->delete();
         return true;
     }

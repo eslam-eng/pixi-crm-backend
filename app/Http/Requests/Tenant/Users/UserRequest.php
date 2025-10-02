@@ -19,7 +19,7 @@ class UserRequest extends BaseRequest
 
     public function rules(): array
     {
-        $userId = $this->user ?? $this->user->id;
+        $userId = $this->user;
 
         return [
             'first_name' => 'required|string',
