@@ -12,25 +12,23 @@ use App\Models\Tenant\Attendance\AttendanceDay;
 class AttendanceController extends Controller
 {
     public function __construct(private AttendanceService $attendanceService) {}
-    public function punchIn(ClickRequest $req)
-    {
-        dd($req->all());
-        $this->attendanceService->punch(
-            userId: auth()->id(),
-            type: 'in',
-            meta: ['source' => 'web', 'request_uuid' => Str::uuid()->toString()]
-        );
-        return apiResponse(message: 'Punched in');
-    }
 
-    public function punchOut()
+    public function punch(ClickRequest $clickRequest)
     {
-        $this->attendanceService->punch(
+        $data = $clickRequest->validated();
+
+        $data = $this->attendanceService->punch(
             userId: auth()->id(),
-            type: 'out',
-            meta: ['source' => 'web', 'request_uuid' => Str::uuid()->toString()]
+            type: $data['type'] ?? 'in',
+            meta: [
+                'source' => 'web',
+                'request_uuid' => Str::uuid()->toString(),
+                'lat' => $data['lat'],
+                'lng' => $data['lng']
+            ]
         );
-        return apiResponse(message: 'Punched out');
+
+        return apiResponse(message: 'Punched ' . $data->type . ' successfully');
     }
 
     public function index(Request $req)

@@ -32,6 +32,8 @@ class AttendanceService
                 'ip'      => request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'request_uuid' => $meta['request_uuid'] ?? null,
+                'latitude' => $meta['lat'] ?? null,
+                'longitude' => $meta['lng'] ?? null,
             ]);
 
             // Rebuild daily totals for the affected local dates (could be two if overnight)

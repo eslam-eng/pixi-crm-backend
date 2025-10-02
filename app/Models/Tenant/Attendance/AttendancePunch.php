@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendancePunch extends Model
 {
-    protected $fillable = ['user_id', 'type', 'happened_at', 'source', 'ip', 'user_agent', 'request_uuid'];
+    protected $fillable = ['user_id', 'type', 'happened_at', 'source', 'ip', 'user_agent', 'request_uuid', 'latitude', 'longitude'];
 
     protected $casts = [
         'happened_at' => 'immutable_datetime'

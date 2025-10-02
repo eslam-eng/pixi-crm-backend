@@ -176,8 +176,8 @@ Route::middleware([
 
         // Attendance routes
         Route::group(['prefix' => 'attendances'], function () {
-            Route::post('/punch-in', [AttendanceController::class, 'punchIn']);
-            Route::post('/punch-out', [AttendanceController::class, 'punchOut']);
+            Route::post('/punch', [AttendanceController::class, 'punch']);
+          
             Route::get('/days', [AttendanceController::class, 'index']); // filters
             Route::get('/clicks', [AttendanceController::class, 'clicks']); // filters
         });

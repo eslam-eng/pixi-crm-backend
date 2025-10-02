@@ -17,13 +17,9 @@ class ClickRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', 'in:in,out'],
-            'location' => ['nullable', 'array'],
-            'location.lat' => ['required_with:location', 'numeric', 'between:-90,90'],
-            'location.lng' => ['required_with:location', 'numeric', 'between:-180,180'],
-            'location.accuracy' => ['nullable', 'numeric', 'min:0', 'max:5000'], // meters
-            'location.source' => ['nullable', 'in:browser,ip,manual'],
-            'location.place' => ['nullable', 'string', 'max:255'],
+            'type' => ['sometimes', 'in:in,out'],
+            'lat' => ['sometimes', 'numeric', 'between:-90,90'],
+            'lng' => ['sometimes', 'numeric', 'between:-180,180'],
         ];
     }
 }
