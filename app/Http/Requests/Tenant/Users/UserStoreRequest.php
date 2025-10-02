@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Users;
+namespace App\Http\Requests\Tenant\Users;
 
 use App\DTO\Tenant\UserDTO;
 use App\Enums\UserType;

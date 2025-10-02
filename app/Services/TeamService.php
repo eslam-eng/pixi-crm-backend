@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\DTO\Team\TeamDTO;
 use App\Exceptions\GeneralException;
-use App\Models\Team;
+use App\Models\Tenant\Team;
 use App\QueryFilters\Tenant\TeamFilters;
 use App\Services\BaseService;
 use App\Services\Tenant\Users\UserService;

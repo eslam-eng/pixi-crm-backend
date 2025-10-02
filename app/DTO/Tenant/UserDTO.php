@@ -12,7 +12,7 @@ class UserDTO extends BaseDTO
      * @param string $last_name',
      * @param string $email',
      * @param ?string $password',
-     * @param string $phone',
+     * @param ?string $phone',
      * @param ?string $job_title',
      * @param ?int $team_id',
      * @param ?float $target',
@@ -22,13 +22,13 @@ class UserDTO extends BaseDTO
      * @param ?string $lang',
      * @param ?bool $is_active',
      */
-    
+
     public function __construct(
         public readonly string $first_name,
         public readonly string $last_name,
         public readonly string $email,
         public readonly ?string $password,
-        public readonly string $phone,
+        public readonly ?string $phone,
         public readonly ?string $job_title,
         public readonly ?int $team_id,
         public readonly ?float $target,
@@ -60,10 +60,6 @@ class UserDTO extends BaseDTO
         );
     }
 
-    /**
-     * @param array $data
-     * @return $this
-     */
     public static function fromArray(array $data): UserDTO
     {
         return new self(
@@ -84,9 +80,6 @@ class UserDTO extends BaseDTO
         );
     }
 
-    /**
-     * @return array
-     */
     public function toArray(): array
     {
         return [
@@ -99,7 +92,6 @@ class UserDTO extends BaseDTO
             'team_id' => $this->team_id,
             'target' => $this->target,
             'target_type' => $this->target_type,
-            'role' => $this->role,
             'department_id' => $this->department_id,
             'last_login_at' => $this->last_login_at,
             'lang' => $this->lang,

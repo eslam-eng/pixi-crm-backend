@@ -177,12 +177,12 @@ Route::middleware([
         // Attendance routes
         Route::group(['prefix' => 'attendances'], function () {
             Route::post('/punch', [AttendanceController::class, 'punch']);
-          
             Route::get('/days', [AttendanceController::class, 'index']); // filters
             Route::get('/clicks', [AttendanceController::class, 'clicks']); // filters
         });
 
         // Route::middleware('role:admin')->group(function () {
+        Route::get('users/{user}/target', [UserController::class, 'target']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);

@@ -2,7 +2,8 @@
 
 namespace App\Http\Resources\Tenant\Users;
 
-use App\Http\Resources\TeamResource;
+use App\Http\Resources\TeamDDLResource;
+
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,7 +25,7 @@ class UserResource extends JsonResource
             'target' => $this->target,
             'target_type' => $this->target_type,
             'phone' => $this->phone,
-            'team' => new TeamResource($this->whenLoaded('team')),
+            'team' => new TeamDDLResource($this->whenLoaded('team')),
             'department' => $this->department?->localized_name,
             'last_login_at' => $this->last_login_at?->translatedFormat('Y-m-d g:i a'),
             'is_active' => $this->is_active,

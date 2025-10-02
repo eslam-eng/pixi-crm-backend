@@ -46,7 +46,7 @@ class AttendanceController extends Controller
     public function clicks(Request $req)
     {
         $clicks = $this->attendanceService->getPunches(
-            userId: auth()->id(),
+            userId: $req->user_id ?? auth()->id(),
         );
         return apiResponse(message: 'Clicks retrieved successfully', data: $clicks);
     }

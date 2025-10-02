@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Users;
 
 use App\DTO\Tenant\UserDTO;
-
 use Exception;
 use Illuminate\Http\JsonResponse;
 use App\Services\Tenant\Users\UserService;
@@ -14,25 +13,22 @@ use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
 use App\Http\Requests\Tenant\Users\ChangeLanguageRequest;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
-use App\Http\Resources\Tenant\Users\UserShowResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Throwable;
 
 class UserController extends Controller
 {
     public function __construct(private readonly UserService $userService) {}
 
-
     public function index(Request $request): JsonResponse
     {
         try {
             $filters = array_filter(request()->query());
-            $withRelations = ['roles'];
-            if($request->has('ddl')){
-                $users = $this->userService->index(filters: $filters,withRelations: $withRelations);
+            $withRelations = ['roles', 'team'];
+            if ($request->has('ddl')) {
+                $users = $this->userService->index(filters: $filters, withRelations: $withRelations);
                 $data = UserDDLResource::collection($users);
-            }else{
+            } else {
                 $users = $this->userService->index(filters: $filters, withRelations: $withRelations,  perPage: $filters['per_page'] ?? 10);
                 $data = UserResource::collection($users)->response()->getData(true);
             }
@@ -42,13 +38,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param AddUserRequest $request
-     * @return JsonResponse
-     * @throws Throwable
-     */
     public function store(UserRequest $request): JsonResponse
     {
         try {
@@ -63,56 +52,28 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * @param $id
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-     */
     public function show($id)
     {
         try {
-            $user = $this->userService->getModel()->with(['roles'])->find($id);
+            $user = $this->userService->getModel()->with(['roles', 'team'])->find($id);
             if (!$user) {
                 return apiResponse(message: trans('app.data not found'), code: 404);
             }
-            $data = new UserShowResource($user);
+            $data = new UserResource($user);
             return apiResponse($data, trans('app.data displayed successfully'));
         } catch (Exception $e) {
             return apiResponse(message: $e->getMessage(), code: 500);
         }
     }
 
-    /**
-     * @param $id
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function edit($id)
-    {
-        try {
-            $user = $this->userService->getModel()->with(['roles'])->find($id);
-            if (!$user) {
-                return apiResponse(message: trans('app.data not found'), code: 404);
-            }
-            $data = new UserShowResource($user);
-            return apiResponse($data, trans('app.data displayed successfully'));
-        } catch (Exception $e) {
-            return apiResponse(message: $e->getMessage(), code: 500);
-        }
-    }
-
-    /**
-     * @param UserUpdateRequest $request
-     * @param $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(UserRequest $request,$id): JsonResponse
+    public function update(UserRequest $request, $id): JsonResponse
     {
         try {
             $userDTO = UserDTO::fromRequest($request);
             DB::beginTransaction();
-            $user = $this->userService->update($userDTO,$id);
-         
+            $user = $this->userService->update($userDTO, $id);
             DB::commit();
-            return ApiResponse([], 'User updated successfully');
+            return ApiResponse(UserResource::make($user), 'User updated successfully');
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);
@@ -139,12 +100,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         try {
@@ -157,12 +112,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Toggle user status (activate/deactivate)
-     *
-     * @param int $id
-     * @return JsonResponse
-     */
     public function toggleStatus($id): JsonResponse
     {
         try {
@@ -177,13 +126,6 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Change user language
-     *
-     * @param ChangeLanguageRequest $request
-     * @param int $id
-     * @return JsonResponse
-     */
     public function getLanguage(): JsonResponse
     {
         try {
@@ -195,20 +137,26 @@ class UserController extends Controller
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
-    }  
-    /**
-     * Change user language
-     *
-     * @param ChangeLanguageRequest $request
-     * @param int $id
-     * @return JsonResponse
-     */
+    }
+
     public function changeLanguage(ChangeLanguageRequest $request): JsonResponse
     {
         try {
             $id = getAuthUser('api_tenant')->id;
             $this->userService->changeLanguage($id, $request->validated()['lang']);
             return ApiResponse([], 'User language changed successfully');
+        } catch (NotFoundException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function target($user_id): JsonResponse
+    {
+        try {
+            $target = $this->userService->getTarget($user_id);
+            return ApiResponse($target, 'User target retrieved successfully');
         } catch (NotFoundException $e) {
             return ApiResponse(message: $e->getMessage(), code: 404);
         } catch (Exception $e) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Tenant;
 
 use App\Models\Tenant\User;
 use App\Traits\Filterable;
