@@ -11,7 +11,11 @@ use App\Models\Tenant\Attendance\AttendanceDay;
 
 class AttendanceController extends Controller
 {
-    public function __construct(private AttendanceService $attendanceService) {}
+    public function __construct(private AttendanceService $attendanceService)
+    {
+        $this->middleware('permission:view-attendance')->only(['index', 'clicks']);
+        $this->middleware('permission:create-attendance')->only(['punch']);
+    }
 
     public function punch(ClickRequest $clickRequest)
     {

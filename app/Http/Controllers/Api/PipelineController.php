@@ -18,7 +18,10 @@ use Illuminate\Http\JsonResponse;
 
 class PipelineController extends Controller
 {
-    public function __construct(public PipelineService $pipelineService) {}
+    public function __construct(public PipelineService $pipelineService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+    }
 
     public function index(Request $request): JsonResponse
     {

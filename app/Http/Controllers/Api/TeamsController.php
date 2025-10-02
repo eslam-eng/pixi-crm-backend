@@ -18,7 +18,10 @@ use Illuminate\Support\Facades\DB;
 class TeamsController extends Controller
 {
 
-    public function __construct(private readonly TeamService $teamService) {}
+    public function __construct(private readonly TeamService $teamService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index']);
+    }
 
     public function index(Request $request): JsonResponse
     {

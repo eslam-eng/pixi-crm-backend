@@ -18,7 +18,10 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    public function __construct(private readonly UserService $userService) {}
+    public function __construct(private readonly UserService $userService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+    }
 
     public function index(Request $request): JsonResponse
     {

@@ -13,7 +13,10 @@ use Illuminate\Http\JsonResponse;
 
 class SettingController extends Controller
 {
-    public function __construct() {}
+    public function __construct()
+    {
+        $this->middleware('permission:manage-settings')->except(['changeValue', 'getSettingsByGroup']);
+    }
 
     /**
      * Handle switcher action - toggle boolean settings

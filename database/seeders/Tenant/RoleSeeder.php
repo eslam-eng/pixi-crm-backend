@@ -25,7 +25,10 @@ class RoleSeeder extends Seeder
             ['name' => 'create-leads', 'group' => 'leads', 'description' => 'Create new leads'],
             ['name' => 'edit-leads', 'group' => 'leads', 'description' => 'Edit all leads'],
             ['name' => 'delete-leads', 'group' => 'leads', 'description' => 'Delete leads'],
-
+            ['name' => 'kanban-leads', 'group' => 'leads', 'description' => 'Kanban leads'],
+            ['name' => 'change-stage', 'group' => 'leads', 'description' => 'Change stage'],
+            ['name' => 'get-activities-list', 'group' => 'leads', 'description' => 'Get activities list'],
+            
             // Contact Management
             ['name' => 'view-contacts', 'group' => 'contacts', 'description' => 'View contacts'],
             ['name' => 'create-contacts', 'group' => 'contacts', 'description' => 'Create contacts'],
@@ -38,12 +41,14 @@ class RoleSeeder extends Seeder
             ['name' => 'create-forms', 'group' => 'forms', 'description' => 'Create forms'],
             ['name' => 'edit-forms', 'group' => 'forms', 'description' => 'Edit forms'],
             ['name' => 'delete-forms', 'group' => 'forms', 'description' => 'Delete forms'],
-
+            ['name' => 'toggle-forms', 'group' => 'forms', 'description' => 'Toggle forms'],
+            
             // Deal Management
             ['name' => 'view-deals', 'group' => 'deals', 'description' => 'View deals'],
             ['name' => 'create-deals', 'group' => 'deals', 'description' => 'Create deals'],
             ['name' => 'edit-deals', 'group' => 'deals', 'description' => 'Edit deals'],
             ['name' => 'delete-deals', 'group' => 'deals', 'description' => 'Delete deals'],
+            ['name' => 'change-approval-status', 'group' => 'deals', 'description' => 'Change approval status'],
 
             // Task Management
             ['name' => 'view-tasks', 'group' => 'tasks', 'description' => 'View tasks'],
@@ -57,17 +62,9 @@ class RoleSeeder extends Seeder
             ['name' => 'edit-items', 'group' => 'items', 'description' => 'Edit items'],
             ['name' => 'delete-items', 'group' => 'items', 'description' => 'Delete items'],
 
-            // User Management
-            // ['name' => 'view-users', 'group' => 'users', 'description' => 'View users'],
-            // ['name' => 'create-users', 'group' => 'users', 'description' => 'Create users'],
-            // ['name' => 'edit-users', 'group' => 'users', 'description' => 'Edit users'],
-            // ['name' => 'delete-users', 'group' => 'users', 'description' => 'Delete users'],
-
-            // Role & Permission Management
-            // ['name' => 'view-roles', 'group' => 'roles', 'description' => 'View roles'],
-            // ['name' => 'create-roles', 'group' => 'roles', 'description' => 'Create roles'],
-            // ['name' => 'edit-roles', 'group' => 'roles', 'description' => 'Edit roles'],
-            // ['name' => 'delete-roles', 'group' => 'roles', 'description' => 'Delete roles'],
+            // Attendance Management
+            ['name' => 'view-attendance', 'group' => 'attendance', 'description' => 'View attendance'],
+            ['name' => 'create-attendance', 'group' => 'attendance', 'description' => 'Create attendance'],
 
             // Settings
             ['name' => 'manage-settings', 'group' => 'settings', 'description' => 'Manage system settings'],
@@ -107,7 +104,9 @@ class RoleSeeder extends Seeder
 
         $admin->syncPermissions(Permission::all());
         $manager->syncPermissions(Permission::all());
-        $agent->syncPermissions(Permission::all());
+        $agent->syncPermissions(Permission::all()->reject(function ($permission) {
+            return $permission->name == 'manage-settings';
+        }));
 
         $this->command->info('Roles and permissions seeded successfully!');
     }

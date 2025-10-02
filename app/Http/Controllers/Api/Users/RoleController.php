@@ -18,7 +18,10 @@ use Illuminate\Http\Response;
 
 class RoleController extends Controller
 {
-    public function __construct(private readonly RoleService $roleService) {}
+    public function __construct(private readonly RoleService $roleService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+    }
 
     public function index(Request $request): JsonResponse
     {
