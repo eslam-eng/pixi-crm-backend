@@ -3,8 +3,7 @@
 namespace App\Http\Requests\Tenant\Users;
 
 use App\DTO\Tenant\UserDTO;
-use App\Enums\RolesEnum;
-use App\Enums\UserType;
+use App\Enums\TargetType;
 use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,16 +19,22 @@ class UserRequest extends BaseRequest
 
     public function rules(): array
     {
-        $userId = $this->id ?? $this->user;
+        $userId = $this->user;
 
         return [
             'first_name' => 'required|string',
             'last_name' => 'required|string',
-            'email' => ['required','email',Rule::unique('users', 'email')->ignore($userId)],
-            'password' => ['nullable','string','min:6',Rule::requiredIf($this->isMethod('POST'))],
-            'phone' => ['required','numeric',Rule::unique('users', 'phone')->ignore($userId)],
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($userId)],
+            'password' => ['nullable', 'string', 'min:6', Rule::requiredIf($this->isMethod('POST'))],
+            'phone' => ['nullable', 'numeric', Rule::unique('users', 'phone')->ignore($userId)],
             'department_id' => 'required|exists:departments,id,is_active,1',
-            'role' => ['required', Rule::exists('roles','name')],
+            'role' => ['required', Rule::exists('roles', 'name')],
+            'job_title' => 'nullable|string',
+            'team_id' => 'nullable|exists:teams,id',
+            'target' => 'required|numeric',
+            'target_type' => ['required_with:target', Rule::enum(TargetType::class)],
+            'lang' => ['required', 'string', Rule::in(['ar', 'en', 'fr', 'es'])],
+            'is_active' => 'required|boolean',
         ];
     }
 

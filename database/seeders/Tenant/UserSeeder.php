@@ -2,6 +2,7 @@
 
 namespace Database\Seeders\Tenant;
 
+use App\Models\Tenant\Team;
 use App\Models\Tenant\User;
 use Hash;
 use Illuminate\Database\Seeder;
@@ -10,39 +11,64 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
+
+
+
+        $admin1 = User::updateOrCreate(
             [
-                'email' => 'admin1@gamil.com',
+                'email' => 'ashraf@gamil.com',
             ],
             [
-                'first_name' => 'first',
-                'last_name' => 'admin',
-                'email' => 'admin1@gamil.com',
+                'first_name' => 'ashraf',
+                'last_name' => 'mohamed',
+                'email' => 'ashraf@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01569207834',
                 'department_id' => 1,
             ]
         )->syncRoles('admin');
 
-        User::updateOrCreate(
+        $admin2 = User::updateOrCreate(
             [
-                'email' => 'admin2@gamil.com',
+                'email' => 'ahmed@gamil.com',
             ],
             [
-                'first_name' => 'second',
-                'last_name' => 'admin',
-                'email' => 'admin2@gamil.com',
+                'first_name' => 'ahmed',
+                'last_name' => 'mohamed',
+                'email' => 'ahmed@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01207834569',
                 'department_id' => 1,
             ]
         )->syncRoles('admin');
 
+
+        // Create Teams
+        $team1 = Team::updateOrCreate(
+            [
+                'title' => 'Team 1',
+            ],
+            [
+                'leader_id' => $admin1->id,
+                'title' => 'Team 1',
+            ]
+        );
+
+        $team2 = Team::updateOrCreate(
+            [
+                'title' => 'Team 2',
+            ],
+            [
+                'leader_id' => $admin2->id,
+                'title' => 'Team 2',
+            ]
+        );
+
         User::updateOrCreate(
             ['email' => 'manager1@gamil.com'],
             [
-                'first_name' => 'first',
-                'last_name' => 'manager',
+                'first_name' => 'ali',
+                'last_name' => 'hassen',
                 'email' => 'manager1@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01234569078',
@@ -53,8 +79,8 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'manager2@gamil.com'],
             [
-                'first_name' => 'second',
-                'last_name' => 'manager',
+                'first_name' => 'ahmed',
+                'last_name' => 'nasser',
                 'email' => 'manager2@gamil.com',
                 'password' => Hash::make(123456),
                 'phone' => '01234569078',
@@ -62,27 +88,55 @@ class UserSeeder extends Seeder
             ]
         )->syncRoles('manager');
 
-        User::updateOrCreate(
+        $agent1 = User::updateOrCreate(
             ['email' => 'agent1@gamil.com'],
             [
-                'first_name' => 'first',
-                'last_name' => 'agent',
+                'first_name' => 'ramy',
+                'last_name' => 'gamaal',
                 'email' => 'agent1@gamil.com',
                 'password' => Hash::make(123456),
-                'phone' => '01234567890',
+                'phone' => '01234567540',
                 'department_id' => 1,
+                'team_id' => $team1->id,
             ]
         )->syncRoles('agent');
 
-        User::updateOrCreate(
+        $agent2 = User::updateOrCreate(
             ['email' => 'agent2@gamil.com'],
             [
-                'first_name' => 'second',
-                'last_name' => 'agent',
+                'first_name' => 'mohamed',
+                'last_name' => 'tamer',
                 'email' => 'agent2@gamil.com',
                 'password' => Hash::make(123456),
-                'phone' => '23401567890',
+                'phone' => '01234546890',
                 'department_id' => 1,
+                'team_id' => $team1->id,
+            ]
+        )->syncRoles('agent');
+
+        $agent3 = User::updateOrCreate(
+            ['email' => 'agent3@gamil.com'],
+            [
+                'first_name' => 'ahmed',
+                'last_name' => 'kahlid',
+                'email' => 'agent3@gamil.com',
+                'password' => Hash::make(123456),
+                'phone' => '23404567890',
+                'department_id' => 1,
+                'team_id' => $team2->id,
+            ]
+        )->syncRoles('agent');
+
+        $agent4 = User::updateOrCreate(
+            ['email' => 'agent4@gamil.com'],
+            [
+                'first_name' => 'ahmed',
+                'last_name' => 'al-sayed',
+                'email' => 'agent4@gamil.com',
+                'password' => Hash::make(123456),
+                'phone' => '24501567890',
+                'department_id' => 1,
+                'team_id' => $team2->id,
             ]
         )->syncRoles('agent');
     }

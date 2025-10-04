@@ -24,7 +24,7 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
-         $this->renderable(function (UnauthorizedException $e, $request) {
+        $this->renderable(function (UnauthorizedException $e, $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'message' => 'You do not have permission to perform this action.',
@@ -39,7 +39,3 @@ class Handler extends ExceptionHandler
         // });
     }
 }
-
-
-
-

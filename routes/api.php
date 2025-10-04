@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AttributeValueController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -19,6 +20,7 @@ use \App\Http\Controllers\Api\Deals\{
 };
 use \App\Http\Controllers\Api\Users\{
     DepartmentController,
+    PermissionController,
     RoleController,
     UserController
 };
@@ -171,13 +173,20 @@ Route::middleware([
         Route::get('authentication/get/language', [UserController::class, 'getLanguage']);
         Route::post('authentication/change/language', [UserController::class, 'changeLanguage']);
 
-        Route::get('/user', function () {
-            return response()->json(Auth::user());
+
+        // Attendance routes
+        Route::group(['prefix' => 'attendances'], function () {
+            Route::post('/punch', [AttendanceController::class, 'punch']);
+            Route::get('/days', [AttendanceController::class, 'index']); // filters
+            Route::get('/clicks', [AttendanceController::class, 'clicks']); // filters
         });
+
         // Route::middleware('role:admin')->group(function () {
+        Route::get('users/{user}/target', [UserController::class, 'target']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);
+        Route::get('roles/permissions/all', [PermissionController::class, 'index']);
         Route::apiResource('roles', RoleController::class);
 
         //Tasks routes
@@ -189,7 +198,6 @@ Route::middleware([
         Route::apiResource('deals', DealController::class);
         Route::get('deals/get/statistics', [DealController::class, 'statistics']);
         Route::post('deals/{id}/change/approval-status', [DealController::class, 'changeApprovalStatus']);
-        
         // Deal Payments routes
         Route::post('deals/{dealId}/payments', [\App\Http\Controllers\Api\Deals\DealPaymentController::class, 'store']);
 
@@ -291,6 +299,7 @@ Route::middleware([
     Route::get('/locations/cities/{cityId}/areas', [\App\Http\Controllers\Api\LocationController::class, 'getAreas']);
     Route::apiResource('sources', \App\Http\Controllers\Api\ResourceController::class);
     Route::apiResource('reasons', \App\Http\Controllers\Api\ReasonController::class);
+
 
     // Translatable example routes
     Route::prefix('translatable')->group(function () {

@@ -17,7 +17,7 @@ class ReasonController extends Controller
 {
     public function __construct(public ReasonService $reasonService)
     {
-
+        $this->middleware('permission:manage-settings')->except(['index']);
     }
     /**
      * Display a listing of the resource.
