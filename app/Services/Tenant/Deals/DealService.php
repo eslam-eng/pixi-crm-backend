@@ -292,7 +292,7 @@ class DealService extends BaseService
         }
 
         // Validate approval requirements
-        $this->validateApprovalRequirements($dealDTO, $settings);
+        // $this->validateApprovalRequirements($dealDTO, $settings);
     }
 
     /**
