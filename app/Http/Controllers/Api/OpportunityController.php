@@ -19,7 +19,16 @@ use Illuminate\Http\Response;
 
 class OpportunityController extends Controller
 {
-    public function __construct(public LeadService $leadService) {}
+    public function __construct(public LeadService $leadService)
+    {
+        $this->middleware('permission:view-leads')->only(['index', 'show']);
+        $this->middleware('permission:create-leads')->only(['store']);
+        $this->middleware('permission:kanban-leads')->only(['kanbanList']);
+        $this->middleware('permission:edit-leads')->only(['update']);
+        $this->middleware('permission:delete-leads')->only(['destroy']);
+        $this->middleware('permission:change-stage')->only(['changeStage']);
+        $this->middleware('permission:get-activities-list')->only(['getActivitiesList']);
+    }
 
     public function statistics()
     {

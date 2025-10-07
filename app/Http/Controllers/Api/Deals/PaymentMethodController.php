@@ -15,7 +15,11 @@ use Illuminate\Http\Request;
 
 class PaymentMethodController extends Controller
 {
-    public function __construct(public PaymentMethodService $paymentMethodService) {}
+    public function __construct(public PaymentMethodService $paymentMethodService)
+    {
+        $this->middleware('permission:view-deals')->only(['index']);
+        $this->middleware('permission:manage-settings')->except(['store', 'setDefault', 'setChecked', 'destroy']);
+    }
 
     /**
      * Display a listing of the resource.

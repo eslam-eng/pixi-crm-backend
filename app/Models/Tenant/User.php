@@ -5,6 +5,7 @@ namespace App\Models\Tenant;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\FcmToken;
+use App\Models\Tenant\Team;
 use App\Traits\Filterable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -32,12 +33,17 @@ class User extends Authenticatable
         'last_login_at',
         'department_id',
         'is_active',
+        'target',
+        'target_type',
+        'job_title',
+        'team_id',
         'lang',
     ];
 
     protected $casts = [
-
+        'target' => 'float',
         'last_login_at' => 'date',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -114,11 +120,24 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
+
     /**
      * Get the FCM tokens for the user.
      */
     public function fcm_tokens()
     {
         return $this->hasMany(FcmToken::class);
+    }
+
+    /**
+     * Get the deals assigned to this user.
+     */
+    public function deals()
+    {
+        return $this->hasMany(Deal::class, 'assigned_to_id');
     }
 }

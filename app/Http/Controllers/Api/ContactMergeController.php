@@ -14,7 +14,10 @@ use Illuminate\Http\Response;
 
 class ContactMergeController extends Controller
 {
-    public function __construct(public ContactMergeService $contactMergeService) {}
+    public function __construct(public ContactMergeService $contactMergeService)
+    {
+        $this->middleware('permission:manage-settings');
+    }
 
     public function form(Request $request)
     {

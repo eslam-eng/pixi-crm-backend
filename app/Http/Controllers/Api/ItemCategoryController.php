@@ -17,7 +17,10 @@ use Illuminate\Http\Response;
 
 class ItemCategoryController extends Controller
 {
-    public function __construct(public ItemCategoryService $itemCategoryService) {}
+    public function __construct(public ItemCategoryService $itemCategoryService)
+    {
+        $this->middleware('permission:manage-settings');
+    }
 
     public function index(Request $request)
     {

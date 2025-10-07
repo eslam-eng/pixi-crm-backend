@@ -21,7 +21,10 @@ use Illuminate\Http\Response;
 
 class ItemVariantController extends Controller
 {
-    public function __construct(public ItemVariantService $itemVariantService) {}
+    public function __construct(public ItemVariantService $itemVariantService)
+    {
+        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+    }
     /**
      * Display a listing of the variants for a product.
      */
