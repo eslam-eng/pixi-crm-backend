@@ -25,6 +25,7 @@ class Lead extends Model implements Auditable
         'status',
         'contact_id',
         'stage_id',
+        'is_qualifying',
         'deal_value',
         'win_probability',
         'expected_close_date',
@@ -35,6 +36,7 @@ class Lead extends Model implements Auditable
 
     protected $casts = [
         'status' => OpportunityStatus::class,
+        'is_qualifying' => 'boolean',
         'deal_value'           => 'decimal:2',
         'win_probability'      => 'decimal:0',
         'expected_close_date'  => 'date',
@@ -48,6 +50,11 @@ class Lead extends Model implements Auditable
     public function city()
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
     }
 
     public function transformAudit(array $data): array

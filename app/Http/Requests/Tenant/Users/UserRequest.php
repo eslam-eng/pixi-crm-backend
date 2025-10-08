@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Tenant\Users;
 
 use App\DTO\Tenant\UserDTO;
-use App\Enums\TargetType;
 use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,7 +31,6 @@ class UserRequest extends BaseRequest
             'job_title' => 'nullable|string',
             'team_id' => 'nullable|exists:teams,id',
             'target' => 'required|numeric',
-            'target_type' => ['required_with:target', Rule::enum(TargetType::class)],
             'lang' => ['required', 'string', Rule::in(['ar', 'en', 'fr', 'es'])],
             'is_active' => 'required|boolean',
         ];

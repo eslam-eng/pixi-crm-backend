@@ -164,7 +164,7 @@ class LeadService extends BaseService
                 ])
                 ->all();
         }
-        
+
         $lead->update($leadDTO->toArray());
 
         if (!empty($variantsPayload)) {

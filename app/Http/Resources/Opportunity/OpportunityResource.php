@@ -22,6 +22,7 @@ class OpportunityResource extends JsonResource
         return [
             'id' => $this->id,
             'status' => $this->status,
+            'is_qualifying' => $this->is_qualifying,
             'deal_value' => $this->deal_value,
             'win_probability' => $this->win_probability,
             'expected_close_date' => $this->expected_close_date,

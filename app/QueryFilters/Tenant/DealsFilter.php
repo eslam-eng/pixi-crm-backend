@@ -127,9 +127,7 @@ class DealsFilter extends QueryFilter
     {
         return $this->builder->where('deal_type', $term);
     }
-
-  
-
+    
     /**
      * Filter by multiple assigned users
      */
@@ -142,4 +140,25 @@ class DealsFilter extends QueryFilter
         return $this->builder->where('assigned_to_id', $term);
     }
 
+    public function start_date($term)
+    {
+        return $this->builder->where('created_at', '>=', $term);
+    }
+
+    public function end_date($term)
+    {
+        return $this->builder->where('created_at', '<=', $term);
+    }
+
+    public function user_id($term)
+    {
+        return $this->builder->where('created_by_id', $term);
+    }
+
+    public function team_id($term)
+    {
+        return $this->builder->whereHas('assigned_to', function ($query) use ($term) {
+            $query->where('team_id', $term);
+        });
+    }
 }

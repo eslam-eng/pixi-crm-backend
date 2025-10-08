@@ -9,7 +9,7 @@ class TeamDTO extends BaseDTO
 {
     public function __construct(
         public readonly string $title,
-        public readonly int $leader_id,
+        public readonly ?int $leader_id,
         public readonly ?array $sales_ids,
     ) {}
 
