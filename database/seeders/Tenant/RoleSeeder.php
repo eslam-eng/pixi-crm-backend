@@ -28,7 +28,7 @@ class RoleSeeder extends Seeder
             ['name' => 'kanban-leads', 'group' => 'leads', 'description' => 'Kanban leads'],
             ['name' => 'change-stage', 'group' => 'leads', 'description' => 'Change stage'],
             ['name' => 'get-activities-list', 'group' => 'leads', 'description' => 'Get activities list'],
-            
+
             // Contact Management
             ['name' => 'view-contacts', 'group' => 'contacts', 'description' => 'View contacts'],
             ['name' => 'create-contacts', 'group' => 'contacts', 'description' => 'Create contacts'],
@@ -42,7 +42,7 @@ class RoleSeeder extends Seeder
             ['name' => 'edit-forms', 'group' => 'forms', 'description' => 'Edit forms'],
             ['name' => 'delete-forms', 'group' => 'forms', 'description' => 'Delete forms'],
             ['name' => 'toggle-forms', 'group' => 'forms', 'description' => 'Toggle forms'],
-            
+
             // Deal Management
             ['name' => 'view-deals', 'group' => 'deals', 'description' => 'View deals'],
             ['name' => 'create-deals', 'group' => 'deals', 'description' => 'Create deals'],
@@ -68,6 +68,9 @@ class RoleSeeder extends Seeder
 
             // Settings
             ['name' => 'manage-settings', 'group' => 'settings', 'description' => 'Manage system settings'],
+
+            // Dashboard
+            ['name' => 'view-dashboard', 'group' => 'dashboard', 'description' => 'View dashboard'],
         ];
 
         foreach ($permissions as $permission) {

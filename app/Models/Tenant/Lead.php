@@ -52,6 +52,11 @@ class Lead extends Model implements Auditable
         return $this->belongsTo(City::class);
     }
 
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
     public function transformAudit(array $data): array
     {
         // dd($data,$this->getOriginal('stage_id') ,$this->getAttribute('stage_id'));
