@@ -25,6 +25,7 @@ use \App\Http\Controllers\Api\Users\{
     UserController
 };
 use App\Http\Controllers\Api\CoreController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ItemAttributeController;
 use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
@@ -168,7 +169,7 @@ Route::middleware([
         Route::delete('/{variant}', [ItemVariantController::class, 'destroy']); // Delete variant
     });
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth:api_tenant')->group(function () {
         Route::post('authentication/logout', [AuthController::class, 'logout']);
         Route::get('authentication/get/language', [UserController::class, 'getLanguage']);
         Route::post('authentication/change/language', [UserController::class, 'changeLanguage']);
@@ -266,9 +267,16 @@ Route::middleware([
         Route::get('/{form}/submissions', [FormSubmissionController::class, 'submissions']);
     });
 
+    Route::prefix('dashboard')->middleware('auth:api_tenant')->group(function () {
+        Route::get('/widgets', [DashboardController::class, 'getWidgets']);
+        Route::get('/opportunities-by-stage', [DashboardController::class, 'getOpportunitiesByStage']);
+        Route::get('/sale-funnel', [DashboardController::class, 'getSaleFunnel']);
+        Route::get('/today-tasks', [DashboardController::class, 'getTodayTasks']);
+        Route::get('/recent-activities', [DashboardController::class, 'getUserRecentActivities']);
+        // Route::get('/top-performing-sales-reps', [DashboardController::class, '']); // still working on it
+    });
 
-
-    Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList'])->middleware('auth:sanctum');
+    Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList'])->middleware('auth:api_tenant');
     Route::get('/opportunities/statistics', [\App\Http\Controllers\Api\OpportunityController::class, 'statistics']);
     Route::patch('opportunities/{opportunity}/change-stage', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStage']);
     Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);

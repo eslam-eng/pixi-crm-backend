@@ -2,21 +2,24 @@
 
 namespace App\Models\Tenant;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
+use App\Enums\TargetType;
 use App\Models\FcmToken;
 use App\Models\Tenant\Team;
+use App\Settings\UsersSettings;
 use App\Traits\Filterable;
+use Carbon\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, HasApiTokens, Filterable;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens, Filterable, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -115,6 +118,30 @@ class User extends Authenticatable
         }
     }
 
+    public function targets()
+    {
+        return $this->hasMany(UserTarget::class);
+    }
+
+    public function currentTarget()
+    {
+
+        $settings = app(UsersSettings::class);
+        $targetType = $settings->default_target_type;
+        return match ($targetType) {
+            TargetType::MONTHLY->value => $this->getMonthTarget(),
+            TargetType::CALENDAR_QUARTERS->value => $this->getQuarterTarget(),
+            default => null,
+        };
+    }
+
+    private function getMonthTarget()
+    {
+        $date = Carbon::now();
+        dd($date, $this->targets()->latest('created_at')->first());
+        return $this->targets()->where('created_at', '<=', $date)->where('target_type', TargetType::MONTHLY->value)->latest('created_at')->first();
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class);
@@ -139,5 +166,15 @@ class User extends Authenticatable
     public function deals()
     {
         return $this->hasMany(Deal::class, 'assigned_to_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email'])
+            ->logOnlyDirty() // Only log changed attributes
+            ->dontSubmitEmptyLogs()
+            ->useLogName('user')
+            ->setDescriptionForEvent(fn(string $eventName) => "User has been {$eventName}");
     }
 }
