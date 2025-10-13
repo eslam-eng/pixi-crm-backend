@@ -19,7 +19,7 @@ class TaskFilters extends QueryFilter
     {
         return $this->builder->where(function ($query) use ($term) {
             $query->where('title', 'LIKE', "%$term%")
-                  ->orWhere('description', 'LIKE', "%$term%");
+                ->orWhere('description', 'LIKE', "%$term%");
         });
     }
 
@@ -64,7 +64,6 @@ class TaskFilters extends QueryFilter
             // Handle single date string
             $this->builder->where('due_date', '>=', $term);
         }
-        
         return $this->builder;
     }
 
@@ -100,7 +99,6 @@ class TaskFilters extends QueryFilter
         if (is_array($term)) {
             return $this->builder->whereJsonContains('tags', $term);
         }
-        
         return $this->builder->whereJsonContains('tags', $term);
     }
 
@@ -156,7 +154,7 @@ class TaskFilters extends QueryFilter
     public function overdue()
     {
         return $this->builder->where('due_date', '<', Carbon::today())
-                            ->where('status', '!=', 'completed');
+            ->where('status', '!=', 'completed');
     }
 
     /**
@@ -172,7 +170,6 @@ class TaskFilters extends QueryFilter
                 $this->builder->where('created_at', '<=', $term['end']);
             }
         }
-        
         return $this->builder;
     }
 
@@ -189,7 +186,6 @@ class TaskFilters extends QueryFilter
                 $this->builder->where('updated_at', '<=', $term['end']);
             }
         }
-        
         return $this->builder;
     }
 
@@ -209,7 +205,6 @@ class TaskFilters extends QueryFilter
         if (is_array($term)) {
             return $this->builder->whereIn('status', $term);
         }
-        
         return $this->builder->where('status', $term);
     }
 
@@ -221,7 +216,6 @@ class TaskFilters extends QueryFilter
         if (is_array($term)) {
             return $this->builder->whereIn('priority_id', $term);
         }
-        
         return $this->builder->where('priority_id', $term);
     }
 
@@ -233,7 +227,6 @@ class TaskFilters extends QueryFilter
         if (is_array($term)) {
             return $this->builder->whereIn('assigned_to_id', $term);
         }
-        
         return $this->builder->where('assigned_to_id', $term);
     }
 
@@ -245,7 +238,6 @@ class TaskFilters extends QueryFilter
         if (is_array($term)) {
             return $this->builder->whereIn('lead_id', $term);
         }
-        
         return $this->builder->where('lead_id', $term);
     }
 
@@ -257,7 +249,28 @@ class TaskFilters extends QueryFilter
         if (is_array($term)) {
             return $this->builder->whereIn('task_type_id', $term);
         }
-        
         return $this->builder->where('task_type_id', $term);
+    }
+
+    public function start_date($term)
+    {
+        return $this->builder->where('created_at', '>=', $term);
+    }
+
+    public function user_id($term)
+    {
+        return $this->builder->where('assigned_to_id', $term);
+    }
+
+    public function end_date($term)
+    {
+        return $this->builder->where('created_at', '<=', $term);
+    }
+
+    public function team_id($term)
+    {
+        return $this->builder->whereHas('assignedTo', function ($query) use ($term) {
+            $query->where('team_id', $term);
+        });
     }
 }

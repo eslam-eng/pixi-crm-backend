@@ -21,8 +21,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('job_title')->nullable();
             $table->foreignId('team_id')->nullable()->constrained('teams');
-            $table->enum('target_type', TargetType::values())->default(TargetType::NONE);
-            $table->float('target')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('lang')->default('en');
@@ -32,6 +30,14 @@ return new class extends Migration
             $table->boolean('is_active')->default(1);
             $table->rememberToken();
             $table->timestamps();
+        });
+
+        Schema::create('user_targets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->decimal('target_value', 10, 2);
+            $table->timestamps();
+            $table->index(['user_id', 'created_at']);
         });
 
         Schema::table('teams', function (Blueprint $table) {

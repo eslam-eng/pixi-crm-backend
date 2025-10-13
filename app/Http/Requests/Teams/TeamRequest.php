@@ -29,7 +29,7 @@ class TeamRequest extends BaseRequest
         return [
             'title' => ['required', 'string', Rule::unique('teams', 'title')->ignore($teamIdForUnique), 'max:255'],
             'leader_id' => [
-                'required',
+                'nullable',
                 'integer',
                 Rule::exists('users', 'id'),
                 Rule::exists('model_has_roles', 'model_id')
@@ -38,16 +38,10 @@ class TeamRequest extends BaseRequest
             ],
             'sales_ids' => ['nullable', 'array'],
             'sales_ids.*' => [
-                'required',
+                'nullable',
                 'distinct',
                 'integer',
-                Rule::exists('users', 'id'),
-                Rule::exists('model_has_roles', 'model_id')
-                    ->where(
-                        fn($q) => $q->where('role_id', $roleIds['agent'] ?? 0)
-                            ->where('model_type', 'user')
-                    ),
-                Rule::notIn([(int) $this->input('leader_id')]), // prevent leader appearing in sales list
+                Rule::exists('users', 'id')
             ],
         ];
     }
@@ -57,8 +51,7 @@ class TeamRequest extends BaseRequest
         return [
             'leader_id.exists' => 'Selected team leader must be an existing user.',
             'leader_id.*model_has_roles*' => 'Leader must have role: admin or manager.',
-            // 'sales_ids.*.exists' => 'Each salesperson must be an existing user.',
-            'sales_ids.*.*model_has_roles*' => 'Each salesperson must have role: sales.',
+            'sales_ids.*.exists' => 'Each salesperson must be an existing user.',
             'sales_ids.*.distinct' => 'Duplicate salesperson selected.',
             'sales_ids.*.not_in' => 'Leader cannot be added as a salesperson.',
         ];
