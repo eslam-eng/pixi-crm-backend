@@ -22,6 +22,16 @@ class Team extends Model
         return $this->hasOne(User::class, 'id', 'leader_id');
     }
 
+    public function chairs()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'chairs',
+            'team_id',
+            'user_id'
+        )->withPivot(['id','started_at', 'ended_at']);
+    }
+
     public function sales()
     {
         return $this->hasMany(User::class, 'team_id', 'id');

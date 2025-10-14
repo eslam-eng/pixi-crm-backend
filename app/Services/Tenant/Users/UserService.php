@@ -4,6 +4,8 @@ namespace App\Services\Tenant\Users;
 
 use App\DTO\Tenant\UserDTO;
 use App\Enums\TargetType;
+use App\Exceptions\GeneralException;
+use App\Models\Tenant\Chair;
 use App\Models\Tenant\User;
 use App\Notifications\Tenant\WelcomeNewUserNotification;
 use App\QueryFilters\Tenant\UsersFilters;
@@ -222,5 +224,65 @@ class UserService extends BaseService
             ->whereBetween('created_at', [$period['start'], $period['end']])
             ->where('approval_status', 'approved') // Only count approved deals
             ->get();
+    }
+
+    public function assignToTeam(int $userId, array $data): Chair
+    {
+        $user = $this->findById($userId);
+        // End any existing active chair for this user in the same team
+        Chair::where('user_id', $user->id)
+            ->where('team_id', $data['team_id'])
+            ->whereNull('ended_at')
+            ->update(['ended_at' => now()->subDay()]); // End yesterday to avoid overlap
+
+        // Create new chair assignment
+        $chair = Chair::create([
+            'user_id' => $user->id,
+            'team_id' => $data['team_id'],
+            'started_at' => $data['started_at'],
+            'ended_at' => $data['ended_at']?? null,
+        ]);
+
+        // If monthly targets are provided, create them
+        if (isset($data['monthly_target']) && is_array($data['monthly_target'])) {
+            foreach ($data['monthly_target'] as $target) {
+                $chair->targets()->create([
+                    'period_type' => "monthly",
+                    'year' => now()->year,
+                    'period_number' => $target['month'],
+                    'target_value' => $target['amount'],
+                    'effective_from' => now()->month((int)$target['month'])->startOfMonth(),
+                    'effective_to' => now()->month((int)$target['month'])->endOfMonth(),
+                ]);
+            }
+        }
+
+        // if quarterly targets are provided, create them
+        if (isset($data['quarterly_target']) && is_array($data['quarterly_target'])) {
+            foreach ($data['quarterly_target'] as $target) {
+                $chair->targets()->create([
+                    'period_type' => "quarterly",
+                    'year' => now()->year,
+                    'period_number' => $target['quarter'],
+                    'target_value' => $target['amount'],
+                    'effective_from' => now()->setQuarter((int)$target['quarter'])->startOfQuarter(),
+                    'effective_to' => now()->setQuarter((int)$target['quarter'])->endOfQuarter(),
+                ]);
+            }
+        }
+
+        return $chair;
+    }
+
+    public function endAssignment(int $chair_id): bool
+    {
+        $chair = Chair::where('id',$chair_id)->first();
+        if($chair->ended_at){
+            throw new GeneralException('This assignment has already ended on ' . $chair->ended_at->format('M d, Y'));
+        }
+
+        $chair->update(['ended_at' => now()]);
+
+        return true;
     }
 }

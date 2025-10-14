@@ -8,6 +8,8 @@ use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\TeamRequest;
 use App\Http\Resources\TeamDDLResource;
+use App\Http\Resources\Tenant\Chairs\ChairResource;
+use App\Models\Tenant\Chair;
 use App\Services\TeamService;
 use Illuminate\Http\JsonResponse;
 use Exception;
@@ -86,6 +88,16 @@ class TeamsController extends Controller
             return ApiResponse(message: trans('app.team_deleted_successfully'));
         } catch (NotFoundException $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getChairs($id)
+    {
+        try {
+            $chairs = Chair::where( 'team_id',$id)->with('user', 'monthlyTargets', 'quarterlyTargets')->get();
+            return ApiResponse(ChairResource::collection($chairs), 'Team chairs retrieved successfully');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }

@@ -120,9 +120,14 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
-    public function team()
+    public function chairs()
     {
-        return $this->belongsTo(Team::class);
+        return $this->belongsToMany(
+            Team::class,
+            'chairs',
+            'user_id',
+            'team_id'
+        );
     }
 
     /**

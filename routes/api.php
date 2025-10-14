@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AttributeValueController;
+use App\Http\Controllers\Api\TeamsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
@@ -182,6 +183,9 @@ Route::middleware([
         });
 
         // Route::middleware('role:admin')->group(function () {
+        Route::get('/teams/{team}/chairs', [TeamsController::class, 'getChairs']);
+        Route::post('/users/{user}/assign-team', [UserController::class, 'assignToTeam']);
+        Route::patch('/chairs/{chair}/end', [UserController::class, 'endAssignment']);
         Route::get('users/{user}/target', [UserController::class, 'target']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);

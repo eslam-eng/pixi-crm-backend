@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Users;
 
 use App\DTO\Tenant\UserDTO;
+use App\Exceptions\GeneralException;
+use App\Http\Requests\Tenant\Users\AssignToTeamRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use App\Services\Tenant\Users\UserService;
@@ -161,6 +163,37 @@ class UserController extends Controller
             $target = $this->userService->getTarget($user_id);
             return ApiResponse($target, 'User target retrieved successfully');
         } catch (NotFoundException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function assignToTeam(AssignToTeamRequest $request, $id): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+            $chair = $this->userService->assignToTeam($id, $request->validated());
+            DB::commit();
+            return ApiResponse($chair, 'User assigned to team successfully');
+        }catch (NotFoundException $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        }catch (GeneralException $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        }catch (Exception $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function endAssignment($chair_id): JsonResponse
+    {
+        try {
+            $this->userService->endAssignment($chair_id);
+            return ApiResponse([], 'User assignment ended successfully');
+        } catch (GeneralException $e) {
             return ApiResponse(message: $e->getMessage(), code: 404);
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);

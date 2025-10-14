@@ -31,12 +31,13 @@ return new class extends Migration
 
             // Assignment
             $table->foreignId('assigned_to_id')->constrained('users');
+            $table->foreignId('chair_id')->nullable()->onDelete('cascade');
             $table->enum('payment_status', PaymentStatusEnum::values());
             $table->foreignId('payment_method_id')->constrained('payment_methods');
 
             // total amount
             $table->decimal('total_amount', 10, 2)->default(0);
-            
+
             $table->decimal('partial_amount_paid', 10, 2)->default(0);
             $table->decimal('amount_due', 10, 2)->default(0);
 
