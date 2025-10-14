@@ -28,7 +28,10 @@ class TeamsController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $filters = array_filter(request()->query());
+            $filters = array_filter(request()->all(), function ($value) {
+                return $value !== null && $value !== '';
+            });
+
             $withRelations = ['leader.roles', 'sales.roles'];
             if ($request->has('ddl')) {
                 $teams = $this->teamService->index(filters: $filters, withRelations: $withRelations);
@@ -96,8 +99,12 @@ class TeamsController extends Controller
     public function getChairs($id)
     {
         try {
-            $chairs = Chair::where( 'team_id',$id)->with('user', 'monthlyTargets', 'quarterlyTargets')->get();
-            return ApiResponse(ChairResource::collection($chairs), 'Team chairs retrieved successfully');
+            // $chairs = Chair::where('team_id',$id)->with('user', 'monthlyTargets', 'quarterlyTargets')->get();
+            $allChairs = Chair::active()
+                ->with(['user', 'team', 'targets', 'deals'])
+                ->get();
+            // dd($allChairs);
+            return ApiResponse(ChairResource::collection($allChairs), 'Team chairs retrieved successfully');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }

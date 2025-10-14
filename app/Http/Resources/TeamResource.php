@@ -22,7 +22,7 @@ class TeamResource extends JsonResource
             'title' => $this->title,
             'chairs' => ChairResource::collection($this->whenLoaded('chairs')),
             'leader' => new UserResource($this->whenLoaded('leader')),
-            'sales' => UserResource::collection($this->whenLoaded('sales')),
+            'is_target' => $this->is_target ? 'have target' : 'don\'t have target',
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -28,7 +28,7 @@ class AssignToTeamRequest extends FormRequest
                 // Prevent assigning to same team if already active
                 Rule::unique('chairs')->where(function ($query) use ($user) {
                     return $query->where('user_id', $user->id)
-                                 ->whereNull('ended_at');
+                        ->whereNull('ended_at');
                 })
             ],
             'started_at' => [
@@ -90,8 +90,8 @@ class AssignToTeamRequest extends FormRequest
                 return;
             }
 
-            if (!$this->checkIsTarget()) {
-                $validator->errors()->add('team', 'The specified team does not exist.');
+            if (!$this->checkIsTarget() && !blank($this->monthly_target)) {
+                $validator->errors()->add('team', 'The specified team does\'t have target.');
                 return;
             }
 
@@ -121,15 +121,15 @@ class AssignToTeamRequest extends FormRequest
             // Check for overlap with date range
             $query->where(function ($q) {
                 $q->whereNull('ended_at')
-                  ->orWhere(function ($subq) {
-                      $subq->where('started_at', '<=', $this->ended_at)
-                           ->where('ended_at', '>=', $this->started_at);
-                  });
+                    ->orWhere(function ($subq) {
+                        $subq->where('started_at', '<=', $this->ended_at)
+                            ->where('ended_at', '>=', $this->started_at);
+                    });
             });
         } else {
             // Check for any active assignment
             $query->whereNull('ended_at')
-                  ->where('started_at', '<=', now());
+                ->where('started_at', '<=', now());
         }
         return $query->exists();
     }
@@ -169,6 +169,6 @@ class AssignToTeamRequest extends FormRequest
     private function checkIsTarget()
     {
         $team = $this->getTeam();
-        return $team->is_target??false;
+        return $team->is_target ?? false;
     }
 }
