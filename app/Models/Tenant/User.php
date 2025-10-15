@@ -122,14 +122,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Many-to-many relationship with teams through chair pivot
+     * Relationship with team
      */
-    public function teams()
+    public function team()
     {
-        return $this->belongsToMany(Team::class, 'chairs')
-            ->withPivot(['id', 'started_at', 'ended_at'])
-            ->withTimestamps()
-            ->using(Chair::class);
+        return $this->hasOne(Team::class);
     }
 
     /**
@@ -188,6 +185,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Get active individual chair
+     */
+    public function activeChair()
+    {
+        return $this->hasOne(Chair::class)
+            ->whereNull('ended_at');
+    }
+
+    /**
      * Check if user is currently a chair (team or individual)
      */
     public function isChair(): bool
@@ -218,7 +224,6 @@ class User extends Authenticatable
     {
         return $this->hasManyThrough(Deal::class, Chair::class);
     }
-
 
     /**
      * Get teams user was chair of at a specific date

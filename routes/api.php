@@ -183,8 +183,8 @@ Route::middleware([
         });
 
         // Route::middleware('role:admin')->group(function () {
+        Route::post('/users/assign-team', [UserController::class, 'assignToTeam']);
         Route::get('/teams/{team}/chairs', [TeamsController::class, 'getChairs']);
-        Route::post('/users/{user}/assign-team', [UserController::class, 'assignToTeam']);
         Route::patch('/chairs/{chair}/end', [UserController::class, 'endAssignment']);
         Route::get('users/{user}/target', [UserController::class, 'target']);
         Route::apiResource('users', UserController::class);

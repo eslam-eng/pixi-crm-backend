@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Users;
 
+use App\DTO\Tenant\AssignToTeam\AssignToTeamDTO;
 use App\DTO\Tenant\UserDTO;
 use App\Exceptions\GeneralException;
 use App\Http\Requests\Tenant\Users\AssignToTeamRequest;
@@ -17,6 +18,7 @@ use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -51,6 +53,9 @@ class UserController extends Controller
             $user = $this->userService->store($userDTO);
             DB::commit();
             return ApiResponse(new UserResource($user), 'User created successfully');
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->errors(), code: 422);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);
@@ -79,6 +84,9 @@ class UserController extends Controller
             $user = $this->userService->update($userDTO, $id);
             DB::commit();
             return ApiResponse(UserResource::make($user), 'User updated successfully');
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->errors(), code: 422);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);
@@ -169,29 +177,30 @@ class UserController extends Controller
         }
     }
 
-    public function assignToTeam(AssignToTeamRequest $request, $id): JsonResponse
+    public function assignToTeam(Request $request): JsonResponse
     {
         try {
             DB::beginTransaction();
-            $chair = $this->userService->assignToTeam($id, $request->validated());
+            $assignToTeamDTO = AssignToTeamDTO::fromRequest($request);
+            // $chair = $this->userService->assignToTeam($assignToTeamDTO);
             DB::commit();
             return ApiResponse($chair, 'User assigned to team successfully');
-        }catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 404);
-        }catch (GeneralException $e) {
+        } catch (ValidationException $e) {
             DB::rollBack();
-            return ApiResponse(message: $e->getMessage(), code: 404);
-        }catch (Exception $e) {
+            return ApiResponse(message: $e->errors(), code: 422);
+        } catch (Exception $e) {
             DB::rollBack();
-            return ApiResponse(message: $e->getMessage(), code: 500);
+            return ApiResponse(message: $e, code: 500);
         }
     }
 
-    public function endAssignment($chair_id): JsonResponse
+    public function endAssignment($user_id): JsonResponse
     {
         try {
-            $this->userService->endAssignment($chair_id);
+            $this->userService->endAssignment($user_id);
             return ApiResponse([], 'User assignment ended successfully');
         } catch (GeneralException $e) {
             return ApiResponse(message: $e->getMessage(), code: 404);
