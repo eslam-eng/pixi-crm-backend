@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class Stage extends Model
 {
     use Filterable;
-    protected $fillable = ['name', 'probability', 'seq_number'];
+    protected $fillable = ['name', 'probability', 'seq_number','pipeline_id'];
 
     public function pipeline()
     {
