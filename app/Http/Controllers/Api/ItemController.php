@@ -47,7 +47,6 @@ class ItemController extends Controller
             DB::commit();
             return ApiResponse(message: 'Item created successfully', data: new ItemResource($item->load('itemable')), code: Response::HTTP_CREATED);
         } catch (Exception $e) {
-            dd($e);
             DB::rollBack();
             return ApiResponse(message: 'Failed to create item', code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }

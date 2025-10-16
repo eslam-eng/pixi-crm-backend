@@ -28,7 +28,6 @@ class ActivationCodeService extends BaseService
 
     public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
-        // dd($filters);
         $query = $this->queryGet(filters: $filters, withRelations: $withRelations);
         if ($perPage) {
             return $query->paginate($perPage);

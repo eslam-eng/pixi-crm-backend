@@ -138,7 +138,6 @@ class User extends Authenticatable
     private function getMonthTarget()
     {
         $date = Carbon::now();
-        dd($date, $this->targets()->latest('created_at')->first());
         return $this->targets()->where('created_at', '<=', $date)->where('target_type', TargetType::MONTHLY->value)->latest('created_at')->first();
     }
 

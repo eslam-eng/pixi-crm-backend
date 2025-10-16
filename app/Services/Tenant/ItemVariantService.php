@@ -59,7 +59,6 @@ class ItemVariantService extends BaseService
 
     public function queryGet(int $itemId, array $filters = [], array $withRelations = []): HasMany
     {
-        // dd($itemId);
         $item = $this->model->query()->findOrFail($itemId);
         if ($item->isProduct) {
             $query = $item->itemable
@@ -73,9 +72,7 @@ class ItemVariantService extends BaseService
 
     public function index(int $itemId, array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
-
         $query = $this->queryGet(itemId: $itemId, filters: $filters, withRelations: $withRelations);
-        dd($query->get());
         if ($perPage) {
             return $query->paginate($perPage);
         }

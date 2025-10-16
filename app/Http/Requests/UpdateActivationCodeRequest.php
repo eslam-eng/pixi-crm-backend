@@ -24,7 +24,6 @@ class UpdateActivationCodeRequest extends FormRequest
      */
     public function rules(): array
     {
-        // dd($this->route('activation_code'));
         $setting = Setting::first();
         $allowedSources = json_decode($setting?->sources ?? '[]', true);
         return [

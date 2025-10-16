@@ -10,7 +10,6 @@ class ItemQuantityRule implements ValidationRule
 {
     public function __construct(public array $items)
     {
-        dd($this->items);
     }
 
     /**
