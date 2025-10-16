@@ -7,6 +7,7 @@ use App\DTO\Tenant\UserDTO;
 use App\Enums\TargetType;
 use App\Exceptions\GeneralException;
 use App\Models\Tenant\Chair;
+use App\Models\Tenant\Team;
 use App\Models\Tenant\User;
 use App\Notifications\Tenant\WelcomeNewUserNotification;
 use App\QueryFilters\Tenant\UsersFilters;
@@ -22,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 
 class UserService extends BaseService
 {
-    public function __construct(private User $model, private TeamService $teamService) {}
+    public function __construct(private User $model) {}
 
     public function getModel(): Model
     {
@@ -208,7 +209,9 @@ class UserService extends BaseService
                     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
                 }
             }
-            $this->TotalMonthlyTargetInQuarter($userDTO->quarterly_target, $chair, $validator);
+            if ($userDTO->quarterly_target) {
+                $this->TotalMonthlyTargetInQuarter($userDTO->quarterly_target, $chair, $validator);
+            }
         }
 
         if ($userDTO->quarterly_target) {
@@ -249,17 +252,10 @@ class UserService extends BaseService
         return true;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         $user = $this->findById($id);
-        // $user->deleteAttachments();
         $user->roles()->detach();
-
         $user->delete();
         return true;
     }
@@ -267,7 +263,6 @@ class UserService extends BaseService
     public function getTarget($user_id)
     {
         $user = $this->findById($user_id);
-
         if (!$user->target || $user->target_type === TargetType::NONE) {
             return [
                 'target' => 0,
@@ -342,96 +337,93 @@ class UserService extends BaseService
             ->get();
     }
 
-    // public function assignToTeam(AssignToTeamDTO $assignToTeamDTO): User
-    // {
-    //     $user = $this->findById($assignToTeamDTO->user_id);
-    //     $team = $this->teamService->findById($assignToTeamDTO->team_id);
-    //     dd('here');
-    //     if ($user->team()->exists()) {
-    //         throw ValidationException::withMessages([
-    //             'team' => 'User already has a team',
-    //         ]);
-    //     }
+    public function assignToTeam(AssignToTeamDTO $assignToTeamDTO): User
+    {
+        $user = $this->findById($assignToTeamDTO->user_id);
+        $team = Team::findOrFail($assignToTeamDTO->team_id);
 
-    //     if (!$team->is_target) {
-    //         $user->update(['team_id' => $assignToTeamDTO->team_id]);
-    //     } else {
-    //         throw ValidationException::withMessages([
-    //             'team' => 'Team is a target team, so you need to assign a target to him',
-    //         ]);
-    //     }
+        if ($user->team_id) {
+            throw ValidationException::withMessages([
+                'team' => 'User already has a team',
+            ]);
+        }
 
+        if ($team->is_target) {
+            if ($assignToTeamDTO->monthly_target || $assignToTeamDTO->quarterly_target) {
+                $chair = $user->chairs()->create([
+                    'team_id' => $assignToTeamDTO->team_id,
+                    'started_at' => now(),
+                    'ended_at' => null,
+                ]);
+            } else {
+                throw ValidationException::withMessages([
+                    'team' => 'Team is a target team, so you need to assign a target to him',
+                ]);
+            }
+        }
 
-    //     if ($assignToTeamDTO->monthly_target || $assignToTeamDTO->quarterly_target) {
-    //         if ($user->activeChairs()->exists()) {
-    //             $chair = $user->activeChairs()->first();
-    //         } else {
-    //             $chair = $user->chairs()->create([
-    //                 'team_id' => null,
-    //                 'started_at' => now(),
-    //                 'ended_at' => null,
-    //             ]);
-    //         }
-    //     } else {
-    //         $user->activeChairs()->first()->update([
-    //             'ended_at' => now(),
-    //         ]);
-    //     }
+        $user->update(['team_id' => $assignToTeamDTO->team_id]);
 
 
-    //     $validator = validator([], []); // Create empty validator
-    //     if ($assignToTeamDTO->monthly_target) {
-    //         foreach ($assignToTeamDTO->monthly_target as $index => $target) {
-    //             if ($this->IsAllowMonthlyTarget($target['month'])) {
-    //                 $chair->targets()->updateOrCreate([
-    //                     'period_type' => "monthly",
-    //                     'year' => now()->year,
-    //                     'period_number' => $target['month'],
-    //                     'effective_from' => now()->setMonth((int)$target['month'])->startOfMonth()->format('Y-m-d H:i:s'),
-    //                     'effective_to' => now()->setMonth((int)$target['month'])->endOfMonth()->format('Y-m-d H:i:s'),
-    //                 ], [
-    //                     'target_value' => $target['amount'],
-    //                 ]);
-    //             } else {
-    //                 $monthName = now()->copy()->setMonth((int)$target['month']);
-    //                 $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
-    //             }
-    //         }
-    //         $this->TotalMonthlyTargetInQuarter($assignToTeamDTO->quarterly_target, $chair, $validator);
-    //     }
+        $validator = validator([], []);
+        if ($assignToTeamDTO->monthly_target) {
+            foreach ($assignToTeamDTO->monthly_target as $index => $target) {
+                if ($this->IsAllowMonthlyTarget($target['month'])) {
+                    $chair->targets()->create([
+                        'period_type' => "monthly",
+                        'year' => now()->year,
+                        'period_number' => $target['month'],
+                        'effective_from' => now()->setMonth((int)$target['month'])->startOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_to' => now()->setMonth((int)$target['month'])->endOfMonth()->format('Y-m-d H:i:s'),
+                        'target_value' => $target['amount'],
+                    ]);
+                } else {
+                    $monthName = now()->copy()->setMonth((int)$target['month']);
+                    $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
+                }
+            }
+            if ($assignToTeamDTO->quarterly_target) {
+                $this->TotalMonthlyTargetInQuarter($assignToTeamDTO->quarterly_target, $chair, $validator);
+            }
+        }
 
-    //     if ($assignToTeamDTO->quarterly_target) {
-    //         foreach ($assignToTeamDTO->quarterly_target as $index => $target) {
-    //             if ($this->IsAllowQuarterlyTarget($target['quarter'])) {
-    //                 $this->checkIfQuarterlyEqualMonths($target['quarter'], $target['amount'], $assignToTeamDTO->monthly_target, $validator);
-    //                 $chair->targets()->updateOrCreate([
-    //                     'period_type' => "quarterly",
-    //                     'year' => now()->year,
-    //                     'period_number' => $target['quarter'],
-    //                     'effective_from' => now()->startOfQuarter(),
-    //                     'effective_to' => now()->endOfQuarter(),
-    //                 ], [
-    //                     'target_value' => $target['amount'],
-    //                 ]);
-    //             } else {
-    //                 $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $target['quarter']);
-    //             }
-    //         }
-    //     }
+        if ($assignToTeamDTO->quarterly_target) {
+            foreach ($assignToTeamDTO->quarterly_target as $index => $target) {
+                if ($this->IsAllowQuarterlyTarget($target['quarter'])) {
+                    $this->checkIfQuarterlyEqualMonths($target['quarter'], $target['amount'], $assignToTeamDTO->monthly_target, $validator);
+                    $chair->targets()->create([
+                        'period_type' => "quarterly",
+                        'year' => now()->year,
+                        'period_number' => $target['quarter'],
+                        'effective_from' => now()->startOfQuarter(),
+                        'effective_to' => now()->endOfQuarter(),
+                        'target_value' => $target['amount'],
+                    ]);
+                } else {
+                    $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $target['quarter']);
+                }
+            }
+        }
 
-    //     if ($validator->errors()->count() > 0) {
-    //         throw new ValidationException($validator);
-    //     }
+        if ($validator->errors()->count() > 0) {
+            throw new ValidationException($validator);
+        }
 
-    //     return $user;
-    // }
+        return $user;
+    }
 
     public function endAssignment(int $user_id): bool
     {
         $user = $this->findById($user_id);
-        $user->activeChairs()->update(['ended_at' => now()]);
-        $user->update(['team_id' => null]);
-        return true;
+        if (now()->format('Y-m-d') == $user->activeChair()->first()->started_at->format('Y-m-d')) {
+            throw ValidationException::withMessages([
+                'team' => 'You cannot end your assignment on the same day you started',
+            ]);
+        } else {
+            $user->activeChair()->update(['ended_at' => now()]);
+            $user->update(['team_id' => null]);
+            return true;
+        }
     }
 
     public function IsAllowMonthlyTarget($month): bool

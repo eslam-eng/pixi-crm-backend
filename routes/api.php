@@ -184,9 +184,9 @@ Route::middleware([
 
         // Route::middleware('role:admin')->group(function () {
         Route::post('/users/assign-team', [UserController::class, 'assignToTeam']);
-        Route::get('/teams/{team}/chairs', [TeamsController::class, 'getChairs']);
-        Route::patch('/chairs/{chair}/end', [UserController::class, 'endAssignment']);
-        Route::get('users/{user}/target', [UserController::class, 'target']);
+        Route::patch('/users/{user}/end-assignment', [UserController::class, 'endAssignment']);
+        // Route::get('/teams/{team}/chairs', [TeamsController::class, 'getChairs']);
+        // Route::get('users/{user}/target', [UserController::class, 'target']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);

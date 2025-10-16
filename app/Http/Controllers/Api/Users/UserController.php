@@ -182,16 +182,18 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
             $assignToTeamDTO = AssignToTeamDTO::fromRequest($request);
-            // $chair = $this->userService->assignToTeam($assignToTeamDTO);
+            $user = $this->userService->assignToTeam($assignToTeamDTO);
             DB::commit();
-            return ApiResponse($chair, 'User assigned to team successfully');
+            return ApiResponse(new UserResource($user), 'User assigned to team successfully');
         } catch (NotFoundException $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 404);
         } catch (ValidationException $e) {
+            // dd($e->errors()->all());
             DB::rollBack();
             return ApiResponse(message: $e->errors(), code: 422);
         } catch (Exception $e) {
+            dd($e);
             DB::rollBack();
             return ApiResponse(message: $e, code: 500);
         }
