@@ -177,7 +177,7 @@ class UserController extends Controller
         }
     }
 
-    public function assignToTeam(Request $request): JsonResponse
+    public function assignToTeam(AssignToTeamRequest $request): JsonResponse
     {
         try {
             DB::beginTransaction();

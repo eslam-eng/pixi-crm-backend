@@ -13,7 +13,6 @@ class AssignToTeamRequest extends FormRequest
 
     public function rules()
     {
-        dd('jkd');
         return [
             'team_id' => [
                 'required',
