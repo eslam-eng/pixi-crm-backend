@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->unsignedBigInteger('leader_id')->nullable(); // no ->constrained() yet
-            $table->boolean('is_target')->default(false);
             $table->timestamps();
 
             $table->index('leader_id');

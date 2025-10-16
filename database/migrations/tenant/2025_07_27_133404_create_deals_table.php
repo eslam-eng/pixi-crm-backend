@@ -31,7 +31,6 @@ return new class extends Migration
 
             // Assignment
             $table->foreignId('assigned_to_id')->constrained('users');
-            $table->foreignId('chair_id')->nullable()->onDelete('cascade');
             $table->enum('payment_status', PaymentStatusEnum::values());
             $table->foreignId('payment_method_id')->constrained('payment_methods');
 
