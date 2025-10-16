@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\Builder;
 
 class DealService extends BaseService
 {
@@ -40,6 +41,17 @@ class DealService extends BaseService
     public function getModel(): Deal
     {
         return $this->model;
+    }
+
+    public function queryGet(array $filters = [], array $withRelations = []): builder
+    {
+        $deals = $this->getQuery()->with($withRelations);
+        return $deals->filter(new DealsFilter($filters));
+    }
+
+    public function getAll(array $filters = [])
+    {
+        return $this->queryGet($filters)->get();
     }
 
     /**

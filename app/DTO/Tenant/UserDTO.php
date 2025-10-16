@@ -69,6 +69,7 @@ class UserDTO extends BaseDTO
             phone: Arr::get($data, 'phone'),
             job_title: Arr::get($data, 'job_title'),
             team_id: Arr::get($data, 'team_id'),
+            target: Arr::get($data, 'target'),
             role: Arr::get($data, 'role'),
             department_id: Arr::get($data, 'department_id'),
             last_login_at: Arr::get($data, 'last_login_at'),

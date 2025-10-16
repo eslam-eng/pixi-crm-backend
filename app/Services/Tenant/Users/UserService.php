@@ -163,6 +163,11 @@ class UserService extends BaseService
     {
         $user = $this->findById($id);
         $data = $userDTO->toArray();
+        if ($userDTO->target != $user->targets()->forMonth(now())->first()?->target_value) {
+            $user->targets()->create([
+                'target_value' => $userDTO->target,
+            ]);
+        }
 
         if (!isset($data['password'])) {
             $user->update(Arr::except($data, ['password']));
