@@ -19,6 +19,7 @@ use App\Services\BaseService;
 use App\Services\Tenant\Deals\DealPaymentService;
 use App\Settings\DealsSettings;
 use App\Notifications\DealPaymentTermsNotification;
+use App\Services\Tenant\Users\UserService;
 use Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,7 @@ class DealService extends BaseService
         public Item $itemModel,
         public ItemVariant $itemVariantModel,
         public DealPaymentService $dealPaymentService,
+        public UserService $userService,
     ) {}
 
     public function getModel(): Deal
@@ -170,6 +172,12 @@ class DealService extends BaseService
             // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
+            $user = $this->userService->findById($dealDTO->assigned_to_id);
+            if ($user->activeChair()->exists()) {
+                $deal->chair_id = $user->activeChair()->value('id');
+            }
+            $deal->save();
+
             // Create items individually to handle subscriptions
             $this->createDealItemsWithSubscriptions($deal, $dealDTO->items);
 
@@ -246,6 +254,14 @@ class DealService extends BaseService
             }
 
             $deal->update(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
+
+            $user = $this->userService->findById($dealDTO->assigned_to_id);
+            if ($user->activeChair()->exists()) {
+                $deal->chair_id = $user->activeChair()->value('id');
+            }else{
+                $deal->chair_id = null;
+            }
+            $deal->save();
 
             // Sync items (remove old, add new)
             $deal->items()->sync($itemsData['pivot']);

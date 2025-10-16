@@ -15,7 +15,6 @@ class UserDTO extends BaseDTO
      * @param ?string $phone',
      * @param ?string $job_title',
      * @param ?int $team_id',
-     * @param ?float $target',
      * @param ?string $role',
      * @param ?int $department_id',
      * @param ?int $last_login_at',
@@ -31,12 +30,13 @@ class UserDTO extends BaseDTO
         public readonly ?string $phone,
         public readonly ?string $job_title,
         public readonly ?int $team_id,
-        public readonly ?float $target,
         public readonly ?string $role,
         public readonly ?int $department_id,
         public readonly ?int $last_login_at,
         public readonly ?string $lang,
         public readonly ?bool $is_active = true,
+        public readonly ?array $monthly_target = [],
+        public readonly ?array $quarterly_target = [],
     ) {}
 
     public static function fromRequest($request): UserDTO
@@ -49,12 +49,13 @@ class UserDTO extends BaseDTO
             phone: $request->phone,
             job_title: $request->job_title,
             team_id: $request->team_id,
-            target: $request->target,
             role: $request->role,
             department_id: $request->department_id,
             last_login_at: $request->last_login_at,
             lang: $request->lang,
-            is_active: $request->is_active ?? true
+            is_active: $request->is_active ?? true,
+            monthly_target: $request->monthly_target,
+            quarterly_target: $request->quarterly_target
         );
     }
 
@@ -68,12 +69,13 @@ class UserDTO extends BaseDTO
             phone: Arr::get($data, 'phone'),
             job_title: Arr::get($data, 'job_title'),
             team_id: Arr::get($data, 'team_id'),
-            target: Arr::get($data, 'target'),
             role: Arr::get($data, 'role'),
             department_id: Arr::get($data, 'department_id'),
             last_login_at: Arr::get($data, 'last_login_at'),
             lang: Arr::get($data, 'lang'),
-            is_active: Arr::get($data, 'is_active', true)
+            is_active: Arr::get($data, 'is_active', true),
+            monthly_target: Arr::get($data, 'monthly_target', []),
+            quarterly_target: Arr::get($data, 'quarterly_target', [])
         );
     }
 

@@ -51,6 +51,7 @@ class UserSeeder extends Seeder
             [
                 'leader_id' => $admin1->id,
                 'title' => 'Team 1',
+                'is_target' => false,
             ]
         );
 
@@ -61,6 +62,7 @@ class UserSeeder extends Seeder
             [
                 'leader_id' => $admin2->id,
                 'title' => 'Team 2',
+                'is_target' => true,
             ]
         );
 

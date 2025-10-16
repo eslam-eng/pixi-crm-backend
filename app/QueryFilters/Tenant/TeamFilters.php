@@ -11,4 +11,9 @@ class TeamFilters extends QueryFilter
     {
         parent::__construct($params);
     }
+
+    public function is_target($term)
+    {
+        return $this->builder->where('is_target', $term);
+    }
 }
