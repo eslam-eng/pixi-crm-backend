@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Api\Users;
 
+use App\DTO\Tenant\AssignToTeam\AssignToTeamDTO;
 use App\DTO\Tenant\UserDTO;
+use App\Exceptions\GeneralException;
+use App\Http\Requests\Tenant\Users\AssignToTeamRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use App\Services\Tenant\Users\UserService;
@@ -15,6 +18,7 @@ use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -49,6 +53,9 @@ class UserController extends Controller
             $user = $this->userService->store($userDTO);
             DB::commit();
             return ApiResponse(new UserResource($user), 'User created successfully');
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->errors(), code: 422);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);
@@ -77,6 +84,9 @@ class UserController extends Controller
             $user = $this->userService->update($userDTO, $id);
             DB::commit();
             return ApiResponse(UserResource::make($user), 'User updated successfully');
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->errors(), code: 422);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);
@@ -161,6 +171,40 @@ class UserController extends Controller
             $target = $this->userService->getTarget($user_id);
             return ApiResponse($target, 'User target retrieved successfully');
         } catch (NotFoundException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function assignToTeam(AssignToTeamRequest $request): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+            $assignToTeamDTO = AssignToTeamDTO::fromRequest($request);
+            $user = $this->userService->assignToTeam($assignToTeamDTO);
+            DB::commit();
+            return ApiResponse(new UserResource($user), 'User assigned to team successfully');
+        } catch (NotFoundException $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (ValidationException $e) {
+            // dd($e->errors()->all());
+            DB::rollBack();
+            return ApiResponse(message: $e->errors(), code: 422);
+        } catch (Exception $e) {
+            dd($e);
+            DB::rollBack();
+            return ApiResponse(message: $e, code: 500);
+        }
+    }
+
+    public function endAssignment($user_id): JsonResponse
+    {
+        try {
+            $this->userService->endAssignment($user_id);
+            return ApiResponse([], 'User assignment ended successfully');
+        } catch (GeneralException $e) {
             return ApiResponse(message: $e->getMessage(), code: 404);
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);

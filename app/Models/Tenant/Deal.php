@@ -15,6 +15,7 @@ class Deal extends Model implements HasMedia
     protected $fillable = [
         'deal_name',
         'lead_id',
+        'chair_id',
         'sale_date',
         'discount_type',
         'discount_value',

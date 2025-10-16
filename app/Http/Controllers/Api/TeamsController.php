@@ -8,6 +8,8 @@ use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\TeamRequest;
 use App\Http\Resources\TeamDDLResource;
+use App\Http\Resources\Tenant\Chairs\ChairResource;
+use App\Models\Tenant\Chair;
 use App\Services\TeamService;
 use Illuminate\Http\JsonResponse;
 use Exception;
@@ -26,7 +28,10 @@ class TeamsController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $filters = array_filter(request()->query());
+            $filters = array_filter(request()->all(), function ($value) {
+                return $value !== null && $value !== '';
+            });
+
             $withRelations = ['leader.roles', 'sales.roles'];
             if ($request->has('ddl')) {
                 $teams = $this->teamService->index(filters: $filters, withRelations: $withRelations);
@@ -86,6 +91,20 @@ class TeamsController extends Controller
             return ApiResponse(message: trans('app.team_deleted_successfully'));
         } catch (NotFoundException $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getChairs($id)
+    {
+        try {
+            // $chairs = Chair::where('team_id',$id)->with('user', 'monthlyTargets', 'quarterlyTargets')->get();
+            $allChairs = Chair::active()
+                ->with(['user', 'team', 'targets', 'deals'])
+                ->get();
+            // dd($allChairs);
+            return ApiResponse(ChairResource::collection($allChairs), 'Team chairs retrieved successfully');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }

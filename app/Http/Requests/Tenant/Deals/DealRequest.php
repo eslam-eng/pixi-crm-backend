@@ -98,7 +98,7 @@ class DealRequest extends FormRequest
                 if (isset($item['item_id']) && isset($item['variant_id'])) {
                     $this->validateItemVariantRelation($validator, $index, $item['item_id'], $item['variant_id']);
                 }
-                
+
                 // Validate subscription fields
                 $this->validateSubscriptionFields($validator, $index, $item);
             }
@@ -122,14 +122,14 @@ class DealRequest extends FormRequest
                     "Start date is required when subscription fields are provided."
                 );
             }
-            
+
             if (!$hasEndAt) {
                 $validator->errors()->add(
                     "items.{$index}.end_at",
                     "End date is required when subscription fields are provided."
                 );
             }
-            
+
             if (!$hasBillingCycle) {
                 $validator->errors()->add(
                     "items.{$index}.billing_cycle",
@@ -143,13 +143,13 @@ class DealRequest extends FormRequest
             $startAt = \Carbon\Carbon::parse($item['start_at']);
             $endAt = \Carbon\Carbon::parse($item['end_at']);
             $billingCycle = BillingCycleEnum::from($item['billing_cycle']);
-            
+
             // Calculate expected end date based on billing cycle
             $expectedEndAt = $this->calculateExpectedEndDate($startAt, $billingCycle);
-            
+
             // Allow some flexibility (±2 days) for billing cycle validation
             $daysDifference = $endAt->diffInDays($expectedEndAt);
-            
+
             if ($daysDifference > 2) {
                 $expectedEndAtFormatted = $expectedEndAt->format('Y-m-d');
                 $validator->errors()->add(
@@ -165,7 +165,7 @@ class DealRequest extends FormRequest
      */
     private function calculateExpectedEndDate(\Carbon\Carbon $startAt, BillingCycleEnum $billingCycle): \Carbon\Carbon
     {
-        return match($billingCycle) {
+        return match ($billingCycle) {
             BillingCycleEnum::MONTHLY => $startAt->copy()->addMonth(),
             BillingCycleEnum::QUARTERLY => $startAt->copy()->addMonths(3),
             BillingCycleEnum::YEARLY => $startAt->copy()->addYear(),
