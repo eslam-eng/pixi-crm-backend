@@ -336,4 +336,114 @@ Route::middleware([
         Route::post('/', [App\Http\Controllers\Api\FcmTokenController::class, 'store']);
         Route::delete('/', [App\Http\Controllers\Api\FcmTokenController::class, 'destroy']);
     });
+
+    // Report routes
+    Route::prefix('reports')->middleware('auth:api_tenant')->group(function () {
+        // Main report management
+        Route::get('/', [\App\Http\Controllers\Api\Report\ReportController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\Report\ReportController::class, 'store']);
+        Route::get('/categories', [\App\Http\Controllers\Api\Report\ReportController::class, 'categories']);
+        Route::get('/types', [\App\Http\Controllers\Api\Report\ReportController::class, 'types']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\Report\ReportController::class, 'show']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\Report\ReportController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\Report\ReportController::class, 'destroy']);
+        Route::post('/{id}/execute', [\App\Http\Controllers\Api\Report\ReportController::class, 'execute']);
+        Route::post('/{id}/export', [\App\Http\Controllers\Api\Report\ReportController::class, 'export']);
+
+        // Sales Performance Reports
+        Route::prefix('sales-performance')->group(function () {
+            Route::get('/deals-performance', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'dealsPerformance']);
+            Route::get('/revenue-analysis', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'revenueAnalysis']);
+            Route::get('/pipeline-funnel', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'pipelineFunnel']);
+            Route::get('/win-loss-analysis', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'winLossAnalysis']);
+            Route::get('/sales-rep-performance', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'salesRepPerformance']);
+        });
+
+        // Lead Management Reports
+        Route::prefix('lead-management')->group(function () {
+            Route::get('/lead-generation', [\App\Http\Controllers\Api\Report\LeadManagementController::class, 'leadGeneration']);
+            Route::get('/lead-conversion', [\App\Http\Controllers\Api\Report\LeadManagementController::class, 'leadConversion']);
+            Route::get('/lead-sources', [\App\Http\Controllers\Api\Report\LeadManagementController::class, 'leadSources']);
+            Route::get('/lead-quality-distribution', [\App\Http\Controllers\Api\Report\LeadManagementController::class, 'leadQualityDistribution']);
+            Route::get('/lead-generation-trend', [\App\Http\Controllers\Api\Report\LeadManagementController::class, 'leadGenerationTrend']);
+        });
+
+        // Team Performance Reports
+        Route::prefix('team-performance')->group(function () {
+            Route::get('/individual-performance', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'individualPerformance']);
+            Route::get('/team-performance', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'teamPerformance']);
+            Route::get('/target-vs-achievement', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'targetVsAchievement']);
+            Route::get('/team-leaderboard', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'teamLeaderboard']);
+            Route::get('/team-productivity', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'teamProductivity']);
+        });
+
+        // Task Management Reports
+        Route::prefix('task-management')->group(function () {
+            Route::get('/task-completion', [\App\Http\Controllers\Api\Report\TaskManagementController::class, 'taskCompletion']);
+            Route::get('/task-productivity', [\App\Http\Controllers\Api\Report\TaskManagementController::class, 'taskProductivity']);
+            Route::get('/task-status-distribution', [\App\Http\Controllers\Api\Report\TaskManagementController::class, 'taskStatusDistribution']);
+            Route::get('/overdue-task-analysis', [\App\Http\Controllers\Api\Report\TaskManagementController::class, 'overdueTaskAnalysis']);
+        });
+
+        // Revenue Analysis Reports
+        Route::prefix('revenue-analysis')->group(function () {
+            Route::get('/revenue-trends', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueTrends']);
+            Route::get('/revenue-by-product', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueByProduct']);
+            Route::get('/revenue-by-customer-segment', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueByCustomerSegment']);
+            Route::get('/revenue-forecast-vs-actual', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueForecastVsActual']);
+        });
+
+        // Opportunity Management Reports
+        Route::prefix('opportunity-management')->group(function () {
+            Route::get('/pipeline-report', [\App\Http\Controllers\Api\Report\OpportunityManagementController::class, 'pipelineReport']);
+            Route::get('/activity-report', [\App\Http\Controllers\Api\Report\OpportunityManagementController::class, 'activityReport']);
+            Route::get('/stage-progression-analysis', [\App\Http\Controllers\Api\Report\OpportunityManagementController::class, 'stageProgressionAnalysis']);
+        });
+
+        // Call Activity Reports
+        Route::prefix('call-activity')->group(function () {
+            Route::get('/call-log-analysis', [\App\Http\Controllers\Api\Report\CallActivityController::class, 'callLogAnalysis']);
+            Route::get('/call-recording-analysis', [\App\Http\Controllers\Api\Report\CallActivityController::class, 'callRecordingAnalysis']);
+            Route::get('/call-volume-trends', [\App\Http\Controllers\Api\Report\CallActivityController::class, 'callVolumeTrends']);
+        });
+
+        // Contact Management Reports
+        Route::prefix('contact-management')->group(function () {
+            Route::get('/contact-analysis', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactAnalysis']);
+            Route::get('/contact-engagement-metrics', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactEngagementMetrics']);
+            Route::get('/contact-source-analysis', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactSourceAnalysis']);
+        });
+
+        // Product/Service Reports
+        Route::prefix('product-service')->group(function () {
+            Route::get('/product-performance', [\App\Http\Controllers\Api\Report\ProductServiceController::class, 'productPerformance']);
+            Route::get('/service-usage-statistics', [\App\Http\Controllers\Api\Report\ProductServiceController::class, 'serviceUsageStatistics']);
+            Route::get('/product-revenue-contribution', [\App\Http\Controllers\Api\Report\ProductServiceController::class, 'productRevenueContribution']);
+        });
+
+        // Forecasting Reports
+        Route::prefix('forecasting')->group(function () {
+            Route::get('/sales-forecast', [\App\Http\Controllers\Api\Report\ForecastingController::class, 'salesForecast']);
+            Route::get('/pipeline-projections', [\App\Http\Controllers\Api\Report\ForecastingController::class, 'pipelineProjections']);
+            Route::get('/revenue-predictions', [\App\Http\Controllers\Api\Report\ForecastingController::class, 'revenuePredictions']);
+        });
+
+        // SuperAdmin Reports
+        Route::prefix('superadmin')->group(function () {
+            Route::get('/client-overview', [\App\Http\Controllers\Api\Report\SuperAdminController::class, 'clientOverview']);
+            Route::get('/subscription-management', [\App\Http\Controllers\Api\Report\SuperAdminController::class, 'subscriptionManagement']);
+            Route::get('/activation-code-usage', [\App\Http\Controllers\Api\Report\SuperAdminController::class, 'activationCodeUsage']);
+            Route::get('/billing-revenue', [\App\Http\Controllers\Api\Report\SuperAdminController::class, 'billingRevenue']);
+            Route::get('/usage-analytics', [\App\Http\Controllers\Api\Report\SuperAdminController::class, 'usageAnalytics']);
+            Route::get('/system-audit', [\App\Http\Controllers\Api\Report\SuperAdminController::class, 'systemAudit']);
+            Route::get('/user-management', [\App\Http\Controllers\Api\Report\SuperAdminController::class, 'userManagement']);
+        });
+
+        // Marketing & Campaign Reports
+        Route::prefix('marketing-campaign')->group(function () {
+            Route::get('/campaign-performance', [\App\Http\Controllers\Api\Report\MarketingCampaignController::class, 'campaignPerformance']);
+            Route::get('/marketing-roi-analysis', [\App\Http\Controllers\Api\Report\MarketingCampaignController::class, 'marketingRoiAnalysis']);
+            Route::get('/campaign-conversion-metrics', [\App\Http\Controllers\Api\Report\MarketingCampaignController::class, 'campaignConversionMetrics']);
+        });
+    });
 });
