@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Tenant;
 
+use App\Models\Tenant\IntegratedForm;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class FacebookFormFieldMapping extends Model
+class IntegratedFormFieldMapping extends Model
 {
     use HasFactory;
 
@@ -15,7 +16,7 @@ class FacebookFormFieldMapping extends Model
      *
      * @var string
      */
-    protected $table = 'facebook_form_field_mappings';
+    protected $table = 'integrated_form_fields_mapping';
 
     /**
      * The attributes that are mass assignable.
@@ -24,8 +25,9 @@ class FacebookFormFieldMapping extends Model
      */
     protected $fillable = [
         'form_id',
-        'facebook_field_key',
-        'contact_column'
+        'external_field_key',
+        'contact_column',
+        'is_required',
     ];
 
     /**
@@ -34,6 +36,7 @@ class FacebookFormFieldMapping extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'is_required' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -43,17 +46,17 @@ class FacebookFormFieldMapping extends Model
      */
     public function formMapping(): BelongsTo
     {
-        return $this->belongsTo(FacebookFormMapping::class, 'form_id', 'form_id');
+        return $this->belongsTo(IntegratedForm::class, 'form_id', 'form_id');
     }
 
     /**
-     * Get the Facebook field key.
+     * Get the external field key.
      *
      * @return string
      */
-    public function getFacebookFieldKey(): string
+    public function getExternalFieldKey(): string
     {
-        return $this->facebook_field_key;
+        return $this->external_field_key;
     }
 
 
@@ -65,6 +68,16 @@ class FacebookFormFieldMapping extends Model
     public function getContactColumn(): string
     {
         return $this->contact_column;
+    }
+
+    /**
+     * Check if the field is required.
+     *
+     * @return bool
+     */
+    public function isRequired(): bool
+    {
+        return $this->is_required ?? false;
     }
 
 
@@ -96,8 +109,9 @@ class FacebookFormFieldMapping extends Model
         foreach ($mappings as $mapping) {
             $fieldMappings[] = static::create([
                 'form_id' => $formId,
-                'facebook_field_key' => $mapping['facebook_field_key'],
-                'contact_column' => $mapping['contact_column']
+                'external_field_key' => $mapping['external_field_key'],
+                'contact_column' => $mapping['contact_column'],
+                'is_required' => $mapping['is_required'] ?? false,
             ]);
         }
 
@@ -116,8 +130,9 @@ class FacebookFormFieldMapping extends Model
             ->get()
             ->map(function ($mapping) {
                 return [
-                    'facebook_field_key' => $mapping->getFacebookFieldKey(),
-                    'contact_column' => $mapping->getContactColumn()
+                    'external_field_key' => $mapping->getExternalFieldKey(),
+                    'contact_column' => $mapping->getContactColumn(),
+                    'is_required' => $mapping->isRequired(),
                 ];
             })
             ->toArray();

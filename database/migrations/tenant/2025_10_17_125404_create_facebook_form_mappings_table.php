@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PlatformEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,14 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('facebook_form_mappings', function (Blueprint $table) {
+        Schema::create('integrated_forms', function (Blueprint $table) {
             $table->id();
-            $table->string('facebook_form_id')->unique();
+            $table->string('external_form_id')->unique();
             $table->string('form_name');
+            $table->enum('platform', PlatformEnum::values())->default(PlatformEnum::META->value);
             $table->integer('total_contacts_count')->default(0);
+            $table->boolean('is_active')->default(true); // Added is_active column
             $table->timestamps();
             
-            $table->index('facebook_form_id');
+            $table->index('external_form_id');
+            $table->index('platform');
         });
     }
 
@@ -27,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('facebook_form_mappings');
+        Schema::dropIfExists('integrated_forms');
     }
 };

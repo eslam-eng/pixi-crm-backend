@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api\Integrations;
 
+use App\Enums\IntegrationStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\FacebookFormFieldMapping;
 use App\Models\Tenant\Integration;
-use App\Models\FacebookFormMapping;
+use App\Models\Tenant\IntegratedForm;
+use App\Models\Tenant\IntegratedFormFieldMapping;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -19,15 +20,15 @@ class FacebookController extends Controller
      */
     public function getBusinessAccounts(Request $request)
     {
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         // Get user's business accounts
         $response = Http::get('https://graph.facebook.com/v20.0/me/businesses', [
@@ -60,15 +61,15 @@ class FacebookController extends Controller
             'business_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         // Get ad accounts from business
         $response = Http::get("https://graph.facebook.com/v20.0/{$request->business_id}/owned_ad_accounts", [
@@ -96,7 +97,7 @@ class FacebookController extends Controller
      */
     public function getStatus()
     {
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration) {
             return apiResponse(message: 'Meta (Facebook) integration not found', code: 404);
@@ -123,7 +124,7 @@ class FacebookController extends Controller
             'expires_in' => 'required|integer',
         ]);
 
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration) {
             return apiResponse(message: 'Meta (Facebook) integration not found', code: 404);
@@ -147,15 +148,15 @@ class FacebookController extends Controller
             'page_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         // First, get the page access token
         $pageTokenResponse = Http::get("https://graph.facebook.com/v20.0/{$request->page_id}", [
@@ -404,10 +405,10 @@ class FacebookController extends Controller
     {
         DB::beginTransaction();
         $request->validate([
-            'facebook_form_id' => 'required|string',
+            'external_form_id' => 'required|string',
             'form_name' => 'required|string|max:255',
             'mappings' => 'required|array',
-            'mappings.*.facebook_field_key' => 'required|string',
+            'mappings.*.external_field_key' => 'required|string',
             'mappings.*.contact_column' => 'required|string',
         ]);
 
@@ -474,16 +475,16 @@ class FacebookController extends Controller
             }
 
             // Save mapping using the model (this will save to both tables)
-            $form = FacebookFormMapping::create(
+            $form = IntegratedForm::create(
                 [
-                    'facebook_form_id' => $request->facebook_form_id,
+                    'external_form_id' => $request->external_form_id,
                     'form_name' => $request->form_name
                 ]
             );
             foreach ($request->mappings as $mapping) {
-                FacebookFormFieldMapping::create([
+                IntegratedFormFieldMapping::create([
                     'form_id' => $form->id,
-                    'facebook_field_key' => $mapping['facebook_field_key'],
+                    'external_field_key' => $mapping['external_field_key'],
                     'contact_column' => $mapping['contact_column']
                 ]);
             }
@@ -505,7 +506,7 @@ class FacebookController extends Controller
         ]);
 
         try {
-            $mapping = FacebookFormMapping::findByFormId($request->form_id);
+            $mapping = IntegratedForm::findByFormId($request->form_id);
 
             if (!$mapping) {
                 return apiResponse(message: 'No mapping found for this form', code: 404);
@@ -537,7 +538,7 @@ class FacebookController extends Controller
         ]);
 
         try {
-            $mapping = FacebookFormMapping::findByFormId($request->form_id);
+            $mapping = IntegratedForm::findByFormId($request->form_id);
 
             if (!$mapping) {
                 return apiResponse(message: 'No mapping found for this form', code: 404);
@@ -570,7 +571,7 @@ class FacebookController extends Controller
         ]);
 
         try {
-            $mapping = FacebookFormMapping::findByFormId($request->form_id);
+            $mapping = IntegratedForm::findByFormId($request->form_id);
 
             if (!$mapping) {
                 return apiResponse(message: 'No mapping found for this form', code: 404);
@@ -600,7 +601,7 @@ class FacebookController extends Controller
     public function getAllFormMappings(Request $request)
     {
         try {
-            $mappings = FacebookFormMapping::orderBy('created_at', 'desc')->get();
+            $mappings = IntegratedForm::orderBy('created_at', 'desc')->get();
 
             $data = $mappings->map(function ($mapping) {
                 return [
@@ -668,15 +669,15 @@ class FacebookController extends Controller
             'form_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         // Get form fields - using only confirmed supported fields
         $response = Http::get("https://graph.facebook.com/v20.0/{$request->form_id}", [
@@ -729,15 +730,15 @@ class FacebookController extends Controller
             'limit' => 'integer|min:1|max:100'
         ]);
 
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         // Get leads from form
         $response = Http::get("https://graph.facebook.com/v20.0/{$request->form_id}/leads", [
@@ -835,17 +836,19 @@ class FacebookController extends Controller
         if (isset($data['error'])) {
             return apiResponse(message: 'Facebook OAuth error: ' . $data['error'], code: 400);
         }
-
         // Store access token
         $accessToken = $data['access_token'];
-        $expiresIn = $data['expires_in'];
+        // $expiresIn = $data['expires_in'];
 
         // Save to database
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
         if ($integration) {
             $integration->update([
                 'access_token' => $accessToken,
-                'token_expires_at' => now()->addSeconds($expiresIn)
+                // 'token_expires_at' => now()->addSeconds($expiresIn),
+                'status' => IntegrationStatusEnum::CONNECTED->value,
+                'is_active' => true,
+                'last_sync' => now()
             ]);
         }
 
@@ -859,7 +862,7 @@ class FacebookController extends Controller
 
         $data = [
             'access_token' => $accessToken,
-            'expires_in' => $expiresIn,
+            // 'expires_in' => $expiresIn,
             'user' => $user,
             'integration' => $integration->fresh()
         ];
@@ -871,15 +874,15 @@ class FacebookController extends Controller
      */
     public function validateFacebookToken(Request $request)
     {
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         // Validate token with Facebook
         $response = Http::get('https://graph.facebook.com/v20.0/me', [
@@ -926,7 +929,7 @@ class FacebookController extends Controller
      */
     public function revokeToken(Request $request)
     {
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No access token found', code: 404);
@@ -1036,15 +1039,15 @@ class FacebookController extends Controller
             'ad_account_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         $allPages = [];
         $pageIds = [];
@@ -1213,15 +1216,15 @@ class FacebookController extends Controller
             'ad_account_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
         }
 
-        if ($integration->isTokenExpired()) {
-            return apiResponse(message: 'Facebook token expired', code: 401);
-        }
+        // if ($integration->isTokenExpired()) {
+        //     return apiResponse(message: 'Facebook token expired', code: 401);
+        // }
 
         try {
             // Use me/accounts endpoint to get pages
@@ -1255,7 +1258,7 @@ class FacebookController extends Controller
      */
     public function checkPermissions(Request $request)
     {
-        $integration = Integration::where('name', 'Meta (Facebook)')->first();
+        $integration = Integration::where('platform', 'Meta')->first();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);

@@ -3,7 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Tenant\Integration;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Enums\IntegrationStatusEnum;
+use App\Enums\PlatformEnum;
 use Illuminate\Database\Seeder;
 
 class IntegrationSeeder extends Seeder
@@ -14,10 +15,24 @@ class IntegrationSeeder extends Seeder
     public function run(): void
     {
         $integrations = [
-            ['name' => 'Meta (Facebook)'],
-            ['name' => 'Google Ads'],
-            ['name' => 'TikTok'],
-            ['name' => 'WhatsApp'],
+            [
+                'name' => 'Google Ads Campaign Sync',
+                'platform' => PlatformEnum::GOOGLE->value,
+                'status' => IntegrationStatusEnum::DISCONNECTED->value,
+                'is_active' => false,
+            ],
+            [
+                'name' => 'Meta Business Integration',
+                'platform' => PlatformEnum::META->value,
+                'status' => IntegrationStatusEnum::DISCONNECTED->value,
+                'is_active' => false,
+            ],
+            [
+                'name' => 'TikTok Ads Analytics',
+                'platform' => PlatformEnum::TIKTOK->value,
+                'status' => IntegrationStatusEnum::DISCONNECTED->value,
+                'is_active' => false,
+            ],
         ];
 
         foreach ($integrations as $integration) {

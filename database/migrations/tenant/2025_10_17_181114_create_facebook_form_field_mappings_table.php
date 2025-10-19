@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('facebook_form_field_mappings', function (Blueprint $table) {
+        Schema::create('integrated_form_fields_mapping', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('form_id')->references('id')->on('facebook_form_mappings')->onDelete('cascade');
-            $table->string('facebook_field_key');
+            $table->foreignId('form_id')->references('id')->on('integrated_forms')->onDelete('cascade');
+            $table->string('external_field_key');
             $table->string('contact_column');
             $table->boolean('is_required')->default(false);
             $table->timestamps();
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('facebook_form_field_mappings');
+        Schema::dropIfExists('integrated_form_fields_mapping');
     }
 };

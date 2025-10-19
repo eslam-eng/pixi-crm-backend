@@ -2,8 +2,10 @@
 
 
 use App\Http\Controllers\Api\Integrations\{
-    FacebookController
+    FacebookController,
+    IntegratedFormController
 };
+use App\Http\Controllers\Api\IntegrationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
@@ -243,8 +245,96 @@ Route::middleware([
         // Reminder routes
         Route::apiResource('reminders', ReminderController::class);
         Route::patch('reminders/{reminder}/set-default', [ReminderController::class, 'setDefault']);
+
+        // Integration routes
+        Route::get('/integrations', [IntegrationController::class, 'index']);
+        Route::get('/integrations/statistics', [IntegrationController::class, 'statistics']);
+        Route::apiResource('integrations', IntegrationController::class);
+        Route::patch('/integrations/{integration}/toggle-status', [IntegrationController::class, 'toggleStatus']);
+
+        // Integrated Forms API routes
+        Route::prefix('integrated-forms')->group(function () {
+            Route::get('/', [IntegratedFormController::class, 'index']);
+            Route::get('/{id}', [IntegratedFormController::class, 'show']);
+            Route::patch('/{id}/status', [IntegratedFormController::class, 'updateStatus']);
+            Route::delete('/{id}', [IntegratedFormController::class, 'destroy']);
+        });
+
+        // Facebook Integration API routes
+        Route::prefix('facebook')->group(function () {
+            // Protected routes (authentication required)
+                Route::get('/status', [FacebookController::class, 'getStatus']);
+                Route::post('/save-token', [FacebookController::class, 'saveToken']);
+                Route::get('/validate-token', [FacebookController::class, 'validateToken']);
+                Route::get('/permissions', [FacebookController::class, 'getPermissions']);
+                Route::get('/user-profile', [FacebookController::class, 'getUserProfile']);
+                Route::get('/user-pages', [FacebookController::class, 'getUserPages']);
+                Route::post('/post-to-page', [FacebookController::class, 'postToPage']);
+                Route::delete('/revoke-token', [FacebookController::class, 'revokeToken']);
+
+                // Customer Data Endpoints
+                Route::get('/customer/profile', [FacebookController::class, 'getCustomerProfile']);
+                Route::get('/customer/pages', [FacebookController::class, 'getCustomerPages']);
+                Route::get('/customer/posts', [FacebookController::class, 'getCustomerPosts']);
+                Route::get('/customer/insights', [FacebookController::class, 'getPageInsights']);
+
+                // Facebook Ads Manager Endpoints
+                Route::get('/ads/accounts', [FacebookController::class, 'getCustomerAdAccounts']);
+                Route::get('/ads/forms', [FacebookController::class, 'getCustomerForms']);
+                Route::get('/ads/campaigns', [FacebookController::class, 'getCustomerCampaigns']);
+                Route::get('/ads/leads', [FacebookController::class, 'getFormLeads']);
+                Route::get('/ads/insights', [FacebookController::class, 'getAdAccountInsights']);
+
+                // Simplified Facebook User Data Endpoints (using saved access token)
+                Route::get('/user/validate-token', [FacebookController::class, 'validateFacebookToken']);
+                Route::get('/user/pages', [FacebookController::class, 'getFacebookUserPages']);
+                Route::get('/user/ad-accounts', [FacebookController::class, 'getFacebookUserAccounts']);
+                Route::get('/user/forms', [FacebookController::class, 'getFormsFromAdAccount']);
+                Route::get('/user/leads', [FacebookController::class, 'getLeadsFromForm']);
+
+                // Step 1: Get Business Accounts (Business Manager)
+                Route::get('/business-accounts', [FacebookController::class, 'getBusinessAccounts']);
+
+                // Step 2: Get Ad Accounts from specific Business Account
+                Route::get('/business/ad-accounts', [FacebookController::class, 'getAdAccountsFromBusiness']);
+
+                // Step 3: Pages From Ad Account - using me/accounts endpoint
+                Route::get('/pages-from-ad-account', [FacebookController::class, 'pagesFromAdAccount']);
+
+                // Step 4: Get Forms from specific Page
+                Route::get('/forms-from-page', [FacebookController::class, 'getFormsFromPage']);
+
+                // Step 5: Get Form Fields from specific Form
+                Route::get('/form-fields', [FacebookController::class, 'getFormFields']);
+
+                // Field Mapping APIs
+                Route::get('/contacts-columns', [FacebookController::class, 'getContactsColumns']);
+                // Step 6: Save Form Mapping
+                Route::post('/save-form-mapping', [FacebookController::class, 'saveFormFieldMapping']);
+
+
+                Route::get('/get-form-mapping', [FacebookController::class, 'getFormFieldMapping']);
+                Route::post('/test-mapping-validation', [FacebookController::class, 'testMappingValidation']);
+
+                // Form Mapping Management APIs
+                Route::get('/all-form-mappings', [FacebookController::class, 'getAllFormMappings']);
+                Route::post('/update-contacts-count', [FacebookController::class, 'updateContactsCount']);
+                Route::post('/increment-contacts-count', [FacebookController::class, 'incrementContactsCount']);
+
+                // Step 6: Get Leads from specific Form
+                Route::post('/leads-from-form', [FacebookController::class, 'getLeadsFromForm']);
+                Route::get('/pages-from-ad-account-alternative', [FacebookController::class, 'getPagesFromAdAccountAlternative']);
+                Route::get('/check-permissions', [FacebookController::class, 'checkPermissions']);
+        });
     });
 
+    // Public routes (no authentication required)
+    Route::prefix('facebook')->group(function () {
+        Route::get('/app-config', [FacebookController::class, 'getAppConfig']);
+        Route::get('/auth-url', [FacebookController::class, 'getAuthUrl']); // Get OAuth URL
+        Route::get('/callback', [FacebookController::class, 'handleCallback']); // OAuth callback
+        Route::post('/data-deletion-callback', [FacebookController::class, 'dataDeletionCallback']);
+    });
 
 
     Route::prefix('forms')->group(function () {
@@ -318,79 +408,10 @@ Route::middleware([
         Route::post('/', [App\Http\Controllers\Api\FcmTokenController::class, 'store']);
         Route::delete('/', [App\Http\Controllers\Api\FcmTokenController::class, 'destroy']);
     });
+});
 
-    // Facebook Integration API routes
-    Route::prefix('facebook')->group(function () {
-        // Public routes (no authentication required)
-        Route::get('/app-config', [FacebookController::class, 'getAppConfig']);
-        Route::get('/auth-url', [FacebookController::class, 'getAuthUrl']); // Get OAuth URL
-        Route::get('/callback', [FacebookController::class, 'handleCallback']); // OAuth callback
-        Route::post('/data-deletion-callback', [FacebookController::class, 'dataDeletionCallback']);
-
-        // Protected routes (authentication required)
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::get('/status', [FacebookController::class, 'getStatus']);
-            Route::post('/save-token', [FacebookController::class, 'saveToken']);
-            Route::get('/validate-token', [FacebookController::class, 'validateToken']);
-            Route::get('/permissions', [FacebookController::class, 'getPermissions']);
-            Route::get('/user-profile', [FacebookController::class, 'getUserProfile']);
-            Route::get('/user-pages', [FacebookController::class, 'getUserPages']);
-            Route::post('/post-to-page', [FacebookController::class, 'postToPage']);
-            Route::delete('/revoke-token', [FacebookController::class, 'revokeToken']);
-
-            // Customer Data Endpoints
-            Route::get('/customer/profile', [FacebookController::class, 'getCustomerProfile']);
-            Route::get('/customer/pages', [FacebookController::class, 'getCustomerPages']);
-            Route::get('/customer/posts', [FacebookController::class, 'getCustomerPosts']);
-            Route::get('/customer/insights', [FacebookController::class, 'getPageInsights']);
-
-            // Facebook Ads Manager Endpoints
-            Route::get('/ads/accounts', [FacebookController::class, 'getCustomerAdAccounts']);
-            Route::get('/ads/forms', [FacebookController::class, 'getCustomerForms']);
-            Route::get('/ads/campaigns', [FacebookController::class, 'getCustomerCampaigns']);
-            Route::get('/ads/leads', [FacebookController::class, 'getFormLeads']);
-            Route::get('/ads/insights', [FacebookController::class, 'getAdAccountInsights']);
-
-            // Simplified Facebook User Data Endpoints (using saved access token)
-            Route::get('/user/validate-token', [FacebookController::class, 'validateFacebookToken']);
-            Route::get('/user/pages', [FacebookController::class, 'getFacebookUserPages']);
-            Route::get('/user/ad-accounts', [FacebookController::class, 'getFacebookUserAccounts']);
-            Route::get('/user/forms', [FacebookController::class, 'getFormsFromAdAccount']);
-            Route::get('/user/leads', [FacebookController::class, 'getLeadsFromForm']);
-
-            // Step 1: Get Business Accounts (Business Manager)
-            Route::get('/business-accounts', [FacebookController::class, 'getBusinessAccounts']);
-
-            // Step 2: Get Ad Accounts from specific Business Account
-            Route::get('/business/ad-accounts', [FacebookController::class, 'getAdAccountsFromBusiness']);
-
-            // Step 3: Pages From Ad Account - using me/accounts endpoint
-            Route::get('/pages-from-ad-account', [FacebookController::class, 'pagesFromAdAccount']);
-
-            // Step 4: Get Forms from specific Page
-            Route::get('/forms-from-page', [FacebookController::class, 'getFormsFromPage']);
-
-            // Step 5: Get Form Fields from specific Form
-            Route::get('/form-fields', [FacebookController::class, 'getFormFields']);
-
-            // Field Mapping APIs
-            Route::get('/contacts-columns', [FacebookController::class, 'getContactsColumns']);
-            // Step 6: Save Form Mapping
-            Route::post('/save-form-mapping', [FacebookController::class, 'saveFormFieldMapping']);
-
-            
-            Route::get('/get-form-mapping', [FacebookController::class, 'getFormFieldMapping']);
-            Route::post('/test-mapping-validation', [FacebookController::class, 'testMappingValidation']);
-            
-            // Form Mapping Management APIs
-            Route::get('/all-form-mappings', [FacebookController::class, 'getAllFormMappings']);
-            Route::post('/update-contacts-count', [FacebookController::class, 'updateContactsCount']);
-            Route::post('/increment-contacts-count', [FacebookController::class, 'incrementContactsCount']);
-
-            // Step 6: Get Leads from specific Form
-            Route::post('/leads-from-form', [FacebookController::class, 'getLeadsFromForm']);
-            Route::get('/pages-from-ad-account-alternative', [FacebookController::class, 'getPagesFromAdAccountAlternative']);
-            Route::get('/check-permissions', [FacebookController::class, 'checkPermissions']);
-        });
-    });
+// Facebook Webhook Routes (outside API prefix for direct access)
+Route::prefix('facebook')->group(function () {
+    Route::get('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'verify']);
+    Route::post('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'handle']);
 });

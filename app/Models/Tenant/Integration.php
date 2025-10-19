@@ -3,22 +3,35 @@
 namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
+use App\Enums\IntegrationStatusEnum;
+use App\Enums\PlatformEnum;
 
 class Integration extends Model
 {
     protected $fillable = [
         'name',
-        'app_id',
-        'app_secret',
-        'redirect_uri',
+        'platform',
         'access_token',
         'refresh_token',
         'token_expires_at',
+        'last_sync',
+        'status',
+        'is_active',
     ];
 
     protected $casts = [
+        'access_token' => 'encrypted',
+        'refresh_token' => 'encrypted',
         'token_expires_at' => 'datetime',
+        'last_sync' => 'datetime',
+        'status' => IntegrationStatusEnum::class,
+        'platform' => PlatformEnum::class,
+        'is_active' => 'boolean',
+    ];
+
+    protected $hidden = [
+        'access_token',
+        'refresh_token',
     ];
 
     /**
@@ -38,7 +51,7 @@ class Integration extends Model
      */
     public function hasValidCredentials(): bool
     {
-        return !empty($this->app_id) && !empty($this->app_secret);
+        return !empty($this->access_token);
     }
 
     /**

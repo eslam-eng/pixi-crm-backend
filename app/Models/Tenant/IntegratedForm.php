@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Tenant;
 
+use App\Enums\PlatformEnum;
+use App\Models\Tenant\IntegratedFormFieldMapping;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class FacebookFormMapping extends Model
+class IntegratedForm extends Model
 {
     use HasFactory;
 
@@ -15,7 +17,7 @@ class FacebookFormMapping extends Model
      *
      * @var string
      */
-    protected $table = 'facebook_form_mappings';
+    protected $table = 'integrated_forms';
 
     /**
      * The attributes that are mass assignable.
@@ -23,9 +25,11 @@ class FacebookFormMapping extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'facebook_form_id',
+        'external_form_id',
         'form_name',
+        'platform',
         'total_contacts_count',
+        'is_active',
     ];
 
     /**
@@ -35,6 +39,8 @@ class FacebookFormMapping extends Model
      */
     protected $casts = [
         'total_contacts_count' => 'integer',
+        'is_active' => 'boolean',
+        'platform' => PlatformEnum::class,
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -44,17 +50,62 @@ class FacebookFormMapping extends Model
      */
     public function fieldMappings(): HasMany
     {
-        return $this->hasMany(FacebookFormFieldMapping::class, 'form_id', 'form_id');
+        return $this->hasMany(IntegratedFormFieldMapping::class, 'form_id');
     }
 
     /**
-     * Get the form name.
+     * Get the platform label.
      *
-     * @return string|null
+     * @return string
      */
-    public function getFormName(): ?string
+    public function getPlatformLabel(): string
     {
-        return $this->form_name;
+        return $this->platform->label();
+    }
+
+    /**
+     * Check if the form is active.
+     *
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->is_active ?? false;
+    }
+
+    /**
+     * Set the form as active or inactive.
+     *
+     * @param bool $active
+     * @return void
+     */
+    public function setActive(bool $active): void
+    {
+        $this->is_active = $active;
+    }
+
+    /**
+     * Find forms by platform.
+     *
+     * @param PlatformEnum $platform
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function findByPlatform(PlatformEnum $platform)
+    {
+        return static::where('platform', $platform)->get();
+    }
+
+    /**
+     * Get active forms by platform.
+     *
+     * @param PlatformEnum $platform
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getActiveByPlatform(PlatformEnum $platform)
+    {
+        return static::where('platform', $platform)
+            ->where('is_active', true)
+            ->get();
     }
 
     /**
@@ -109,7 +160,7 @@ class FacebookFormMapping extends Model
     {
         return $this->fieldMappings->map(function ($mapping) {
             return [
-                'facebook_field_key' => $mapping->getFacebookFieldKey(),
+                'external_field_key' => $mapping->getExternalFieldKey(),
                 'contact_column' => $mapping->getContactColumn(),
                 'is_required' => $mapping->isRequired(),
             ];
@@ -124,7 +175,7 @@ class FacebookFormMapping extends Model
      */
     public function setMappings(array $mappings): void
     {
-        FacebookFormFieldMapping::createMappings($this->form_id, $mappings);
+        IntegratedFormFieldMapping::createMappings($this->form_id, $mappings);
     }
 
     /**
@@ -143,7 +194,7 @@ class FacebookFormMapping extends Model
      * @param string $formId
      * @return FacebookFormMapping|null
      */
-    public static function findByFormId(string $formId): ?FacebookFormMapping
+    public static function findByFormId(string $formId): ?IntegratedFormFieldMapping
     {
         return static::where('form_id', $formId)->first();
     }
@@ -157,7 +208,7 @@ class FacebookFormMapping extends Model
      * @param int $contactsCount
      * @return FacebookFormMapping
      */
-    public static function createOrUpdate(string $formId, array $mappings, ?string $formName = null, int $contactsCount = 0): FacebookFormMapping
+    public static function createOrUpdate(string $formId, array $mappings, ?string $formName = null, int $contactsCount = 0): IntegratedFormFieldMapping
     {
         $formMapping = static::updateOrCreate(
             ['form_id' => $formId],
@@ -168,7 +219,7 @@ class FacebookFormMapping extends Model
         );
 
         // Create field mappings
-        FacebookFormFieldMapping::createMappings($formId, $mappings);
+        IntegratedFormFieldMapping::createMappings($formId, $mappings);
 
         return $formMapping;
     }
