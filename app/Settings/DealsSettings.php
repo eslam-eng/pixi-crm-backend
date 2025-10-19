@@ -9,7 +9,6 @@ class DealsSettings extends Settings
     // General Deal Settings
     public string $default_currency;
     public int $default_tax_rate;
-    public int $default_payment_terms_days;
     public int $attachment_size_limit_mb;
     
     // Feature Toggles
@@ -39,7 +38,6 @@ class DealsSettings extends Settings
             // General Deal Settings
             'default_currency' => 'USD',
             'default_tax_rate' => 14,
-            'default_payment_terms_days' => 30,
             'attachment_size_limit_mb' => 10,
             
             // Feature Toggles

@@ -117,12 +117,6 @@ class SettingRequest extends FormRequest
                 $rules[] = 'max:100';
                 break;
                 
-            case 'default_payment_terms_days':
-                $rules[] = 'required';
-                $rules[] = 'integer';
-                $rules[] = 'min:1';
-                $rules[] = 'max:365';
-                break;
                 
             case 'attachment_size_limit_mb':
                 $rules[] = 'required';
