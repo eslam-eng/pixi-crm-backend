@@ -1,16 +1,13 @@
 <?php
 
-namespace App\Services\Report;
+namespace App\Services\Tenant\Report;
 
 use App\DTO\Report\ReportDTO;
-use App\DTO\Report\ReportExecutionDTO;
 use App\DTO\Report\ReportFilterDTO;
 use App\Models\Tenant\Report;
 use App\Models\Tenant\ReportExecution;
 use App\Services\BaseService;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -24,154 +21,6 @@ class ReportService extends BaseService
     public function getModel(): Report
     {
         return $this->model;
-    }
-
-    /**
-     * Get all reports with optional filtering
-     */
-    public function index(array $filters = [], array $withRelations = [], int $perPage = 15): mixed
-    {
-        $query = $this->getQuery($filters)
-            ->with($withRelations)
-            ->orderBy('created_at', 'desc');
-
-        if (isset($filters['per_page']) && $filters['per_page'] === 'all') {
-            return $query->get();
-        }
-
-        return $query->paginate($perPage);
-    }
-
-    /**
-     * Create a new report
-     */
-    public function store(ReportDTO $reportDTO): Report
-    {
-        return DB::transaction(function () use ($reportDTO) {
-            $report = $this->model->create($reportDTO->toArray());
-
-            // Set next run time if scheduled
-            if ($report->is_scheduled) {
-                $report->next_run_at = $this->calculateNextRunTime($report->schedule_frequency, $report->schedule_time);
-                $report->save();
-            }
-
-            return $report;
-        });
-    }
-
-    /**
-     * Update an existing report
-     */
-    public function update(ReportDTO $reportDTO, int $id): Report
-    {
-        return DB::transaction(function () use ($reportDTO, $id) {
-            $report = $this->findById($id);
-            $report->update($reportDTO->toArray());
-
-            // Update next run time if scheduled
-            if ($report->is_scheduled) {
-                $report->next_run_at = $this->calculateNextRunTime($report->schedule_frequency, $report->schedule_time);
-                $report->save();
-            }
-
-            return $report;
-        });
-    }
-
-    /**
-     * Delete a report
-     */
-    public function destroy(int $id): bool
-    {
-        return DB::transaction(function () use ($id) {
-            $report = $this->findById($id);
-
-            // Delete all executions first
-            $report->executions()->delete();
-
-            return $report->delete();
-        });
-    }
-
-    /**
-     * Execute a report
-     */
-    public function executeReport(int $reportId, ReportFilterDTO $filters = null, int $executedById = null): ReportExecution
-    {
-        $report = $this->findById($reportId);
-        $executedById = $executedById ?? Auth::id();
-
-        $execution = $this->executionModel->create([
-            'report_id' => $reportId,
-            'executed_by_id' => $executedById,
-            'status' => 'running',
-            'started_at' => now(),
-            'parameters' => $filters?->toArray(),
-        ]);
-
-        try {
-            // Update report last run time
-            $report->update(['last_run_at' => now()]);
-
-            // Execute the specific report type
-            $result = $this->executeReportByType($report, $filters);
-
-            // Mark execution as completed
-            $execution->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-                'execution_time' => $execution->started_at->diffInSeconds(now()),
-                'records_processed' => $result['records_count'] ?? 0,
-                'file_path' => $result['file_path'] ?? null,
-                'file_size' => $result['file_size'] ?? null,
-            ]);
-
-            return $execution;
-        } catch (\Exception $e) {
-            // Mark execution as failed
-            $execution->update([
-                'status' => 'failed',
-                'completed_at' => now(),
-                'execution_time' => $execution->started_at->diffInSeconds(now()),
-                'error_message' => $e->getMessage(),
-            ]);
-
-            throw $e;
-        }
-    }
-
-    /**
-     * Execute report based on its type
-     */
-    protected function executeReportByType(Report $report, ReportFilterDTO $filters = null): array
-    {
-        $reportType = $report->report_type;
-
-        switch ($reportType) {
-            case 'sales_performance':
-                return $this->executeSalesPerformanceReport($filters);
-            case 'lead_management':
-                return $this->executeLeadManagementReport($filters);
-            case 'team_performance':
-                return $this->executeTeamPerformanceReport($filters);
-            case 'task_completion':
-                return $this->executeTaskCompletionReport($filters);
-            case 'revenue_analysis':
-                return $this->executeRevenueAnalysisReport($filters);
-            case 'opportunity_pipeline':
-                return $this->executeOpportunityPipelineReport($filters);
-            case 'call_activity':
-                return $this->executeCallActivityReport($filters);
-            case 'contact_management':
-                return $this->executeContactManagementReport($filters);
-            case 'product_performance':
-                return $this->executeProductPerformanceReport($filters);
-            case 'forecasting':
-                return $this->executeForecastingReport($filters);
-            default:
-                throw new \InvalidArgumentException("Unknown report type: {$reportType}");
-        }
     }
 
     /**
@@ -385,6 +234,7 @@ class ReportService extends BaseService
             'deals.id',
             'deals.deal_name',
             'deals.total_amount',
+            'deals.partial_amount_paid',
             'deals.sale_date',
             'deals.payment_status',
             'contacts.company_name',
@@ -603,52 +453,68 @@ class ReportService extends BaseService
 
         // Use method-based approach if available, otherwise fall back to property-based
         if (method_exists($filters, 'hasUserFilter') && $filters->hasUserFilter()) {
-            $query->whereIn('assigned_to_id', $filters->user_ids);
+            $query->whereIn('leads.assigned_to_id', $filters->user_ids);
         } elseif (property_exists($filters, 'user_ids') && !empty($filters->user_ids)) {
-            $query->whereIn('assigned_to_id', $filters->user_ids);
+            $query->whereIn('leads.assigned_to_id', $filters->user_ids);
         }
 
         if (method_exists($filters, 'hasTeamFilter') && $filters->hasTeamFilter()) {
-            $query->whereIn('team_id', $filters->team_ids);
+            $query->whereIn('users.team_id', $filters->team_ids);
         } elseif (property_exists($filters, 'team_ids') && !empty($filters->team_ids)) {
-            $query->whereIn('team_id', $filters->team_ids);
+            $query->whereIn('users.team_id', $filters->team_ids);
         }
 
         if (method_exists($filters, 'hasStageFilter') && $filters->hasStageFilter()) {
-            $query->whereIn('stage_id', $filters->stage_ids);
+            $query->whereIn('leads.stage_id', $filters->stage_ids);
         } elseif (property_exists($filters, 'stage_ids') && !empty($filters->stage_ids)) {
-            $query->whereIn('stage_id', $filters->stage_ids);
+            $query->whereIn('leads.stage_id', $filters->stage_ids);
         }
 
         if (method_exists($filters, 'hasStatusFilter') && $filters->hasStatusFilter()) {
             $statusField = property_exists($filters, 'deal_statuses') ? 'deal_statuses' : 'statuses';
-            $query->whereIn('status', $filters->$statusField);
+            $query->whereIn('leads.status', $filters->$statusField);
         } elseif (property_exists($filters, 'statuses') && !empty($filters->statuses)) {
-            $query->whereIn('status', $filters->statuses);
+            $query->whereIn('leads.status', $filters->statuses);
         } elseif (property_exists($filters, 'deal_statuses') && !empty($filters->deal_statuses)) {
-            $query->whereIn('status', $filters->deal_statuses);
+            $query->whereIn('leads.status', $filters->deal_statuses);
         }
 
         if (method_exists($filters, 'hasSourceFilter') && $filters->hasSourceFilter()) {
-            $query->whereIn('source_id', $filters->sources);
+            $query->whereIn('contacts.source_id', $filters->sources);
         } elseif (property_exists($filters, 'sources') && !empty($filters->sources)) {
-            $query->whereIn('source_id', $filters->sources);
+            $query->whereIn('contacts.source_id', $filters->sources);
         }
 
         if (method_exists($filters, 'hasSearch') && $filters->hasSearch()) {
             $query->where(function ($q) use ($filters) {
-                $q->where('first_name', 'like', '%' . $filters->search . '%')
-                    ->orWhere('last_name', 'like', '%' . $filters->search . '%')
-                    ->orWhere('company_name', 'like', '%' . $filters->search . '%')
-                    ->orWhere('email', 'like', '%' . $filters->search . '%');
+                $q->where('contacts.first_name', 'like', '%' . $filters->search . '%')
+                    ->orWhere('contacts.last_name', 'like', '%' . $filters->search . '%')
+                    ->orWhere('contacts.company_name', 'like', '%' . $filters->search . '%')
+                    ->orWhere('contacts.email', 'like', '%' . $filters->search . '%');
             });
         } elseif (property_exists($filters, 'search') && !empty($filters->search)) {
             $query->where(function ($q) use ($filters) {
-                $q->where('first_name', 'like', '%' . $filters->search . '%')
-                    ->orWhere('last_name', 'like', '%' . $filters->search . '%')
-                    ->orWhere('company_name', 'like', '%' . $filters->search . '%')
-                    ->orWhere('email', 'like', '%' . $filters->search . '%');
+                $q->where('contacts.first_name', 'like', '%' . $filters->search . '%')
+                    ->orWhere('contacts.last_name', 'like', '%' . $filters->search . '%')
+                    ->orWhere('contacts.company_name', 'like', '%' . $filters->search . '%')
+                    ->orWhere('contacts.email', 'like', '%' . $filters->search . '%');
             });
+        }
+
+        // Value range filtering
+        if (property_exists($filters, 'value_range_min') && $filters->value_range_min !== null && $filters->value_range_min !== '') {
+            $query->where('leads.deal_value', '>=', $filters->value_range_min);
+        }
+        if (property_exists($filters, 'value_range_max') && $filters->value_range_max !== null && $filters->value_range_max !== '') {
+            $query->where('leads.deal_value', '<=', $filters->value_range_max);
+        }
+
+        // Probability range filtering
+        if (property_exists($filters, 'probability_range_min') && $filters->probability_range_min !== null && $filters->probability_range_min !== '') {
+            $query->where('leads.win_probability', '>=', $filters->probability_range_min);
+        }
+        if (property_exists($filters, 'probability_range_max') && $filters->probability_range_max !== null && $filters->probability_range_max !== '') {
+            $query->where('leads.win_probability', '<=', $filters->probability_range_max);
         }
 
         // Date range filtering
