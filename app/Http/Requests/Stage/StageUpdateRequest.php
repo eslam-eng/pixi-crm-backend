@@ -23,7 +23,7 @@ class StageUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:stages,name,' . $this->stage,
+            'name' => 'required|string|max:255|unique:stages,name,' . $this->stageId,
             'probability' => 'required|integer|min:0|max:100',
         ];
     }

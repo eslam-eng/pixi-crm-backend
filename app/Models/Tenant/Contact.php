@@ -17,6 +17,7 @@ class Contact extends Model
     use Filterable, Notifiable;
     protected $fillable =
     [
+        'external_lead_id',
         'first_name',
         'last_name',
         'email',
