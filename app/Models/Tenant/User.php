@@ -151,7 +151,7 @@ class User extends Authenticatable
      */
     public function team()
     {
-        return $this->hasOne(Team::class);
+        return $this->belongsTo(Team::class);
     }
 
     /**
