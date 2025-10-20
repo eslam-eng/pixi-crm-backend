@@ -53,7 +53,6 @@ class AuthService extends BaseService
             $user->assignRole($type);
             return $user;
         } catch (Exception $e) {
-            dd($e);
             throw new Exception(__('app.signup_failed'));
         }
     }

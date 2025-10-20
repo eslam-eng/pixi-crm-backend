@@ -107,7 +107,6 @@ class LocationController extends Controller
             ];
             return to_route('locations.index')->with('toast', $toast);
         } catch (\Exception $exception) {
-            dd($exception);
             $toast = [
                 'type' => 'error',
                 'title' => 'error',

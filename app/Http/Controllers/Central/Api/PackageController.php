@@ -79,7 +79,6 @@ class PackageController extends Controller
 
             // Paginate the results
             $tiers = $query->paginate(per_page());
-            // dd($tiers);
             $data = TierResource::collection($tiers)->response()->getdata(true);
             return ApiResponse($data, __('app.data added successfully'));
         } catch (\Exception $e) {
