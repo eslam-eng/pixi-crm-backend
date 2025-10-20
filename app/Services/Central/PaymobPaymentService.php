@@ -40,7 +40,6 @@ class PaymobPaymentService extends BasePaymentService implements PaymentGatewayI
         $data = $request->all();
         $data['api_source'] = "INVOICE";
         $data['integrations'] = $this->integrations_id;
-        // dd($data);
 
         $response = $this->buildRequest('POST', '/api/ecommerce/orders', $data);
         //handel payment response data and return it

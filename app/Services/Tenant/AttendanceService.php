@@ -85,7 +85,6 @@ class AttendanceService
                 if ($out->lt($in)) { // guard corrupted order
                     [$in, $out] = [$out, $in];
                 }
-                // dd($in, $out, $tz);
                 // Split interval if it crosses the day boundary
                 $intervals = array_merge($intervals, $this->splitIntervalByDay($in, $out, $tz));
                 $stackIn = null;

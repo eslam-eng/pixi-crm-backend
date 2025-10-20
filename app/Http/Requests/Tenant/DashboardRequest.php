@@ -38,7 +38,6 @@ class DashboardRequest extends FormRequest
 
                 if ($this->user_id) {
                     $teamUserIds = User::where('team_id', $user->team_id)->pluck('id');
-                    // dd($teamUserIds, $this->user_id, $teamUserIds->contains($this->user_id));
                     if ($teamUserIds->contains($this->user_id)) {
                         $filters['user_id'] = $this->user_id;
                     } else {

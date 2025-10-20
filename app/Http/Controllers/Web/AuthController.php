@@ -31,7 +31,6 @@ class AuthController extends Controller
             ];
             return to_route('login');
         } catch (Exception $e) {
-            dd($e);
             return back()->with('error', $e->getMessage());
         }
     }
@@ -54,7 +53,6 @@ class AuthController extends Controller
         } catch (NotFoundException $e) {
             return back()->with('error', "email or password incorrect please try again");
         } catch (Exception $e) {
-            dd($e);
             return back()->with('error', $e->getMessage());
         }
     }
@@ -76,7 +74,7 @@ class AuthController extends Controller
 
             return to_route('home')->with('toast', $toast);
         } catch (Exception $e) {
-            dd($e);
+
             $toast = [
                 'type' => 'error',
                 'title' => 'error',

@@ -59,7 +59,6 @@ class ReasonController extends Controller
      */
     public function show(Reason $reason)
     {
-        dd($reason);
         return ApiResponse::sendResponse(200, 'Reeason retrieved successfully', new ReasonResource($reason));
     }
 

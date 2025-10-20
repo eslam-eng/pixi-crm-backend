@@ -11,7 +11,6 @@ class UpdateItemCategoryRequest extends BaseRequest
 {
     public function rules(): array
     {
-        // dd($this->route('item_category'));
         return [
             'name' => 'required|string|unique:item_categories,name,' . $this->route('item_category') . '|max:255',
         ];

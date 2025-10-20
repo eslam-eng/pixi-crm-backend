@@ -128,7 +128,6 @@ class ContactRequest extends FormRequest
             // Check if phone exists in database (for updates)
             if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
                 $contactId = $this->route('contact_id');
-                // dd($contactId);
                 $exists = \DB::table('contact_phones')
                     ->where('phone', $phoneNumber)
                     ->where('contact_id', '!=', $contactId)
