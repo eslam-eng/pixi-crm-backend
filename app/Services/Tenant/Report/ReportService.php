@@ -33,6 +33,50 @@ class ReportService extends BaseService
             ->leftJoin('users', 'leads.assigned_to_id', '=', 'users.id')
             ->leftJoin('stages', 'leads.stage_id', '=', 'stages.id')
             ->leftJoin('sources', 'contacts.source_id', '=', 'sources.id')
+            ->leftJoin('teams', 'users.team_id', '=', 'teams.id')
+            ->leftJoin('deals', 'deals.lead_id', '=', 'leads.id');
+
+        // Apply filters
+        if ($filters) {
+            $this->applyCommonFilters($query, $filters);
+        }
+
+        $data = $query->select([
+            'leads.id',
+            'leads.deal_value',
+            'leads.win_probability',
+            'leads.status',
+            'leads.created_at',
+            'leads.expected_close_date',
+            // Use deals.sale_date as the deal date when available
+            DB::raw('deals.sale_date as deal_date'),
+            'contacts.first_name',
+            'contacts.last_name',
+            'contacts.company_name',
+            'users.first_name as user_first_name',
+            'users.last_name as user_last_name',
+            'stages.name as stage_name',
+            'sources.name as source_name',
+            'teams.title as team_name',
+        ])->get();
+
+        return [
+            'data' => $data,
+            'records_count' => $data->count(),
+            'summary' => $this->calculateSalesPerformanceSummary($data),
+        ];
+    }
+
+    /**
+     * Execute Sales Performance Report
+     */
+    public function executeDealsReport($filters = null): array
+    {
+        $query = DB::table('leads')
+            ->leftJoin('contacts', 'leads.contact_id', '=', 'contacts.id')
+            ->leftJoin('users', 'leads.assigned_to_id', '=', 'users.id')
+            ->leftJoin('stages', 'leads.stage_id', '=', 'stages.id')
+            ->leftJoin('sources', 'contacts.source_id', '=', 'sources.id')
             ->leftJoin('teams', 'users.team_id', '=', 'teams.id');
 
         // Apply filters

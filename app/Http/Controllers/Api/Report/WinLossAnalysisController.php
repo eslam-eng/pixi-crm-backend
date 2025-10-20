@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Report;
 
 use App\DTO\Report\SalesPerformanceReportDTO;
 use App\Http\Controllers\Controller;
-use App\Services\Report\ReportService;
+use App\Services\Tenant\Report\ReportService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -161,19 +161,15 @@ class WinLossAnalysisController extends Controller
         return [
             'win_rate' => [
                 'value' => number_format($winRate, 1) . '%',
-                'change_percentage' => 4.2,
             ],
             'loss_rate' => [
                 'value' => number_format($lossRate, 1) . '%',
-                'change_percentage' => -2.1,
             ],
             'total_analyzed' => [
                 'value' => $totalDeals,
-                'description' => 'Deals in last 12 months',
             ],
             'avg_cycle_time' => [
                 'value' => round($avgCycleTime) . ' days',
-                'change_percentage' => -8, // days improvement
             ],
         ];
     }

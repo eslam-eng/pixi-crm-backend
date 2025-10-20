@@ -27,7 +27,7 @@ class DealAnalysisController extends Controller
             $filters = SalesPerformanceReportDTO::fromRequest($request);
 
             // Get deals performance data
-            $dealsData = $this->reportService->executeSalesPerformanceReport($filters);
+            $dealsData = $this->reportService->executeDealsReport($filters);
 
             // Calculate key metrics
             $keyMetrics = $this->calculateKeyMetrics($dealsData['data']);
@@ -180,19 +180,15 @@ class DealAnalysisController extends Controller
         return [
             'total_deals' => [
                 'value' => $totalDeals,
-                'change_percentage' => 18.2,
             ],
             'won_deals' => [
                 'value' => $wonDeals,
-                'change_percentage' => 24.5,
             ],
             'win_rate' => [
                 'value' => number_format($winRate, 1) . '%',
-                'change_percentage' => 3.2,
             ],
             'avg_deal_size' => [
                 'value' => '$' . number_format($avgDealSize),
-                'change_percentage' => 8.7,
             ],
         ];
     }
