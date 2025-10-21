@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\AttendanceController;
-use App\Http\Controllers\Api\AttributeValueController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
@@ -23,6 +22,11 @@ use \App\Http\Controllers\Api\Users\{
     PermissionController,
     RoleController,
     UserController
+};
+use \App\Http\Controllers\Api\Automation\{
+    AutomationActionController,
+    AutomationTriggerController,
+    AutomationWorkflowController
 };
 use App\Http\Controllers\Api\CoreController;
 use App\Http\Controllers\Api\ItemAttributeController;
@@ -324,4 +328,18 @@ Route::middleware([
         Route::post('/', [App\Http\Controllers\Api\FcmTokenController::class, 'store']);
         Route::delete('/', [App\Http\Controllers\Api\FcmTokenController::class, 'destroy']);
     });
+
+    // Automation Triggers routes
+    Route::prefix('automation-triggers')->group(function () {
+        Route::get('/', [AutomationTriggerController::class, 'index']);
+    });
+
+    // Automation Actions routes
+    Route::prefix('automation-actions')->group(function () {
+        Route::get('/', [AutomationActionController::class, 'index']);
+    });
+
+    // Automation Workflows routes
+    Route::apiResource('automation-workflows', AutomationWorkflowController::class);
+    Route::patch('automation-workflows/{id}/toggle-active', [AutomationWorkflowController::class, 'toggleActive']);
 });
