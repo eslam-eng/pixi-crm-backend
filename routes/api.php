@@ -53,15 +53,15 @@ foreach (config('tenancy.central_domains') as $domain) {
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             // Route::middleware('throttle:login')->group(function () {
 
-                // Route::post('login', CentralAuthController::class);
+            // Route::post('login', CentralAuthController::class);
 
-                // Route::post('admin/login', AdminAuthController::class);
+            // Route::post('admin/login', AdminAuthController::class);
 
-                // Route::post('free-trial', RegisterController::class)->name('landlord.auth.free-trial');
+            // Route::post('free-trial', RegisterController::class)->name('landlord.auth.free-trial');
 
-                Route::post('register-tenant', RegisterController::class);
+            Route::post('register-tenant', RegisterController::class);
 
-                // Route::post('signup-activation-code', RegisterWithActivationCodeController::class);
+            // Route::post('signup-activation-code', RegisterWithActivationCodeController::class);
             // });
 
             // Route::group(['prefix' => 'google'], function () {
@@ -81,6 +81,19 @@ foreach (config('tenancy.central_domains') as $domain) {
             //     Route::get('callback', [ShopifyController::class, 'callback']);
             // });
 
+        });
+
+        // for tenant and shared tables for tenant section
+        Route::middleware(['auth:sanctum', 'users.only'])->group(function () {
+            Route::get('profile', [UserController::class, 'profile']);
+            // Route::post('change-password', [UserController::class, 'changePassword']);
+
+            // Route::group(['prefix' => 'subscriptions'], function () {
+            //     Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
+            //     Route::post('/{subscription_id}/renew', [SubscriptionController::class, 'renew']);
+            //     Route::post('/upgrade', [SubscriptionController::class, 'upgrade']);
+            // });
+            // Route::get('discount-codes/{discount_code}/plans/{plan}', [DiscountCodeController::class, 'validateDiscountCode']);
         });
     });
 }

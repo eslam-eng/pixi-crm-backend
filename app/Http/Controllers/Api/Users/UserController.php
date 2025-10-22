@@ -10,10 +10,12 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use App\Services\Tenant\Users\UserService;
 use App\Exceptions\NotFoundException;
+use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Users\UserRequest;
 use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
 use App\Http\Requests\Tenant\Users\ChangeLanguageRequest;
+use App\Http\Resources\Central\AuthUserResource;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use Illuminate\Http\Request;
@@ -91,6 +93,13 @@ class UserController extends Controller
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
+    }
+
+    public function profile()
+    {
+        $user = auth()->user();
+
+        return ApiResponse::success(data: AuthUserResource::make($user));
     }
 
     public function updateProfile(UserUpdateProfileRequest $request, $id)

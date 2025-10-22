@@ -20,10 +20,11 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request, RegisterService $registerService)
     {
         try {
+            $cn = DB::connection('landlord');
             $userDTO = UserDTO::fromRequest($request);
             $userDTO->create_free_trial = $request->free_trial ?? false;
             // $user = $registerService->handle(registerDTO: $userDTO);
-            DB::beginTransaction();
+
             $user = User::create([
                 'first_name' => $userDTO->first_name,
                 'last_name' => $userDTO->last_name,
@@ -31,11 +32,8 @@ class RegisterController extends Controller
                 'password' => bcrypt($userDTO->password),
             ]);
 
-            // Generate tenant_id if not provided
-            $tenant_id = $userDTO->tenant_id ?? \Illuminate\Support\Str::uuid();
-
             $tenant_record = Tenant::create([
-                'id' => $tenant_id,
+                'id' => $userDTO->tenant_id,
                 'tenancy_db_name' => "billiqa_" . $userDTO->organization_name,
                 'organization_name' => $userDTO->organization_name,
                 'user_id' => $user->id,
@@ -51,11 +49,9 @@ class RegisterController extends Controller
                 'user' => AuthUserResource::make($user),
             ];
 
-            DB::commit();
-
             return ApiResponse::success(data: $data);
         } catch (\Exception $e) {
-            DB::rollBack();
+            // $cn->rollBack();
             dd($e);
 
             return ApiResponse::error(message: 'there is an error please try again later or contact with support for fast response');
