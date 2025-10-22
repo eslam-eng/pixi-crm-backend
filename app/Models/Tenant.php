@@ -28,7 +28,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase, HasMedia
     {
         return [
             'id',
-            'name',
+            'organization_name',
             'user_id',
         ];
     }
@@ -36,10 +36,5 @@ class Tenant extends BaseTenant implements TenantWithDatabase, HasMedia
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function tiers()
-    {
-        return $this->belongsToMany(Tier::class);
     }
 }

@@ -1,8 +1,10 @@
 <?php
 
+use App\Exceptions\ApiExceptionHandler;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -31,5 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 message: 'You do not have the required authorization.',
                 code: Response::HTTP_FORBIDDEN,
             );
+        });
+        $exceptions->render(function (Exception $e, Request $request) {
+            return ApiExceptionHandler::handle($e, $request);
         });
     })->create();

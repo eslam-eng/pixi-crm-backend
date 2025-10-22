@@ -62,11 +62,8 @@ class User extends Authenticatable
         return $this->hasOne(Tenant::class);
     }
 
-    /**
-     * Get the FCM tokens for the user.
-     */
-    public function fcm_tokens()
+    public function generateToken(string $name = 'auth_token', array $abilities = ['*']): string
     {
-        return $this->hasMany(FcmToken::class);
+        return $this->createToken($name, $abilities)->plainTextToken;
     }
 }

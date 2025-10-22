@@ -12,6 +12,9 @@ class PriorityColorSeeder extends Seeder
      */
     public function run(): void
     {
+        if(PriorityColor::count() > 0) {
+            return;
+        }
         $colors = [
             [
                 'name' => 'blue',
