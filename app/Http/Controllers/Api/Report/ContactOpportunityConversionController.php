@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Report;
 
 use App\DTO\Report\SalesPerformanceReportDTO;
 use App\Http\Controllers\Controller;
-use App\Services\Report\ReportService;
+use App\Services\Tenant\Report\ReportService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
