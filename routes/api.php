@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\AttendanceController;
-use App\Http\Controllers\Api\AttributeValueController;
-use App\Http\Controllers\Api\TeamsController;
 
 use App\Http\Controllers\Api\Integrations\{
     FacebookController,
@@ -187,6 +185,7 @@ Route::middleware([
 
         Route::post('/users/assign-team', [UserController::class, 'assignToTeam']);
         Route::patch('/users/{user}/end-assignment', [UserController::class, 'endAssignment']);
+        Route::get('users/{user}/targets', [UserController::class, 'getTargets']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);
