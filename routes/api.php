@@ -390,13 +390,12 @@ Route::middleware([
         Route::put('loss-reasons/{lossReasonId}', [\App\Http\Controllers\Api\LossReasonController::class, 'update']);
         Route::delete('loss-reasons/{lossReasonId}', [\App\Http\Controllers\Api\LossReasonController::class, 'destroy']);
 
-
+        // location routes
         Route::get('/locations/countries', [\App\Http\Controllers\Api\LocationController::class, 'getCountries']);
         Route::get('/locations/countries/{countryId}/cities', [\App\Http\Controllers\Api\LocationController::class, 'getCities']);
         Route::get('/locations/cities/{cityId}/areas', [\App\Http\Controllers\Api\LocationController::class, 'getAreas']);
+        
         Route::apiResource('sources', \App\Http\Controllers\Api\ResourceController::class);
-        Route::apiResource('reasons', \App\Http\Controllers\Api\ReasonController::class);
-
 
         // Translatable example routes
         Route::prefix('translatable')->group(function () {
