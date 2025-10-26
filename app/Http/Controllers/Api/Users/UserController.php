@@ -33,7 +33,7 @@ class UserController extends Controller
             $filters = array_filter(request()->query());
             $withRelations = ['roles', 'team'];
             if ($request->has('ddl')) {
-                $users = $this->userService->index(filters: $filters, withRelations: $withRelations);
+                $users = $this->userService->index(filters: $filters);
                 $data = UserDDLResource::collection($users);
             } else {
                 $users = $this->userService->index(filters: $filters, withRelations: $withRelations,  perPage: $filters['per_page'] ?? 10);
