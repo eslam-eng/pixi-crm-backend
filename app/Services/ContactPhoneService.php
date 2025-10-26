@@ -62,9 +62,9 @@ class ContactPhoneService extends BaseService
         ]);
     }
 
-    public function update(array $contactPhones, Contact $Contact): void
+    public function update(array $contactPhones, Contact $contact): void
     {
-        $this->syncContactPhones($Contact, $contactPhones);
+        $this->syncContactPhones($contact, $contactPhones);
     }
 
 

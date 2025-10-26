@@ -11,19 +11,11 @@ use Illuminate\Validation\Rule;
 
 class ContactRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -71,87 +63,8 @@ class ContactRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get the appropriate required rule based on HTTP method
-     */
     protected function requiredRule(): string
     {
         return $this->isMethod('POST') ? 'required' : 'sometimes';
-    }
-
-    /**
-     * Configure the validator instance
-     */
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($validator) {
-            $this->validateContactPhones($validator);
-        });
-    }
-
-    /**
-     * Validate contact phones structure and business rules
-     */
-    protected function validateContactPhones($validator): void
-    {
-        $contactPhones = $this->input('contact_phones', []);
-
-        if (empty($contactPhones)) {
-            return;
-        }
-
-        // Check for duplicate phone numbers
-        $phoneNumbers = collect($contactPhones)->pluck('phone')->filter();
-        if ($phoneNumbers->count() !== $phoneNumbers->unique()->count()) {
-            $validator->errors()->add('contact_phones', 'Duplicate phone numbers are not allowed.');
-        }
-
-        // Check that only one phone is marked as primary
-        $primaryCount = collect($contactPhones)
-            ->where('is_primary', true)
-            ->count();
-
-        if ($primaryCount > 1) {
-            $validator->errors()->add('contact_phones', 'Only one phone number can be marked as primary.');
-        }
-
-        // Validate phone number format
-        foreach ($contactPhones as $index => $phone) {
-            $phoneNumber = $phone['phone'] ?? '';
-            if (!empty($phoneNumber) && !preg_match('/^[+]?[0-9\s\-\(\)]{7,20}$/', $phoneNumber)) {
-                $validator->errors()->add(
-                    "contact_phones.{$index}.phone",
-                    'Please enter a valid phone number.'
-                );
-            }
-
-            // Check if phone exists in database (for updates)
-            if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
-                $contactId = $this->route('contact_id');
-                $exists = \DB::table('contact_phones')
-                    ->where('phone', $phoneNumber)
-                    ->where('contact_id', '!=', $contactId)
-                    ->exists();
-
-                if ($exists) {
-                    $validator->errors()->add(
-                        "contact_phones.{$index}.phone",
-                        'This phone number is already in use by another contact.'
-                    );
-                }
-            } else {
-                // For store operations
-                $exists = \DB::table('contact_phones')
-                    ->where('phone', $phoneNumber)
-                    ->exists();
-
-                if ($exists) {
-                    $validator->errors()->add(
-                        "contact_phones.{$index}.phone",
-                        'This phone number is already in use.'
-                    );
-                }
-            }
-        }
     }
 }
