@@ -13,15 +13,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Contacts\ContactRequest;
 use App\Http\Resources\ContactResource;
 use App\Imports\ContactsImport;
-use App\Models\Tenant\Contact;
 use App\Services\ContactService;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\HeadingRowImport;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class ContactController extends Controller
 {
-    public function __construct(public ContactService $contactService) {
+    public function __construct(public ContactService $contactService)
+    {
         $this->middleware('permission:view-contacts')->only(['index', 'show']);
         $this->middleware('permission:create-contacts')->only(['store']);
         $this->middleware('permission:edit-contacts')->only(['update']);
@@ -201,6 +202,8 @@ class ContactController extends Controller
             $contact = $this->contactService->update($contact_id, $contactDTO);
             DB::commit();
             return ApiResponse(new ContactResource($contact), 'Contact updated successfully');
+        } catch (ValidationException $e) {
+            return ApiResponse(message: $e->validator->errors(), code: 422);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);

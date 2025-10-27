@@ -8,16 +8,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ItemVariantResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         $attrsLoaded = $this->relationLoaded('attributeValues');
         $hasAttrs    = $attrsLoaded && $this->attributeValues->isNotEmpty();
-
         return [
             'id' => $this->id,
             'sku' => $this->when($this->sku !== null, $this->sku),
