@@ -2,27 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exceptions\GeneralException;
-use App\Http\Requests\Clients\UpdateClientRequest;
-use App\Http\Requests\Clients\StoreClientRequest;
 use App\Http\Resources\LocationCollection;
-use App\Http\Resources\LocationResource;
 use Exception;
 use Illuminate\Http\Request;
-use App\DTO\Client\ClientDTO;
-use App\Services\ClientService;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ClientResource;
-use App\Services\LocationService;
+use App\Services\Tenant\LocationService;
+use Illuminate\Http\JsonResponse;
 
 class LocationController extends Controller
 {
     public function __construct(public LocationService $locationService) {}
-    /**
-     * Display a listing of the resource.
-     */
-    public function getCountries(Request $request): \Illuminate\Http\JsonResponse
+
+    public function getCountries(Request $request): JsonResponse
     {
         try {
             $perPage = $request->query('per_page');
@@ -39,7 +30,7 @@ class LocationController extends Controller
         }
     }
 
-    public function getCities(Request $request, $country_id): \Illuminate\Http\JsonResponse
+    public function getCities(Request $request, $country_id): JsonResponse
     {
         try {
             $perPage = $request->query('per_page');
@@ -54,7 +45,7 @@ class LocationController extends Controller
         }
     }
 
-    public function getAreas(Request $request, $city_id): \Illuminate\Http\JsonResponse
+    public function getAreas(Request $request, $city_id): JsonResponse
     {
         try {
             $perPage = $request->query('per_page');
@@ -67,47 +58,5 @@ class LocationController extends Controller
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreClientRequest $request)
-    {
-        try {
-            DB::beginTransaction();
-            $clientDTO = ClientDTO::fromRequest($request);
-            $client = $this->clientService->store($clientDTO);
-            DB::commit();
-            return ApiResponse((new ClientResource($client))->toArray(request()), 'Client created successfully', code: 201);
-        } catch (Exception $e) {
-            DB::rollBack();
-            return ApiResponse(message: $e->getMessage(), code: 500);
-        }
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id) {}
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(ClientUpdateRequest $request, int $id): \Illuminate\Http\JsonResponse
-    {
-        DB::beginTransaction();
-        $clientDTO = ClientDTO::fromRequest($request);
-        $client = $this->clientService->update($clientDTO, $id);
-        DB::commit();
-        return ApiResponse::sendResponse(200, 'Client updated successfully', new ClientResource($client));
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

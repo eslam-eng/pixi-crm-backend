@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Tenant;
 
 use App\DTO\Location\LocationDTO;
 use App\Exceptions\GeneralException;
 use App\Exceptions\NotFoundException;
 use App\Models\Country;
-use App\Models\Location;
+use App\Models\Tenant\Location;
 use App\QueryFilters\LocationFilters;
+use App\Services\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 
 

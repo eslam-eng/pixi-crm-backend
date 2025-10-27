@@ -42,7 +42,9 @@ use App\Http\Controllers\Api\SettingController as TenantSettingController;
 // //////////// landlord routes
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
-
+        Route::get('/', function () {
+            return 'Central domain';
+        });
     });
 }
 
@@ -131,8 +133,6 @@ Route::middleware([
 
         // Deal Payments routes
         Route::post('deals/{dealId}/payments', [\App\Http\Controllers\Api\Deals\DealPaymentController::class, 'store']);
-
-        Route::apiResource('custom-fields', \App\Http\Controllers\Api\CustomFieldController::class);
 
         // Notification routes
         Route::prefix('notifications')->group(function () {
@@ -297,9 +297,7 @@ Route::middleware([
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
-
         Route::apiResource('teams', \App\Http\Controllers\Api\TeamsController::class);
-        Route::apiResource('clients', \App\Http\Controllers\Api\ClientController::class);
 
         // pipeline and stage routes
         Route::apiResource('pipelines', \App\Http\Controllers\Api\PipelineController::class);
@@ -321,8 +319,6 @@ Route::middleware([
         Route::get('/locations/countries/{countryId}/cities', [\App\Http\Controllers\Api\LocationController::class, 'getCities']);
         Route::get('/locations/cities/{cityId}/areas', [\App\Http\Controllers\Api\LocationController::class, 'getAreas']);
         Route::apiResource('sources', \App\Http\Controllers\Api\ResourceController::class);
-        Route::apiResource('reasons', \App\Http\Controllers\Api\ReasonController::class);
-
 
         // Translatable example routes
         Route::prefix('translatable')->group(function () {
