@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-// use App\Enum\ActivationStatusEnum;
+use App\Enums\Landlord\ActivationStatusEnum;
 // use App\Enum\SupportedLocalesEnum;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -55,7 +55,7 @@ class Admin extends Authenticatable implements HasMedia
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            // 'is_active' => ActivationStatusEnum::class,
+            'is_active' => ActivationStatusEnum::class,
             // 'locale' => SupportedLocalesEnum::class,
         ];
     }
