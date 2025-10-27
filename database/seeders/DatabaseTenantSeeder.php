@@ -9,6 +9,7 @@ use Database\Seeders\Tenant\DepartmentSeeder;
 use Database\Seeders\Tenant\ItemCategorySeeder;
 use Database\Seeders\Tenant\ItemSeeder;
 use Database\Seeders\Tenant\UserSeeder;
+use Database\Seeders\Tenant\SourceSeeder;
 use Database\Seeders\Tenant\OpportunitySeeder;
 use Database\Seeders\Tenant\PaymentMethodSeeder;
 use Database\Seeders\Tenant\PipelineSeeder;

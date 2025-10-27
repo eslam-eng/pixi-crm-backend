@@ -48,6 +48,11 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users_tenant',
         ],
+
+        'landlord' => [
+            'driver' => 'sanctum',
+            'provider' => 'admins',
+        ],
     ],
 
     /*
@@ -76,6 +81,11 @@ return [
         'users_tenant' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL_TENANT', App\Models\Tenant\User::class),
+        ],
+
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
         ],
 
         // 'users' => [
