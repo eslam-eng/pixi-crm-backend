@@ -338,8 +338,7 @@ Route::middleware([
         Route::prefix('facebook')->group(function () {
             Route::get('/app-config', [FacebookController::class, 'getAppConfig']);
             Route::get('/auth-url', [FacebookController::class, 'getAuthUrl']); // Get OAuth URL
-            Route::get('/callback', [FacebookController::class, 'handleCallback']); // OAuth callback
-            Route::post('/data-deletion-callback', [FacebookController::class, 'dataDeletionCallback']);
+
         });
 
         Route::prefix('forms')->group(function () {
@@ -421,12 +420,17 @@ Route::middleware([
             Route::delete('/', [App\Http\Controllers\Api\FcmTokenController::class, 'destroy']);
         });
 
-        // Facebook Webhook Routes (outside API prefix for direct access)
-        Route::prefix('facebook')->group(function () {
-            Route::get('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'verify']);
-            Route::post('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'handle']);
-        });
+        
     });
+
+    Route::prefix('facebook')->group(function () {
+        Route::get('/callback', [FacebookController::class, 'handleCallback']); // OAuth callback
+        Route::post('/data-deletion-callback', [FacebookController::class, 'dataDeletionCallback']);
+
+        Route::get('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'verify']);
+        Route::post('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'handle']);
+    });
+
 
     // Report routes
     Route::prefix('reports')->middleware('auth:api_tenant')->group(function () {
