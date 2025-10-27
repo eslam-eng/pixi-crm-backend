@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Integrations\{
 };
 use App\Http\Controllers\Api\IntegrationController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Central\Api\AdminAuthController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\FormSubmissionController;
@@ -44,6 +45,13 @@ foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
         Route::get('/', function () {
             return 'Central domain';
+        });
+        Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
+            Route::post('admin/login', AdminAuthController::class);
+        });
+
+        Route::group(['middleware' => 'auth:landlord'], function () {
+
         });
     });
 }
