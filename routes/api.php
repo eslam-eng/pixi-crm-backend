@@ -37,88 +37,14 @@ use App\Http\Controllers\Api\ItemAttributeController;
 use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
 use App\Http\Controllers\Api\TranslatableExampleController;
-use App\Http\Controllers\Central\Api\AuthController as  centralAuthController;
-use App\Http\Controllers\Central\Api\PaymentController;
-use App\Http\Controllers\Central\Api\SettingController;
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
-use App\Http\Controllers\Central\Api\SubscriptionController;
-use App\Http\Controllers\Central\Api\ModuleController;
-
 
 // //////////// landlord routes
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
-        Route::group(['prefix' => 'authentication', 'middleware' => 'guest', 'name' => 'authentication.'], function () {
-            // Route::post('signup', [centralAuthController::class, 'signup'])->name('signup');
-            Route::post('login', [centralAuthController::class, 'login'])->name('login');
-            Route::post('logout', [centralAuthController::class, 'logout'])->name('logout');
-            Route::get('hi', fn() => \Illuminate\Support\Facades\DB::getDatabaseName());
-        });
 
-        Route::post('subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
-        Route::post('tiers/buy', [\App\Http\Controllers\Central\Api\TierController::class, 'buy'])->name('tiers.buy')->middleware('auth:sanctum');
-        Route::apiResource('tiers', \App\Http\Controllers\Central\Api\TierController::class);
-        Route::apiResource('modules', \App\Http\Controllers\Central\Api\ModuleController::class);
-        // Route::apiResource('activation-codes', \App\Http\Controllers\Central\Api\ActivationCodeController::class);
-
-
-        Route::get('tenants', [\App\Http\Controllers\Central\Api\TenantController::class, 'index'])->name('tenants.index')->middleware('auth:sanctum');
-
-        //auth routes
-        Route::group(['prefix' => 'dashboard', 'middleware' => 'auth:sanctum'], function () {
-
-            Route::prefix('packages')->group(function () {
-                Route::get('/statistics', [\App\Http\Controllers\Central\Api\PackageController::class, 'get_statistics']);
-                Route::get('/', [\App\Http\Controllers\Central\Api\PackageController::class, 'index']);
-                Route::get('/{tier}', [\App\Http\Controllers\Central\Api\PackageController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\Central\Api\PackageController::class, 'store']);
-                Route::put('/{tier}', [\App\Http\Controllers\Central\Api\PackageController::class, 'update']);
-                Route::delete('/{tier}', [\App\Http\Controllers\Central\Api\PackageController::class, 'destroy']);
-            });
-            Route::get('/settings', [SettingController::class, 'show']);
-            Route::put('/settings', [SettingController::class, 'update']);
-
-            Route::get('/clients/statistics', [\App\Http\Controllers\Central\Api\ClientController::class, 'get_statistics']);
-            Route::apiResource('clients', \App\Http\Controllers\Central\Api\ClientController::class);
-
-            Route::get('/locations/countries', [\App\Http\Controllers\Central\Api\LocationController::class, 'getCountries']);
-            Route::get('/locations/countries/{countryId}/cities', [\App\Http\Controllers\Central\Api\LocationController::class, 'getCities']);
-
-            //subscription routes
-            // Route::get('/subscriptions/activation-method', [SubscriptionController::class, 'getActivationMethod']);
-            // Route::get('/subscriptions/payment-status', [SubscriptionController::class, 'getPaymentStatus']);
-            // Route::get('/subscriptions/subscription-status', [SubscriptionController::class, 'getSubscriptionStatus']);
-            // Route::apiResource('subscriptions', SubscriptionController::class);
-
-
-            Route::prefix('subscriptions')->controller(SubscriptionController::class)->group(function () {
-                Route::get('/', 'index');
-                Route::get('/{subscription}', 'show');
-                Route::post('/', 'store');
-                Route::put('/{subscription}', 'update');
-                Route::delete('/{subscription}', 'destroy');
-                Route::delete('/{subscription}/{client}', 'destroy');
-            });
-
-            Route::get('activation-codes/statistics', [\App\Http\Controllers\Central\Api\ActivationCodeController::class, 'get_statistics']);
-            Route::apiResource('activation-codes', \App\Http\Controllers\Central\Api\ActivationCodeController::class);
-            Route::apiResource('discount-codes', \App\Http\Controllers\Central\Api\DiscountCodeController::class);
-            Route::apiResource('invoices', \App\Http\Controllers\Central\Api\InvoiceController::class);
-
-            //payment routes
-            Route::post('payment/process', [PaymentController::class, 'paymentProcess']);
-            Route::get('payment/callback', [PaymentController::class, 'callback']);
-
-            Route::post('logout', [centralAuthController::class, 'logout'])->name('logout.post');
-
-            Route::prefix('helpers')->group(function () {
-                // Form CRUD
-                Route::get('/modules', [ModuleController::class, 'index']);
-            });
-        });
     });
 }
-
 
 // //////////// tenant routes
 Route::middleware([
