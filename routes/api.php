@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
 use App\Http\Controllers\Api\TranslatableExampleController;
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
+use App\Http\Controllers\Central\Api\SourceController;
 
 // //////////// landlord routes
 foreach (config('tenancy.central_domains') as $domain) {
@@ -52,6 +53,7 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         Route::group(['middleware' => 'auth:landlord'], function () {
 
+            Route::apiResource('sources', SourceController::class);
         });
     });
 }
