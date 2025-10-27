@@ -30,8 +30,6 @@ class UserRequest extends BaseRequest
             'role' => ['required', Rule::exists('roles', 'name')],
             'job_title' => 'nullable|string',
             'team_id' => 'nullable|exists:teams,id',
-            'target' => 'required|numeric',
-            'target_type' => ['required_with:target', Rule::enum(TargetType::class)],
             'lang' => ['required', 'string', Rule::in(['ar', 'en', 'fr', 'es'])],
             'is_active' => 'required|boolean',
             'monthly_target' => 'nullable|array',

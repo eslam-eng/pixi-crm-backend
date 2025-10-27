@@ -16,6 +16,7 @@ use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
 use App\Http\Requests\Tenant\Users\ChangeLanguageRequest;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
+use App\Http\Resources\Tenant\Users\UserTargetResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -165,13 +166,13 @@ class UserController extends Controller
         }
     }
 
-    public function target($user_id): JsonResponse
+    public function getTargets($user_id): JsonResponse
     {
         try {
-            $target = $this->userService->getTarget($user_id);
-            return ApiResponse($target, 'User target retrieved successfully');
-        } catch (NotFoundException $e) {
-            return ApiResponse(message: $e->getMessage(), code: 404);
+            $targets = $this->userService->getTargets($user_id);
+            return ApiResponse(UserTargetResource::collection($targets), 'User targets retrieved successfully');
+        } catch (ValidationException $e) {
+            return ApiResponse(message: $e->errors(), code: 422);
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }

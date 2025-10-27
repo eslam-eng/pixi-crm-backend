@@ -159,11 +159,6 @@ class UserService extends BaseService
     {
         $user = $this->findById($id);
         $data = $userDTO->toArray();
-        if ($userDTO->target != $user->targets()->forMonth(now())->first()?->target_value) {
-            $user->targets()->create([
-                'target_value' => $userDTO->target,
-            ]);
-        }
 
         if (!isset($data['password'])) {
             $user->update(Arr::except($data, ['password']));
@@ -261,46 +256,17 @@ class UserService extends BaseService
         return true;
     }
 
-    public function getTarget($user_id)
+    public function getTargets($user_id)
     {
         $user = $this->findById($user_id);
-        if (!$user->target || $user->target_type === TargetType::NONE) {
-            return [
-                'target' => 0,
-                'target_type' => $user->target_type,
-                'achieved_amount' => 0,
-                'achievement_percentage' => 0,
-                'is_target_achieved' => false,
-                'deals_count' => 0,
-                'period' => null,
-            ];
+
+        if (!$user->activeChair()->exists()) {
+            throw ValidationException::withMessages([
+                'user' => 'User does not have a target',
+            ], 400);
         }
-
-        $period = $this->getTargetPeriod($user->target_type);
-        $deals = $this->getUserDealsForPeriod($user_id, $period);
-
-        $achieved_amount = $deals->sum('total_amount');
-        $achievement_percentage = $user->target > 0 ? ($achieved_amount / $user->target) * 100 : 0;
-        $is_target_achieved = $achieved_amount >= $user->target;
-
-        return [
-            'target' => $user->target,
-            'target_type' => $user->target_type,
-            'achieved_amount' => $achieved_amount,
-            'achievement_percentage' => round($achievement_percentage, 2),
-            'is_target_achieved' => $is_target_achieved,
-            'deals_count' => $deals->count(),
-            'period' => $period,
-            'deals' => $deals->map(function ($deal) {
-                return [
-                    'id' => $deal->id,
-                    'deal_name' => $deal->deal_name,
-                    'total_amount' => $deal->total_amount,
-                    'sale_date' => $deal->sale_date,
-                    'payment_status' => $deal->payment_status,
-                ];
-            }),
-        ];
+        $chair = $user->activeChair()->first();
+        return $chair->targets()->get();
     }
 
     /**
