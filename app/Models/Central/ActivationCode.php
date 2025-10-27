@@ -2,7 +2,7 @@
 
 namespace App\Models\Central;
 
-use App\Enum\ActivationCodeStatusEnum;
+use App\Enums\Landlord\ActivationCodeStatusEnum;
 use App\Traits\Filterable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -36,10 +36,10 @@ class ActivationCode extends Model
     // /**
     //  * Check if code is already redeemed.
     //  */
-    // public function isRedeemed(): bool
-    // {
-    //     return $this->status == ActivationCodeStatusEnum::USED->value || $this->redeemed_at;
-    // }
+    public function isRedeemed(): bool
+    {
+        return $this->status == ActivationCodeStatusEnum::USED->value || $this->redeemed_at;
+    }
 
     public function source(): BelongsTo
     {

@@ -39,25 +39,52 @@ use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
 use App\Http\Controllers\Api\TranslatableExampleController;
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
+use App\Http\Controllers\Central\Api\ActivationCodeController;
 use App\Http\Controllers\Central\Api\AdminController;
+use App\Http\Controllers\Central\Api\CountryCodeController;
+use App\Http\Controllers\Central\Api\CurrencyController;
+use App\Http\Controllers\Central\Api\LocaleController;
+use App\Http\Controllers\Central\Api\PayoutSourceController;
+use App\Http\Controllers\Central\Api\PlanController;
 use App\Http\Controllers\Central\Api\SourceController;
+use App\Http\Controllers\Central\Api\TimeZoneController;
 
 // //////////// landlord routes
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
-        Route::get('/', function () {
-            return 'Central domain';
-        });
+
+
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             Route::post('admin/login', AdminAuthController::class);
         });
+
+        Route::get('active-plans', [PlanController::class, 'activePlans']);
+        Route::get('locales', LocaleController::class);
+        Route::get('country-code', CountryCodeController::class);
+        Route::get('currencies', CurrencyController::class);
+        Route::get('timezones', TimeZoneController::class);
 
         Route::group(['middleware' => 'auth:landlord'], function () {
             Route::post('admins/{admin}/status', [AdminController::class, 'toggleStatus']);
             Route::get('admins/profile', [AdminController::class, 'profile']);
             Route::apiResource('admins', AdminController::class);
-            
-            Route::apiResource('sources', SourceController::class);            
+
+            Route::apiResource('plans', PlanController::class);
+
+            Route::group(['prefix' => 'activation-codes'], function () {
+                Route::get('/', [ActivationCodeController::class, 'index']);
+                Route::get('/statics', [ActivationCodeController::class, 'statics']);
+                Route::post('generate', [ActivationCodeController::class, 'store']);
+                Route::delete('{activation_code}', [ActivationCodeController::class, 'delete']);
+            });
+            Route::group(['prefix' => 'source-collections'], function () {
+                Route::get('/', [PayoutSourceController::class, 'index']);
+                Route::post('/', [PayoutSourceController::class, 'createCollection']);
+                Route::get('/{collection_id}', [PayoutSourceController::class, 'details']);
+                Route::patch('/{collection_id}/collect', [PayoutSourceController::class, 'markCollected']);
+                Route::patch('/{collection_id}/codes/collect', [PayoutSourceController::class, 'collectedSpaceficPayoutItem']);
+            });
+            Route::apiResource('sources', SourceController::class);
         });
     });
 }
