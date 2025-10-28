@@ -421,15 +421,6 @@ Route::middleware([
         
     });
 
-    Route::prefix('facebook')->group(function () {
-        Route::get('/callback', [FacebookController::class, 'handleCallback']); // OAuth callback
-        Route::post('/data-deletion-callback', [FacebookController::class, 'dataDeletionCallback']);
-
-        Route::get('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'verify']);
-        Route::post('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'handle']);
-    });
-
-
     // Report routes
     Route::prefix('reports')->middleware('auth:api_tenant')->group(function () {
         // Sales Performance Reports
@@ -536,4 +527,13 @@ Route::middleware([
             Route::get('/conversion-by-deal-size', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionByDealSize']);
         });
     });
+});
+
+// Facebook callback routes - outside tenant middleware to handle OAuth callbacks
+Route::prefix('facebook')->group(function () {
+    Route::get('/callback', [FacebookController::class, 'handleCallback']); // OAuth callback
+    Route::post('/data-deletion-callback', [FacebookController::class, 'dataDeletionCallback']);
+
+    Route::get('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'verify']);
+    Route::post('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'handle']);
 });
