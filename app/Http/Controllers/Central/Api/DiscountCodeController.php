@@ -53,9 +53,9 @@ class DiscountCodeController extends Controller
         );
     }
 
-    public function destroy(DiscountCode $discount)
+    public function destroy(DiscountCode $discount_code)
     {
-        $this->discountCodeService->delete($discount);
+        $this->discountCodeService->delete($discount_code);
 
         return ApiResponse::success(message: 'Discount deleted successfully');
     }

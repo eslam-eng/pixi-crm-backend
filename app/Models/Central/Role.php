@@ -2,7 +2,7 @@
 
 namespace App\Models\Central;
 
-use App\Enum\ActivationStatusEnum;
+use App\Enums\Landlord\ActivationStatusEnum;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,7 +17,7 @@ class Role extends \Spatie\Permission\Models\Role
     protected $table = 'roles';
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active' => ActivationStatusEnum::class,
     ];
 
     public function users(): BelongsToMany

@@ -47,6 +47,7 @@ use App\Http\Controllers\Central\Api\DiscountCodeController;
 use App\Http\Controllers\Central\Api\LocaleController;
 use App\Http\Controllers\Central\Api\PayoutSourceController;
 use App\Http\Controllers\Central\Api\PlanController;
+use App\Http\Controllers\Central\Api\RoleController as RoleCentralController;
 use App\Http\Controllers\Central\Api\SourceController;
 use App\Http\Controllers\Central\Api\TimeZoneController;
 
@@ -67,7 +68,8 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         // for tenant and shared tables for tenant section
         Route::middleware(['auth:sanctum', 'users.only'])->group(function () {
-            
+
+
             Route::get('discount-codes/{discount_code}/plans/{plan}', [DiscountCodeController::class, 'validateDiscountCode']);
         });
 
@@ -85,6 +87,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::delete('{activation_code}', [ActivationCodeController::class, 'delete']);
             });
 
+
             Route::group(['prefix' => 'source-collections'], function () {
                 Route::get('/', [PayoutSourceController::class, 'index']);
                 Route::post('/', [PayoutSourceController::class, 'createCollection']);
@@ -92,6 +95,11 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::patch('/{collection_id}/collect', [PayoutSourceController::class, 'markCollected']);
                 Route::patch('/{collection_id}/codes/collect', [PayoutSourceController::class, 'collectedSpaceficPayoutItem']);
             });
+
+            Route::get('permissions', [RoleCentralController::class, 'permissionsList']);
+            Route::apiResource('roles', RoleCentralController::class);
+            Route::apiResource('discount-codes', DiscountCodeController::class);
+
             Route::apiResource('sources', SourceController::class);
         });
     });

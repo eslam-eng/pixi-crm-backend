@@ -2,8 +2,9 @@
 
 namespace App\Services;
 
-use App\DTO\RoleDTO;
+use App\DTO\Central\RoleDTO;
 use App\Models\Central\Role;
+use App\Services\Central\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +42,7 @@ class BaseRoleService extends BaseService
      */
     public function create(RoleDTO $roleDTO): Builder|Model|Role
     {
-        return DB::connection('tenant')->transaction(function () use ($roleDTO) {
+        return DB::connection('landlord')->transaction(function () use ($roleDTO) {
             $role = $this->baseQuery()->create($roleDTO->toArray());
             $role->syncPermissions($roleDTO->permissions);
 
@@ -54,7 +55,7 @@ class BaseRoleService extends BaseService
      */
     public function update(Role|int $role, RoleDTO $roleDTO)
     {
-        return DB::connection('tenant')->transaction(function () use ($role, $roleDTO) {
+        return DB::connection('landlord')->transaction(function () use ($role, $roleDTO) {
             if (is_int($role)) {
                 $role = parent::findById($role);
             }
