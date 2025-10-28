@@ -43,6 +43,7 @@ use App\Http\Controllers\Central\Api\ActivationCodeController;
 use App\Http\Controllers\Central\Api\AdminController;
 use App\Http\Controllers\Central\Api\CountryCodeController;
 use App\Http\Controllers\Central\Api\CurrencyController;
+use App\Http\Controllers\Central\Api\DiscountCodeController;
 use App\Http\Controllers\Central\Api\LocaleController;
 use App\Http\Controllers\Central\Api\PayoutSourceController;
 use App\Http\Controllers\Central\Api\PlanController;
@@ -64,6 +65,12 @@ foreach (config('tenancy.central_domains') as $domain) {
         Route::get('currencies', CurrencyController::class);
         Route::get('timezones', TimeZoneController::class);
 
+        // for tenant and shared tables for tenant section
+        Route::middleware(['auth:sanctum', 'users.only'])->group(function () {
+            
+            Route::get('discount-codes/{discount_code}/plans/{plan}', [DiscountCodeController::class, 'validateDiscountCode']);
+        });
+
         Route::group(['middleware' => 'auth:landlord'], function () {
             Route::post('admins/{admin}/status', [AdminController::class, 'toggleStatus']);
             Route::get('admins/profile', [AdminController::class, 'profile']);
@@ -77,6 +84,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::post('generate', [ActivationCodeController::class, 'store']);
                 Route::delete('{activation_code}', [ActivationCodeController::class, 'delete']);
             });
+
             Route::group(['prefix' => 'source-collections'], function () {
                 Route::get('/', [PayoutSourceController::class, 'index']);
                 Route::post('/', [PayoutSourceController::class, 'createCollection']);

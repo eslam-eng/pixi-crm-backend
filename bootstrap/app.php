@@ -1,6 +1,11 @@
 <?php
 
 use App\Exceptions\ApiExceptionHandler;
+use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetUserTimezone;
+use App\Http\Middleware\SkipTenantParameter;
+use App\Http\Middleware\UsersOnly;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'redirect_if_authenticated' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'ensureEmailVerified' => EnsureEmailIsVerified::class,
+            'locale' => SetLocale::class,
+            'users.only' => UsersOnly::class,
+            'setTimeZone' => SetUserTimezone::class,
+            'skipTenantParameter' => SkipTenantParameter::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
