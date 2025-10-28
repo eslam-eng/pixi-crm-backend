@@ -44,6 +44,7 @@ use App\Http\Controllers\Central\Api\AdminController;
 use App\Http\Controllers\Central\Api\CountryCodeController;
 use App\Http\Controllers\Central\Api\CurrencyController;
 use App\Http\Controllers\Central\Api\DiscountCodeController;
+use App\Http\Controllers\Central\Api\FeatureController;
 use App\Http\Controllers\Central\Api\LocaleController;
 use App\Http\Controllers\Central\Api\PayoutSourceController;
 use App\Http\Controllers\Central\Api\PlanController;
@@ -77,8 +78,11 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::post('admins/{admin}/status', [AdminController::class, 'toggleStatus']);
             Route::get('admins/profile', [AdminController::class, 'profile']);
             Route::apiResource('admins', AdminController::class);
+            Route::put('locale', [AdminController::class, 'updateLocale']);
 
+            Route::get('plans/statics', [PlanController::class, 'statics']);
             Route::apiResource('plans', PlanController::class);
+            Route::apiResource('features', FeatureController::class)->only(['index']);
 
             Route::group(['prefix' => 'activation-codes'], function () {
                 Route::get('/', [ActivationCodeController::class, 'index']);
