@@ -69,4 +69,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(FcmToken::class);
     }
+
+    public function generateToken(string $name = 'admin_token', array $abilities = ['*']): string
+    {
+        return $this->createToken($name, $abilities)->plainTextToken;
+    }
 }

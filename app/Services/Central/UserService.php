@@ -2,129 +2,55 @@
 
 namespace App\Services\Central;
 
+use App\DTO\Central\ChangePasswordDTO;
 use App\DTO\Central\UserDTO;
-use App\Models\Tenant\User;
-use App\QueryFilters\Tenant\UsersFilters;
-use App\Services\BaseService;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Central\Filters\UsersFilter;
+use App\Models\Central\User;
+use App\Services\Central\BaseService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
-use Spatie\Permission\Models\Role;
 
 class UserService extends BaseService
 {
-    public function __construct(private User $model) {}
-
-    public function getModel(): Model
+    /**
+     * Return the filter class for users.
+     */
+    protected function getFilterClass(): string
     {
-        return $this->model;
-    }
-
-    public function updateLastLoginAt(int $userId): bool
-    {
-        $user = $this->findById($userId);
-        $user->update(['last_login_at' => now()]);
-        return true;
-    }
-
-    public function getAll(array $filters = [])
-    {
-        return $this->queryGet($filters)->get();
-    }
-
-    public function listing(array $filters = [], array $withRelations = [], $perPage = 10): \Illuminate\Contracts\Pagination\CursorPaginator
-    {
-        return $this->queryGet(filters: $filters, withRelations: $withRelations)->cursorPaginate($perPage);
-    }
-
-    public function queryGet(array $filters = [], array $withRelations = []): builder
-    {
-        $users = $this->getQuery()->with($withRelations);
-        return $users->filter(new UsersFilters($filters));
-    }
-
-    public function datatable(array $filters = [], array $withRelations = []): Builder
-    {
-        return $this->queryGet(filters: $filters, withRelations: $withRelations);
-    }
-
-    public function getUsersForSelectDropDown(array $filters = []): \Illuminate\Database\Eloquent\Collection|array
-    {
-        return $this->queryGet(filters: $filters)->select(['id', 'name'])->get();
-    }
-
-    public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
-    {
-        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)->orderBy('id','desc');
-        if ($perPage) {
-            return $query->paginate($perPage);
-        }
-        return $query->get();
-    }
-
-    public function store(UserDTO $userDTO)
-    {
-        $data = $userDTO->toArray();
-        $user = $this->getModel()->create($data);
-        // Get role by ID and assign by name
-        if ($userDTO->role) {
-            $user->assignRole($userDTO->role);
-        }
-        return $user->load('roles');
-    }
-
-    public function update(UserDTO $userDTO, $id)
-    {
-        $user = $this->findById($id);
-        $data = $userDTO->toArray();
-
-        // Remove role from data before updating user
-        $roleId = $data['role'] ?? null;
-        unset($data['role']);
-
-        if (!isset($data['password']))
-            $user->update(Arr::except($data, ['password']));
-        else
-            $user->update($data);
-
-        // Handle role assignment
-        if ($roleId) {
-            $role = Role::find($roleId);
-            if ($role) {
-                // Remove existing roles and assign new one
-                $user->syncRoles([$role->name]);
-            }
-        }
-
-        return true;
-    }
-
-    public function updateProfile($id, array $data = [])
-    {
-        $user = $this->findById($id);
-        if (!isset($data['password']))
-            $user->update(Arr::except($data, ['password']));
-        else {
-            $data['password'] = bcrypt($data['password']);
-            $user->update($data);
-        }
-        return true;
+        return UsersFilter::class;
     }
 
     /**
-     * Remove the specified resource from storage.
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Return the base query for users.
      */
-    public function destroy($id)
+    protected function baseQuery(): Builder
     {
-        $user = $this->findById($id);
-        $user->deleteAttachments();
-        $user->roles()->detach();
-        if (count($user->locations) > 0) {
-            $user->locations()->detach();
+        return User::query();
+    }
+
+    public function create(UserDTO $userDTO)
+    {
+        
+        return $this->getQuery()->create($userDTO->toArray());
+    }
+
+    public function changePassword(ChangePasswordDTO $changePasswordDTO)
+    {
+        $user = $changePasswordDTO->user;
+        // Update the password
+        $is_updated = $user->update([
+            'password' => bcrypt($changePasswordDTO->password),
+        ]);
+        // Revoke all tokens (optional: for security, logs out all devices)
+        if ($changePasswordDTO->logout_other_devices) {
+            $user->tokens()->delete();
         }
-        $user->delete();
-        return true;
+        if ($is_updated) {
+            // Send email
+            //            Mail::to($user->email)->queue(new UserCredentialsMail(
+            //                user: $user,
+            //                password: $changePasswordDTO->password,
+            //                loginUrl: null, //todo get it from config and env files
+            //            ));
+        }
     }
 }

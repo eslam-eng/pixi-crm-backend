@@ -18,13 +18,14 @@ class AuthUserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            // 'locale' => $this->locale->value,
-            // 'locale_text' => $this->locale->getLabel(),
-            'phone' => $this->phone,
-            'belongs_to' => 'LANDLORD',
+            'locale' => $this->locale,
+            'tenant_id' => $this->tenant_id,
+            'tenant_name' => $this->tenant?->name,
+            'tenant_slug' => $this->tenant?->slug,
+            'is_verified' => isset($this->email_verified_at),
+            'belongs_to' => 'TENANT',
             'role' => 'role',
             'permissions' => [],
-
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\Landlord\ActivationStatusEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,6 +20,8 @@ class CreateTenantsTable extends Migration
             $table->string('id')->primary();
             $table->string('name')->unique();
             $table->json('data')->nullable();
+            $table->tinyInteger('status')->default(ActivationStatusEnum::ACTIVE->value);
+            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

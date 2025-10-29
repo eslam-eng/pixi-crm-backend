@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models\Landlord;
+namespace App\Models\Central;
 
-use App\Enum\ActivationStatusEnum;
-use App\Enum\SubscriptionStatusEnum;
+use App\Enums\Landlord\ActivationStatusEnum;
+use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Traits\Filterable;
 use App\Traits\HasFeatureLimits;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,23 +11,43 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Spatie\Multitenancy\Models\Concerns\UsesLandlordConnection;
+// use Illuminate\Database\Eloquent\SoftDeletes;
+// use Illuminate\Support\Facades\Artisan;
+// use Illuminate\Support\Facades\DB;
+// use Illuminate\Support\Str;
+use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
+use Stancl\Tenancy\Contracts\TenantWithDatabase;
+use Stancl\Tenancy\Database\Concerns\HasDatabase;
+use Stancl\Tenancy\Database\Concerns\HasDomains;
 
-class Tenant extends \Spatie\Multitenancy\Models\Tenant
+
+
+class Tenant extends BaseTenant implements TenantWithDatabase
 {
-    use Filterable, HasFeatureLimits, HasUuids, SoftDeletes, UsesLandlordConnection;
+    // use Filterable, HasFeatureLimits, HasUuids, SoftDeletes, UsesLandlordConnection;
+    use  Filterable, HasFeatureLimits, HasUuids, HasDatabase, HasDomains;
 
     protected $keyType = 'string';
 
     public $incrementing = false;
 
     protected $fillable = [
-        'name', 'slug', 'database', 'status', 'owner_id', 'has_used_trial', 'trial_plan_id',
+        'name',
+        'status',
+        'owner_id',
+        'has_used_trial',
+        'trial_plan_id',
     ];
+
+
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'name',
+            'owner_id',
+        ];
+    }
 
     protected $casts = [
         'status' => ActivationStatusEnum::class,
@@ -36,7 +56,6 @@ class Tenant extends \Spatie\Multitenancy\Models\Tenant
     public function users()
     {
         return $this->hasMany(User::class);
-
     }
 
     // todo return to in when use pivot table for multiple access per user for multiple tenants
@@ -106,63 +125,61 @@ class Tenant extends \Spatie\Multitenancy\Models\Tenant
         return $this->hasMany(Invoice::class);
     }
 
-    protected static function boot(): void
-    {
-        parent::boot();
+    // protected static function boot(): void
+    // {
+    //     parent::boot();
 
-        static::creating(function ($tenant) {
-            // Generate database name if not provided
-            if (empty($tenant->database)) {
-                $ulid = (string) Str::ulid(); // e.g., '01HZG8Z8X1CWVRYKX84Z7KT8AZ'
-                $lastFive = substr($ulid, -5); // e.g., '8AZ'
-                $tenant->database = 'tenant_'.Str::slug($tenant->name).'_'.$lastFive;
-            }
-        });
+    //     static::creating(function ($tenant) {
+    //         // Generate database name if not provided
+    //         if (empty($tenant->database)) {
+    //             $ulid = (string) Str::ulid(); // e.g., '01HZG8Z8X1CWVRYKX84Z7KT8AZ'
+    //             $lastFive = substr($ulid, -5); // e.g., '8AZ'
+    //             $tenant->database = 'tenant_' . Str::slug($tenant->name) . '_' . $lastFive;
+    //         }
+    //     });
 
-        static::created(function ($tenant) {
-            $tenant->makeCurrent();
+    //     static::created(function ($tenant) {
+    //         $tenant->makeCurrent();
 
-            if (app()->environment('local')) {
-                // Create the tenant database
-                static::createDatabase($tenant->database);
-                // Set the current tenant to the newly created tenant
-                // Run migrations for the tenant
-                Artisan::call('migrate:fresh', [
-                    '--database' => 'tenant',
-                    '--force' => true,
-                ]);
-            } else {
-                static::cloneFromTemplate($tenant->database);
-                // 4. Run seeders for tenant
-                Artisan::call('db:seed', [
-                    '--class' => 'TenantDatabaseSeeder',
-                    '--database' => 'tenant',
-                    '--force' => true,
-                ]);
-            }
+    //         if (app()->environment('local')) {
+    //             // Create the tenant database
+    //             static::createDatabase($tenant->database);
+    //             // Set the current tenant to the newly created tenant
+    //             // Run migrations for the tenant
+    //             Artisan::call('migrate:fresh', [
+    //                 '--database' => 'tenant',
+    //                 '--force' => true,
+    //             ]);
+    //         } else {
+    //             static::cloneFromTemplate($tenant->database);
+    //             // 4. Run seeders for tenant
+    //             Artisan::call('db:seed', [
+    //                 '--class' => 'TenantDatabaseSeeder',
+    //                 '--database' => 'tenant',
+    //                 '--force' => true,
+    //             ]);
+    //         }
+    //     });
+    // }
 
-        });
+    // public static function cloneFromTemplate($database_name): bool
+    // {
+    //     // Create new database
+    //     DB::statement("CREATE DATABASE IF NOT EXISTS `$database_name`");
 
-    }
+    //     // Get all tables from template
+    //     $templateDb = config('database.tenant_template_db');
 
-    public static function cloneFromTemplate($database_name): bool
-    {
-        // Create new database
-        DB::statement("CREATE DATABASE IF NOT EXISTS `$database_name`");
+    //     $tables = DB::select("SHOW TABLES FROM `$templateDb`");
 
-        // Get all tables from template
-        $templateDb = config('database.tenant_template_db');
+    //     foreach ($tables as $table) {
+    //         $tableName = array_values((array) $table)[0];
+    //         // Clone table structure and data
+    //         DB::statement("CREATE TABLE `$database_name`.`$tableName` LIKE `$templateDb`.`$tableName`");
+    //     }
 
-        $tables = DB::select("SHOW TABLES FROM `$templateDb`");
-
-        foreach ($tables as $table) {
-            $tableName = array_values((array) $table)[0];
-            // Clone table structure and data
-            DB::statement("CREATE TABLE `$database_name`.`$tableName` LIKE `$templateDb`.`$tableName`");
-        }
-
-        return true;
-    }
+    //     return true;
+    // }
 
     public function latestSubscription()
     {
@@ -180,15 +197,15 @@ class Tenant extends \Spatie\Multitenancy\Models\Tenant
             });
     }
 
-    public static function createDatabase($database_name): bool
-    {
-        return DB::statement("CREATE DATABASE IF NOT EXISTS `$database_name`");
-    }
+    // public static function createDatabase($database_name): bool
+    // {
+    //     return DB::statement("CREATE DATABASE IF NOT EXISTS `$database_name`");
+    // }
 
-    public function hasHadTrial()
-    {
-        return $this->has_used_trial;
-    }
+    // public function hasHadTrial()
+    // {
+    //     return $this->has_used_trial;
+    // }
 
     /**
      * Mark user as having used their free trial

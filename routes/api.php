@@ -51,6 +51,7 @@ use App\Http\Controllers\Central\Api\PlanController;
 use App\Http\Controllers\Central\Api\RoleController as RoleCentralController;
 use App\Http\Controllers\Central\Api\SourceController;
 use App\Http\Controllers\Central\Api\TimeZoneController;
+use App\Http\Controllers\Central\Api\Auth\RegisterController;
 
 // //////////// landlord routes
 foreach (config('tenancy.central_domains') as $domain) {
@@ -59,6 +60,7 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             Route::post('admin/login', AdminAuthController::class);
+            Route::post('register-tenant', RegisterController::class);
         });
 
         Route::get('active-plans', [PlanController::class, 'activePlans']);
@@ -69,8 +71,6 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         // for tenant and shared tables for tenant section
         Route::middleware(['auth:sanctum', 'users.only'])->group(function () {
-
-
             Route::get('discount-codes/{discount_code}/plans/{plan}', [DiscountCodeController::class, 'validateDiscountCode']);
         });
 

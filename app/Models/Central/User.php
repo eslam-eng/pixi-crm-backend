@@ -1,24 +1,23 @@
 <?php
 
-namespace App\Models\Landlord;
+namespace App\Models\Central;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Enum\SupportedLocalesEnum;
+use App\Enums\Landlord\SupportedLocalesEnum;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
+// use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\Multitenancy\Models\Concerns\UsesLandlordConnection;
 
 class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\Landlord\UserFactory> */
-    use Filterable, HasApiTokens, HasFactory, InteractsWithMedia, Notifiable, SoftDeletes,UsesLandlordConnection;
+    use Filterable, HasApiTokens, HasFactory, InteractsWithMedia, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -26,8 +25,11 @@ class User extends Authenticatable implements HasMedia
      * @var list<string>
      */
     protected $fillable = [
-        'name', 'email_verified_at',
-        'email', 'password', 'tenant_id',
+        'name',
+        'email_verified_at',
+        'email',
+        'password',
+        'tenant_id',
     ];
 
     /**
