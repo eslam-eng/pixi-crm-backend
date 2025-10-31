@@ -44,7 +44,7 @@ class AutomationAction extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('key');
+        return $query->orderBy('id','asc');
     }
 
     /**

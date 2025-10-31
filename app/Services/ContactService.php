@@ -10,6 +10,9 @@ use App\Models\Tenant\User;
 use App\Notifications\Tenant\CreateNewContactNotification;
 use App\Notifications\Tenant\UpdateAssignContactNotification;
 use App\Services\Tenant\Users\UserService;
+use App\Events\Contacts\ContactCreated;
+use App\Events\Contacts\ContactUpdated;
+use App\Events\Contacts\ContactTagAdded;
 use Excel;
 
 class ContactService extends BaseService
@@ -61,6 +64,10 @@ class ContactService extends BaseService
         foreach ($admins as $admin) {
             $admin->notify(new CreateNewContactNotification($contact));
         }
+        
+        // Dispatch ContactCreated event to fire automation workflows
+        event(new ContactCreated($contact));
+        
         $contact->load('country', 'city', 'user', 'source', 'contactPhones');
         return $contact;
     }
@@ -74,10 +81,52 @@ class ContactService extends BaseService
     public function update(int $id, ContactDTO $contactDTO)
     {
         $contact = $this->findById($id);
+        
+        // Get changed fields before update
+        $originalData = $contact->toArray();
+        
         if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
             $this->contactPhoneService->update($contactDTO->contact_phones, $contact);
         }
         $contact->update($contactDTO->toArray());
+        
+        // Get changed fields after update
+        $changedFields = [];
+        $addedTags = [];
+        
+        foreach ($contactDTO->toArray() as $key => $value) {
+            if (isset($originalData[$key]) && $originalData[$key] != $value) {
+                $changedFields[$key] = [
+                    'old' => $originalData[$key],
+                    'new' => $value
+                ];
+                
+                // Check for tag additions
+                if ($key === 'tags') {
+                    $oldTags = $originalData[$key] ?? [];
+                    $newTags = $value ?? [];
+                    
+                    // Find newly added tags
+                    $addedTags = array_diff($newTags, $oldTags);
+                }
+            }
+        }
+        
+        // Dispatch ContactUpdated event if there were changes
+        if (!empty($changedFields)) {
+            event(new ContactUpdated($contact, $changedFields));
+        }
+        
+        // Dispatch ContactTagAdded event for each new tag
+        foreach ($addedTags as $tag) {
+            $tagData = [
+                'old_tags' => $originalData['tags'] ?? [],
+                'new_tags' => $contactDTO->tags ?? [],
+                'added_at' => now(),
+            ];
+            event(new ContactTagAdded($contact, $tag, $tagData));
+        }
+        
         if ($contact->wasChanged('user_id')) {
             $oldUser = $contact->user;
             $admins = $this->userService->getModel()->role('admin')->get();

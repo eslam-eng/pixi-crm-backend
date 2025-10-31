@@ -10,6 +10,9 @@ use App\Models\Tenant\Item;
 use App\Models\Tenant\Lead;
 use App\Notifications\Tenant\UpdateAssignOpportunityNotification;
 use App\Services\Tenant\Users\UserService;
+use App\Events\Contacts\ContactLeadQualified;
+use App\Events\Opportunity\OpportunityCreated;
+use App\Events\Opportunity\OpportunityStageChanged;
 use Auth;
 
 class LeadService extends BaseService
@@ -117,6 +120,28 @@ class LeadService extends BaseService
             $lead->items()->sync($itemsPayload, true);
         }
 
+        // Dispatch OpportunityCreated event
+        $creationData = [
+            'deal_value' => $lead->deal_value,
+            'status' => $lead->status->value,
+            'stage_id' => $lead->stage_id,
+            'contact_id' => $lead->contact_id,
+            'assigned_to_id' => $lead->assigned_to_id,
+            'created_at' => now(),
+        ];
+        
+        // Configuration for opportunity_created trigger
+        $configuration = [
+            'required_fields' => ['amount', 'country'],
+            'default_pipeline' => 'Sales',
+            'validation_rules' => [
+                'amount' => 'required|numeric|min:0',
+                'country' => 'required|string|max:255'
+            ]
+        ];
+        
+        event(new OpportunityCreated($lead, $creationData, $configuration));
+
         return $lead->load('variants', 'items');
     }
 
@@ -165,6 +190,10 @@ class LeadService extends BaseService
                 ->all();
         }
         
+        // Get original data before update
+        $originalStatus = $lead->status;
+        $originalStageId = $lead->stage_id;
+        
         $lead->update($leadDTO->toArray());
 
         if (!empty($variantsPayload)) {
@@ -179,6 +208,36 @@ class LeadService extends BaseService
             $lead->items()->detach();
         }
 
+        // Check if lead became qualified
+        $isQualified = $this->isLeadQualified($lead, $originalStatus, $originalStageId);
+        if ($isQualified) {
+            $qualificationData = [
+                'old_status' => $originalStatus,
+                'new_status' => $lead->status,
+                'old_stage_id' => $originalStageId,
+                'new_stage_id' => $lead->stage_id,
+                'qualified_at' => now(),
+            ];
+            event(new ContactLeadQualified($lead->contact, $lead, $qualificationData));
+        }
+
+        // Check if stage changed
+        if ($originalStageId !== $lead->stage_id) {
+            $oldStage = $originalStageId ? \App\Models\Stage::find($originalStageId) : null;
+            $newStage = $lead->stage_id ? \App\Models\Stage::find($lead->stage_id) : null;
+            
+            $stageChangeData = [
+                'old_stage_id' => $originalStageId,
+                'new_stage_id' => $lead->stage_id,
+                'old_stage_name' => $oldStage?->name,
+                'new_stage_name' => $newStage?->name,
+                'old_stage_probability' => $oldStage?->probability,
+                'new_stage_probability' => $newStage?->probability,
+                'changed_at' => now(),
+            ];
+            event(new OpportunityStageChanged($lead, $oldStage, $newStage, $stageChangeData));
+        }
+
         if ($lead->wasChanged('assigned_to_id')) {
             $currentUser = $lead->user;
             $managers = $this->userService->getModel()->role('manager')->get();
@@ -190,6 +249,23 @@ class LeadService extends BaseService
             }
         }
         return $lead->load('variants', 'items');
+    }
+
+    /**
+     * Check if a lead became qualified based on status or stage changes
+     */
+    private function isLeadQualified(Lead $lead, $originalStatus, $originalStageId): bool
+    {
+        // Lead is qualified if:
+        // 1. Status changed to 'active' (from any other status)
+        // 2. Stage changed to Stage 2 or higher (assuming Stage 2+ represents qualification)
+        // 3. Lead has a deal value > 0 and is active
+        
+        $statusQualified = $lead->status->value === 'active' && $originalStatus !== 'active';
+        $stageQualified = $lead->stage_id !== $originalStageId && $lead->stage && $lead->stage->seq_number >= 2;
+        $valueQualified = $lead->deal_value > 0 && $lead->status->value === 'active';
+        
+        return $statusQualified || $stageQualified || $valueQualified;
     }
 
     public function delete(int $id)

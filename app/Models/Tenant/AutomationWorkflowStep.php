@@ -49,12 +49,16 @@ class AutomationWorkflowStep extends Model
      */
     public function getStepDataAttribute()
     {
-        return match($this->type) {
-            'condition' => $this->condition,
-            'action' => $this->action,
-            'delay' => $this->delay,
-            default => null,
-        };
+        switch($this->type) {
+            case 'condition':
+                return $this->condition;
+            case 'action':
+                return $this->action;
+            case 'delay':
+                return $this->delay;
+            default:
+                return null;
+        }
     }
 
     /**

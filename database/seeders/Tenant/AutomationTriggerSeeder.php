@@ -37,28 +37,6 @@ class AutomationTriggerSeeder extends Seeder
                 'description' => 'Key fields changed (country, phone, email, etc.)'
             ],
             [
-                'key' => 'contact_lead_qualified',
-                'icon' => 'target',
-                'name' => [
-                    'ar' => 'تم تأهيل العميل المحتمل',
-                    'en' => 'Lead Qualified',
-                    'fr' => 'Prospect qualifié',
-                    'es' => 'Cliente potencial calificado'
-                ],
-                'description' => 'Lead status changed to Qualified'
-            ],
-            [
-                'key' => 'contact_tag_added',
-                'icon' => 'tag',
-                'name' => [
-                    'ar' => 'تم إضافة علامة',
-                    'en' => 'Tag Added',
-                    'fr' => 'Étiquette ajoutée',
-                    'es' => 'Etiqueta agregada'
-                ],
-                'description' => 'Tag applied to contact'
-            ],
-            [
                 'key' => 'opportunity_created',
                 'icon' => 'trending-up',
                 'name' => [
@@ -68,6 +46,17 @@ class AutomationTriggerSeeder extends Seeder
                     'es' => 'Oportunidad creada'
                 ],
                 'description' => 'New opportunity added (from form submission)'
+            ],
+            [
+                'key' => 'opportunity_lead_qualified',
+                'icon' => 'target',
+                'name' => [
+                    'ar' => 'تم تأهيل الفرصة',
+                    'en' => 'Opportunity Qualified',
+                    'fr' => 'Opportunité qualifiée',
+                    'es' => 'Oportunidad calificada'
+                ],
+                'description' => 'Opportunity status changed to Qualified'
             ],
             [
                 'key' => 'opportunity_stage_changed',

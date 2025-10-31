@@ -244,6 +244,17 @@ class AutomationActionSeeder extends Seeder
                     'es' => 'Notificar administrador'
                 ],
                 'description' => 'Alert ops to fix mapping issues'
+            ],
+            [
+                'key' => 'assign_opportunity_to_sales',
+                'icon' => 'alert-circle',
+                'name' => [
+                    'ar' => '',
+                    'en' => 'Notify Admin',
+                    'fr' => 'Notifier l\'admin',
+                    'es' => 'Notificar administrador'
+                ],
+                'description' => 'Alert ops to fix mapping issues'
             ]
         ];
 
