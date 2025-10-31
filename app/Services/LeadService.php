@@ -220,4 +220,16 @@ class LeadService extends BaseService
             }
         }
     }
+
+    /**
+     * Update opportunity status to WON
+     */
+    public function markAsWon(int $id): Lead
+    {
+        $lead = $this->findById($id);
+        if ($lead->status !== \App\Enums\OpportunityStatus::WON) {
+            $lead->update(['status' => \App\Enums\OpportunityStatus::WON]);
+        }
+        return $lead;
+    }
 }

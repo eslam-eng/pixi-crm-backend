@@ -6,6 +6,7 @@ use App\DTO\Tenant\DealDTO;
 use App\DTO\Tenant\DealPaymentDTO;
 use App\Enums\ApprovalStatusEnum;
 use App\Enums\DealType;
+use App\Enums\OpportunityStatus;
 use App\Enums\PaymentStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Tenant\Deal;
@@ -16,6 +17,7 @@ use App\Models\Tenant\Item;
 use App\Models\Tenant\ItemVariant;
 use App\QueryFilters\Tenant\DealsFilter;
 use App\Services\BaseService;
+use App\Services\LeadService;
 use App\Services\Tenant\Deals\DealPaymentService;
 use App\Settings\DealsSettings;
 use App\Notifications\DealPaymentTermsNotification;
@@ -36,6 +38,7 @@ class DealService extends BaseService
         public ItemVariant $itemVariantModel,
         public DealPaymentService $dealPaymentService,
         public UserService $userService,
+        public LeadService $leadService,
     ) {}
 
     public function getModel(): Deal
@@ -206,6 +209,11 @@ class DealService extends BaseService
 
             // Send payment terms email for unpaid or partial payments
             $this->sendPaymentTermsEmailIfNeeded($deal, $settings);
+
+            // Update opportunity (lead) status to WON when deal is created
+            if ($deal->lead_id) {
+                $this->leadService->markAsWon($deal->lead_id);
+            }
 
             return $deal->load('items', 'lead', 'attachments', 'payments');
         });
