@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Landlord;
+namespace App\Models\Central;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Landlord\Actions\Subscription;
+namespace App\Services\Central\Subscription;
 
 use App\DTOs\Landlord\InvoiceDTO;
 use App\DTOs\Landlord\SubscriptionDTO;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Enums\landlord;
+namespace App\Enums\Landlord;
 
 enum ActivitionMethods: string
 {

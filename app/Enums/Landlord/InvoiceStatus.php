@@ -1,21 +1,19 @@
 <?php
 
-namespace App\Enums\landlord;
+namespace App\Enums\Landlord;
 
-enum PaymentStatus: string
+enum InvoiceStatus: string
 {
-    case PENDING = "pending";
-    case PAID = "paid";
-    case UNPAID = "unpaid";
+    case SUCCESSFUL = "successful";
     case FAILED = "failed";
+    case PENDING = "pending";
 
     public function label(): string
     {
         return match ($this) {
-            self::PENDING => "Pending",
-            self::PAID => "Paid",
-            self::UNPAID => "Unpaid",
+            self::SUCCESSFUL => "Successful",
             self::FAILED => "Failed",
+            self::PENDING => "Pending",
         };
     }
 

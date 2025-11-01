@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Central\Settings;
+namespace App\Models\Central\Settings;
 
 use App\Models\Central\Settings\MailSetting;
 use App\Services\Central\AbstractMailSettingService;

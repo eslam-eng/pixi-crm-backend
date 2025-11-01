@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Landlord\Actions\Subscription\Factory;
+namespace App\Services\Central\Subscription\Factory;
 
 use App\Enums\Landlord\SubscriptionTypeEnum;
 use App\Services\Central\Subscription\Interfaces\SubscriptionStrategyInterface;

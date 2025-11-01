@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Landlord\Actions\Subscription\Strategies;
+namespace App\Services\Central\Subscription\Strategies;
 
 use App\DTOs\Landlord\SubscriptionDTO;
 use App\Enum\SubscriptionBillingCycleEnum;
