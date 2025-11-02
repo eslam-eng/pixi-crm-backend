@@ -29,14 +29,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     protected $keyType = 'string';
 
-    public $incrementing = false;
-
     protected $fillable = [
         'name',
         'status',
         'owner_id',
-        'has_used_trial',
-        'trial_plan_id',
     ];
 
 
@@ -53,10 +49,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'status' => ActivationStatusEnum::class,
     ];
 
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
+    // public function users()
+    // {
+    //     return $this->hasMany(User::class);
+    // }
 
     // todo return to in when use pivot table for multiple access per user for multiple tenants
     //    public function users()

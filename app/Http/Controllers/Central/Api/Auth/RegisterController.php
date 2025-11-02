@@ -20,10 +20,10 @@ class RegisterController extends Controller
         try {
             $userDTO = UserDTO::fromRequest($request);
             $userDTO->create_free_trial = $request->free_trial ?? false;
-            $user = $registerService->handle(registerDTO: $userDTO);
+            $result = $registerService->handle(registerDTO: $userDTO);
             $data = [
-                'token' => $user->generateToken(),
-                'user' => AuthUserResource::make($user),
+                'token' => $result['token'],
+                'user' => AuthUserResource::make($result['user']),
             ];
 
             return ApiResponse::success(data: $data);

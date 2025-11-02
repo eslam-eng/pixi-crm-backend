@@ -2,10 +2,10 @@
 
 namespace App\Services\Central\Subscription;
 
-use App\Enum\SubscriptionTypeEnum;
-use App\Models\Landlord\Plan;
-use App\Models\Landlord\User;
-use App\Services\Landlord\Actions\Subscription\Factory\SubscriptionFactory;
+use App\Enums\Landlord\SubscriptionTypeEnum;
+use App\Models\Central\Plan;
+use App\Models\Central\User;
+use App\Services\Central\Subscription\Factory\SubscriptionFactory;
 
 class SubscriptionManager
 {

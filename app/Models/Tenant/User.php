@@ -291,4 +291,9 @@ class User extends Authenticatable
             ->useLogName('user')
             ->setDescriptionForEvent(fn(string $eventName) => "User has been {$eventName}");
     }
+
+    public function generateToken(string $name = 'auth_token', array $abilities = ['*']): string
+    {
+        return $this->createToken($name, $abilities)->plainTextToken;
+    }
 }

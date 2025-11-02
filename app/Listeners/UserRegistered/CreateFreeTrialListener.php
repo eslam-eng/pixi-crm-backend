@@ -3,7 +3,7 @@
 namespace App\Listeners\UserRegistered;
 
 use App\Events\UserRegistered;
-use App\Services\Landlord\Actions\Subscription\SubscriptionManager;
+use App\Services\Central\Subscription\SubscriptionManager;
 
 readonly class CreateFreeTrialListener
 {

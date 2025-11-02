@@ -2,14 +2,14 @@
 
 namespace App\Services\Central\Subscription\Strategies;
 
-use App\DTOs\Landlord\SubscriptionDTO;
-use App\Enum\SubscriptionBillingCycleEnum;
-use App\Enum\SubscriptionStatusEnum;
-use App\Enum\SubscriptionTypeEnum;
+use App\DTO\Central\SubscriptionDTO;
+use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Enums\Landlord\SubscriptionTypeEnum;
 use App\Exceptions\VerificationCode\ActivationCodeException;
-use App\Models\Landlord\ActivationCode;
-use App\Models\Landlord\Invoice;
-use App\Models\Landlord\User;
+use App\Models\Central\ActivationCode;
+use App\Models\Central\Invoice;
+use App\Models\Central\User;
 use Illuminate\Support\Arr;
 
 class ActivationCodeSubscriptionStrategy extends AbstractSubscriptionStrategy
