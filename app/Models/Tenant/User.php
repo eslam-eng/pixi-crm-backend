@@ -41,6 +41,7 @@ class User extends Authenticatable
         'job_title',
         'team_id',
         'lang',
+        'landlord_user_id',
     ];
 
     protected $casts = [

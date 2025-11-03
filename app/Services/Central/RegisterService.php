@@ -8,7 +8,7 @@ use App\DTO\Central\UserDTO;
 use App\Enums\RolesEnum;
 use App\Events\UserRegistered;
 use App\Models\Central\Tenant;
-use App\Models\Central\User;
+use App\Models\Central\User as LandlordUser;
 use App\Models\Tenant\User as TenantUser;
 use App\Services\Central\Subscription\FreeTrialService;
 use App\Services\Central\Plan\PlanService;
@@ -54,7 +54,6 @@ class RegisterService
             // If tenant was created, drop its database
             if ($this->createdTenant) {
                 $databaseName = $this->createdTenant->database()->getName();
-                dd($databaseName);
                 if ($databaseName) {
                     $this->dropTenantDatabase($databaseName);
                 }
@@ -118,7 +117,17 @@ class RegisterService
         //        $tenant->users()->attach($landlordUser->id, ['is_owner' => true]);
         // $tenant->update(['owner_id' => $landlordUser->id]);
 
-        $tenantUser = $tenant->run(function () use ($registerDTO) {
+        $landlordUser = LandlordUser::create([
+            'first_name' => $registerDTO->name,
+            'last_name' => $registerDTO->name,
+            'email' => $registerDTO->email,
+            'password' => bcrypt($registerDTO->password),
+            'lang' => 'en',
+        ]);
+
+        $tenant->update(['owner_id' => $landlordUser->id]);
+
+        $tenantUser = $tenant->run(function () use ($registerDTO, $landlordUser) {
             $role = Role::query()->where('name', RolesEnum::ADMIN->value)->first();
             $tenantUser = TenantUser::create([
                 'first_name' => $registerDTO->name,
@@ -126,6 +135,7 @@ class RegisterService
                 'email' => $registerDTO->email,
                 'password' => bcrypt($registerDTO->password),
                 'lang' => 'en',
+                'landlord_user_id' => $landlordUser->id,
             ]);
             $tenantUser->assignRole($role);
             return $tenantUser;

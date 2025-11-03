@@ -35,7 +35,7 @@ class RegisterRequest extends BaseRequest
     public function prepareForValidation(): void
     {
         $this->merge([
-            'free_trial' => $this->routeIs('landlord.auth.free-trial') ? 1 : 0,
+            'free_trial' => $this->routeIs('central.landlord.auth.free-trial') ? 1 : 0,
         ]);
     }
 }

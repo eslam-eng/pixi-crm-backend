@@ -2,7 +2,7 @@
 
 namespace App\Models\Central\Settings;
 
-class MailSetting extends BaseLandlordSettings
+class  MailSetting extends BaseLandlordSettings
 {
     public ?string $smtp_host;
 

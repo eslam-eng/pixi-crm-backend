@@ -60,7 +60,7 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             Route::post('admin/login', AdminAuthController::class);
-            Route::post('register-tenant', RegisterController::class);
+            Route::post('free-trial', RegisterController::class)->name('landlord.auth.free-trial');
         });
 
         Route::get('active-plans', [PlanController::class, 'activePlans']);

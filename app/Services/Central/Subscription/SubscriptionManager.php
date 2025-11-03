@@ -3,8 +3,9 @@
 namespace App\Services\Central\Subscription;
 
 use App\Enums\Landlord\SubscriptionTypeEnum;
+use App\Models\Central\Invoice;
 use App\Models\Central\Plan;
-use App\Models\Central\User;
+use App\Models\Tenant\User;
 use App\Services\Central\Subscription\Factory\SubscriptionFactory;
 
 class SubscriptionManager
@@ -30,7 +31,7 @@ class SubscriptionManager
         ], $user);
     }
 
-    public function renewSubscription(array $params, User $user): array
+    public function renewSubscription(array $params, User $user): ?Invoice
     {
         return $this->handleSubscription(SubscriptionTypeEnum::RENEW->value, $params, $user);
     }

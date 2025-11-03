@@ -2,18 +2,18 @@
 
 namespace App\Services\Central\Subscription\Strategies;
 
-use App\DTOs\Landlord\SubscriptionDTO;
-use App\Enum\SubscriptionBillingCycleEnum;
-use App\Enum\SubscriptionStatusEnum;
-use App\Enum\SubscriptionTypeEnum;
+use App\DTO\Central\SubscriptionDTO;
+use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Enums\Landlord\SubscriptionTypeEnum;
 use App\Exceptions\DiscountCodeException;
-use App\Models\Landlord\DiscountCodeUsage;
-use App\Models\Landlord\Invoice;
-use App\Models\Landlord\Plan;
-use App\Models\Landlord\User;
-use App\Services\Landlord\Actions\Subscription\CreateSubscriptionService;
-use App\Services\Landlord\Discount\DiscountCodeService;
-use App\Services\Landlord\Invoice\InvoiceService;
+use App\Models\Central\DiscountCodeUsage;
+use App\Models\Central\Invoice;
+use App\Models\Central\Plan;
+use App\Models\Tenant\User;
+use App\Services\Central\Subscription\CreateSubscriptionService;
+use App\Services\Central\Discount\DiscountCodeService;
+use App\Services\Central\Invoice\InvoiceService;
 use Illuminate\Support\Arr;
 
 class PaidSubscriptionStrategy extends AbstractSubscriptionStrategy

@@ -3,7 +3,9 @@
 namespace App\Listeners\UserRegistered;
 
 use App\Events\UserRegistered;
-use App\Services\Landlord\Actions\Auth\VerificationCodeService;
+use App\Services\Central\VerificationCodeService;
+use Illuminate\Support\Facades\Log;
+
 
 class SendVerificationCodeListener
 {
@@ -20,12 +22,16 @@ class SendVerificationCodeListener
      */
     public function handle(UserRegistered $event): void
     {
+        Log::info('🎯 [Listener] SendVerificationCodeListener triggered', [
+            'user_id' => $event->user->id,
+            'user_name' => $event->user->first_name . ' ' . $event->user->last_name,
+            'email' => $event->user->email,
+        ]);
         $user = $event->user;
         $this->verificationCodeService->sendVerificationCode(
             email: $user->email,
             type: 'email_verification',
             userName: $user->name
         );
-
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Services\Central\Subscription\Interfaces;
 
 use App\Models\Central\Invoice;
-use App\Models\Central\User;
+use App\Models\Tenant\User;
 
 interface SubscriptionStrategyInterface
 {
