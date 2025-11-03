@@ -181,6 +181,7 @@ Route::middleware([
             Route::post('/punch', [AttendanceController::class, 'punch']);
             Route::get('/days', [AttendanceController::class, 'index']); // filters
             Route::get('/clicks', [AttendanceController::class, 'clicks']); // filters
+            Route::get('/user-status', [AttendanceController::class, 'userStatus']);
         });
 
         Route::post('/users/assign-team', [UserController::class, 'assignToTeam']);
@@ -392,7 +393,7 @@ Route::middleware([
         Route::get('/locations/countries', [\App\Http\Controllers\Api\LocationController::class, 'getCountries']);
         Route::get('/locations/countries/{countryId}/cities', [\App\Http\Controllers\Api\LocationController::class, 'getCities']);
         Route::get('/locations/cities/{cityId}/areas', [\App\Http\Controllers\Api\LocationController::class, 'getAreas']);
-        
+
         Route::apiResource('sources', \App\Http\Controllers\Api\ResourceController::class);
 
         // Translatable example routes
@@ -417,8 +418,6 @@ Route::middleware([
             Route::post('/', [App\Http\Controllers\Api\FcmTokenController::class, 'store']);
             Route::delete('/', [App\Http\Controllers\Api\FcmTokenController::class, 'destroy']);
         });
-
-        
     });
 
     // Report routes
