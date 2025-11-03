@@ -4,6 +4,7 @@ namespace App\Models\Tenant;
 
 use App\Enums\TargetType;
 use App\Models\FcmToken;
+use App\Models\Tenant\Attendance\AttendancePunch;
 use App\Models\Tenant\Team;
 use App\Settings\UsersSettings;
 use App\Traits\Filterable;
@@ -152,6 +153,11 @@ class User extends Authenticatable
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function latestAttendancePunch()
+    {
+        return $this->hasOne(AttendancePunch::class)->latest('happened_at');
     }
 
     /**
