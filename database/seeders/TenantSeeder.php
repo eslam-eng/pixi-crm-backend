@@ -34,12 +34,13 @@ class TenantSeeder extends Seeder
             $databaseName = 'barmagiat_crm_tenant';
 
             // check if database already exists
-            $exists = DB::select("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [$databaseName]);
+//            $exists = DB::select("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [$databaseName]);
+
             $acmeTenant = Tenant::create([
                 'id' => 'pixicrm',
                 'name' => 'pixicrm',
                 'tenancy_db_name' => $databaseName,
-                'tenancy_create_database' => ! $exists, // only create if not exists
+                'tenancy_create_database' => false, // only create if not exists
             ]);
 
             $acmeTenant->createDomain([
