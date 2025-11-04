@@ -6,7 +6,7 @@ use Stancl\Tenancy\Database\Models\Domain;
 use Stancl\Tenancy\Database\Models\Tenant;
 
 return [
-    'tenant_model' => \App\Models\Tenant::class,
+    'tenant_model' => \App\Models\Central\Tenant::class,
     'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
 
     'domain_model' => Domain::class,
@@ -190,7 +190,7 @@ return [
      */
     'migration_parameters' => [
         '--force' => true, // This needs to be true to run migrations in production.
-        '--path' => [database_path('migrations/tenant')],
+        '--path' => [database_path('migrations/tenant/testing')],
         '--realpath' => true,
     ],
 

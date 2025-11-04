@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Integrations\{
 };
 use App\Http\Controllers\Api\IntegrationController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Central\Api\AdminAuthController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\FormSubmissionController;
@@ -35,88 +36,76 @@ use App\Http\Controllers\Api\ItemAttributeController;
 use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
 use App\Http\Controllers\Api\TranslatableExampleController;
-use App\Http\Controllers\Central\Api\AuthController as  centralAuthController;
-use App\Http\Controllers\Central\Api\PaymentController;
-use App\Http\Controllers\Central\Api\SettingController;
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
-use App\Http\Controllers\Central\Api\SubscriptionController;
-use App\Http\Controllers\Central\Api\ModuleController;
-
+use App\Http\Controllers\Central\Api\ActivationCodeController;
+use App\Http\Controllers\Central\Api\AdminController;
+use App\Http\Controllers\Central\Api\CountryCodeController;
+use App\Http\Controllers\Central\Api\CurrencyController;
+use App\Http\Controllers\Central\Api\DiscountCodeController;
+use App\Http\Controllers\Central\Api\FeatureController;
+use App\Http\Controllers\Central\Api\LocaleController;
+use App\Http\Controllers\Central\Api\PayoutSourceController;
+use App\Http\Controllers\Central\Api\PlanController;
+use App\Http\Controllers\Central\Api\RoleController as RoleCentralController;
+use App\Http\Controllers\Central\Api\SourceController;
+use App\Http\Controllers\Central\Api\TimeZoneController;
+use App\Http\Controllers\Central\Api\Auth\RegisterController;
 
 // //////////// landlord routes
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
-        Route::group(['prefix' => 'authentication', 'middleware' => 'guest', 'name' => 'authentication.'], function () {
-            // Route::post('signup', [centralAuthController::class, 'signup'])->name('signup');
-            Route::post('login', [centralAuthController::class, 'login'])->name('login');
-            Route::post('logout', [centralAuthController::class, 'logout'])->name('logout');
-            Route::get('hi', fn() => \Illuminate\Support\Facades\DB::getDatabaseName());
+
+
+        Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
+            Route::post('admin/login', AdminAuthController::class);
+            Route::post('free-trial', RegisterController::class)->name('landlord.auth.free-trial');
         });
 
-        Route::post('subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
-        Route::post('tiers/buy', [\App\Http\Controllers\Central\Api\TierController::class, 'buy'])->name('tiers.buy')->middleware('auth:sanctum');
-        Route::apiResource('tiers', \App\Http\Controllers\Central\Api\TierController::class);
-        Route::apiResource('modules', \App\Http\Controllers\Central\Api\ModuleController::class);
-        // Route::apiResource('activation-codes', \App\Http\Controllers\Central\Api\ActivationCodeController::class);
+        Route::get('active-plans', [PlanController::class, 'activePlans']);
+        Route::get('locales', LocaleController::class);
+        Route::get('country-code', CountryCodeController::class);
+        Route::get('currencies', CurrencyController::class);
+        Route::get('timezones', TimeZoneController::class);
 
+        // for tenant and shared tables for tenant section
+        Route::middleware(['auth:sanctum', 'users.only'])->group(function () {
+            Route::get('discount-codes/{discount_code}/plans/{plan}', [DiscountCodeController::class, 'validateDiscountCode']);
+        });
 
-        Route::get('tenants', [\App\Http\Controllers\Central\Api\TenantController::class, 'index'])->name('tenants.index')->middleware('auth:sanctum');
+        Route::group(['middleware' => 'auth:landlord'], function () {
+            Route::post('admins/{admin}/status', [AdminController::class, 'toggleStatus']);
+            Route::get('admins/profile', [AdminController::class, 'profile']);
+            Route::apiResource('admins', AdminController::class);
+            Route::put('locale', [AdminController::class, 'updateLocale']);
 
-        //auth routes
-        Route::group(['prefix' => 'dashboard', 'middleware' => 'auth:sanctum'], function () {
+            Route::get('plans/statics', [PlanController::class, 'statics']);
+            Route::apiResource('plans', PlanController::class);
+            Route::apiResource('features', FeatureController::class)->only(['index']);
 
-            Route::prefix('packages')->group(function () {
-                Route::get('/statistics', [\App\Http\Controllers\Central\Api\PackageController::class, 'get_statistics']);
-                Route::get('/', [\App\Http\Controllers\Central\Api\PackageController::class, 'index']);
-                Route::get('/{tier}', [\App\Http\Controllers\Central\Api\PackageController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\Central\Api\PackageController::class, 'store']);
-                Route::put('/{tier}', [\App\Http\Controllers\Central\Api\PackageController::class, 'update']);
-                Route::delete('/{tier}', [\App\Http\Controllers\Central\Api\PackageController::class, 'destroy']);
-            });
-            Route::get('/settings', [SettingController::class, 'show']);
-            Route::put('/settings', [SettingController::class, 'update']);
-
-            Route::get('/clients/statistics', [\App\Http\Controllers\Central\Api\ClientController::class, 'get_statistics']);
-            Route::apiResource('clients', \App\Http\Controllers\Central\Api\ClientController::class);
-
-            Route::get('/locations/countries', [\App\Http\Controllers\Central\Api\LocationController::class, 'getCountries']);
-            Route::get('/locations/countries/{countryId}/cities', [\App\Http\Controllers\Central\Api\LocationController::class, 'getCities']);
-
-            //subscription routes
-            // Route::get('/subscriptions/activation-method', [SubscriptionController::class, 'getActivationMethod']);
-            // Route::get('/subscriptions/payment-status', [SubscriptionController::class, 'getPaymentStatus']);
-            // Route::get('/subscriptions/subscription-status', [SubscriptionController::class, 'getSubscriptionStatus']);
-            // Route::apiResource('subscriptions', SubscriptionController::class);
-
-
-            Route::prefix('subscriptions')->controller(SubscriptionController::class)->group(function () {
-                Route::get('/', 'index');
-                Route::get('/{subscription}', 'show');
-                Route::post('/', 'store');
-                Route::put('/{subscription}', 'update');
-                Route::delete('/{subscription}', 'destroy');
-                Route::delete('/{subscription}/{client}', 'destroy');
+            Route::group(['prefix' => 'activation-codes'], function () {
+                Route::get('/', [ActivationCodeController::class, 'index']);
+                Route::get('/statics', [ActivationCodeController::class, 'statics']);
+                Route::post('generate', [ActivationCodeController::class, 'store']);
+                Route::delete('{activation_code}', [ActivationCodeController::class, 'delete']);
             });
 
-            Route::get('activation-codes/statistics', [\App\Http\Controllers\Central\Api\ActivationCodeController::class, 'get_statistics']);
-            Route::apiResource('activation-codes', \App\Http\Controllers\Central\Api\ActivationCodeController::class);
-            Route::apiResource('discount-codes', \App\Http\Controllers\Central\Api\DiscountCodeController::class);
-            Route::apiResource('invoices', \App\Http\Controllers\Central\Api\InvoiceController::class);
 
-            //payment routes
-            Route::post('payment/process', [PaymentController::class, 'paymentProcess']);
-            Route::get('payment/callback', [PaymentController::class, 'callback']);
-
-            Route::post('logout', [centralAuthController::class, 'logout'])->name('logout.post');
-
-            Route::prefix('helpers')->group(function () {
-                // Form CRUD
-                Route::get('/modules', [ModuleController::class, 'index']);
+            Route::group(['prefix' => 'source-collections'], function () {
+                Route::get('/', [PayoutSourceController::class, 'index']);
+                Route::post('/', [PayoutSourceController::class, 'createCollection']);
+                Route::get('/{collection_id}', [PayoutSourceController::class, 'details']);
+                Route::patch('/{collection_id}/collect', [PayoutSourceController::class, 'markCollected']);
+                Route::patch('/{collection_id}/codes/collect', [PayoutSourceController::class, 'collectedSpaceficPayoutItem']);
             });
+
+            Route::get('permissions', [RoleCentralController::class, 'permissionsList']);
+            Route::apiResource('roles', RoleCentralController::class);
+            Route::apiResource('discount-codes', DiscountCodeController::class);
+
+            Route::apiResource('sources', SourceController::class);
         });
     });
 }
-
 
 // //////////// tenant routes
 Route::middleware([
@@ -205,8 +194,6 @@ Route::middleware([
 
         // Deal Payments routes
         Route::post('deals/{dealId}/payments', [\App\Http\Controllers\Api\Deals\DealPaymentController::class, 'store']);
-
-        Route::apiResource('custom-fields', \App\Http\Controllers\Api\CustomFieldController::class);
 
         // Notification routes
         Route::prefix('notifications')->group(function () {
@@ -370,9 +357,7 @@ Route::middleware([
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
-
         Route::apiResource('teams', \App\Http\Controllers\Api\TeamsController::class);
-        Route::apiResource('clients', \App\Http\Controllers\Api\ClientController::class);
 
         // pipeline and stage routes
         Route::apiResource('pipelines', \App\Http\Controllers\Api\PipelineController::class);
@@ -536,3 +521,4 @@ Route::prefix('facebook')->group(function () {
     Route::get('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'verify']);
     Route::post('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'handle']);
 });
+

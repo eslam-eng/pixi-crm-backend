@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
             'product'  => \App\Models\Tenant\Product::class,
             'service' => \App\Models\Tenant\Service::class,
             'user'    => \App\Models\Tenant\User::class,
+            'admin' => \App\Models\Admin::class,
         ]);
     }
 }

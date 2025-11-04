@@ -12,6 +12,10 @@ class SourceSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Source::count() > 0) {
+            $this->command->info('Sources already exist. Skipping SourceSeeder.');
+            return;
+        }
         Source::create([
             'name' => 'Website',
         ]);
