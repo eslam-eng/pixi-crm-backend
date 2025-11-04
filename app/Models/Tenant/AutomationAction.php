@@ -14,11 +14,13 @@ class AutomationAction extends Model
         'key',
         'icon',
         'description',
+        'configs',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'configs' => 'array',
     ];
 
     public $translatable = ['name'];

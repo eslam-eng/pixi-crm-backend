@@ -2,17 +2,26 @@
 
 namespace App\Services\Tenant\Automation;
 
+use App\DTO\Tenant\LeadDTO;
 use App\Models\Tenant\AutomationStepsImplement;
 use App\Models\Tenant\AutomationDelay;
 use App\Models\Tenant\AutomationAction;
 use App\Models\Tenant\Contact;
 use App\Models\Tenant\Lead;
+use App\Services\LeadService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AutomationWorkflowExecutorService
 {
+    public LeadService $opportunityService;
+
+    public function __construct(LeadService $opportunityService)
+    {
+        $this->opportunityService = $opportunityService;
+    }
+
     /**
      * Execute a specific step implementation
      */
@@ -112,8 +121,8 @@ class AutomationWorkflowExecutorService
             return false;
         }
 
-        // Execute the action based on its key
-        $result = $this->executeActionByKey($action->key, $stepImplement->triggerable, $contextData);
+        // Execute the action based on its key (pass stepData for actions that need config values)
+        $result = $this->executeActionByKey($action->key, $stepImplement->triggerable, $contextData, $stepImplement, $stepData);
 
         Log::info("Action step {$stepImplement->id} executed", [
             'action_id' => $actionId,
@@ -140,6 +149,64 @@ class AutomationWorkflowExecutorService
         ]);
 
         return true;
+    }
+
+    /**
+     * Get contact_id from triggerable based on its type
+     */
+    private function getContactIdFromTriggerable(Model $triggerable): ?int
+    {
+        // If triggerable is Contact, use its id
+        if ($triggerable instanceof Contact) {
+            return $triggerable->id;
+        }
+
+        // If triggerable is Lead/Opportunity, use contact_id
+        if ($triggerable instanceof Lead) {
+            return $triggerable->contact_id;
+        }
+
+        // If triggerable is Task, get contact_id through lead
+        if ($triggerable instanceof \App\Models\Tenant\Task) {
+            if ($triggerable->lead_id) {
+                $lead = Lead::find($triggerable->lead_id);
+                return $lead?->contact_id;
+            }
+        }
+
+        // If triggerable is Deal, get contact_id through lead
+        if ($triggerable instanceof \App\Models\Tenant\Deal) {
+            if ($triggerable->lead_id) {
+                $lead = $this->opportunityService->findById($triggerable->lead_id);
+                return $lead?->contact_id;
+            }
+        }
+
+        // If triggerable has contact_id property directly
+        if (isset($triggerable->contact_id)) {
+            return $triggerable->contact_id;
+        }
+
+        // If triggerable has lead_id, try to get contact_id through lead
+        if (isset($triggerable->lead_id)) {
+            $lead = Lead::find($triggerable->lead_id);
+            return $lead?->contact_id;
+        }
+
+        // If triggerable is FormSubmission, check if contact_id is in data
+        if ($triggerable instanceof \App\Models\Tenant\FormSubmission) {
+            $data = $triggerable->data ?? [];
+            if (isset($data['contact_id'])) {
+                return $data['contact_id'];
+            }
+        }
+
+        Log::warning("Could not extract contact_id from triggerable", [
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null
+        ]);
+
+        return null;
     }
 
     /**
@@ -205,7 +272,7 @@ class AutomationWorkflowExecutorService
     /**
      * Execute action by key
      */
-    private function executeActionByKey(string $actionKey, Model $triggerable, array $contextData): bool
+    private function executeActionByKey(string $actionKey, Model $triggerable, array $contextData, ?AutomationStepsImplement $stepImplement = null, ?array $stepData = null): bool
     {
         switch($actionKey) {
             // Contact Actions
@@ -265,10 +332,14 @@ class AutomationWorkflowExecutorService
                 return $this->executeSendReminderRescheduleAction($triggerable, $contextData);
             
             // Complex Actions
-            case 'create_contact_and_opportunity':
-                return $this->executeCreateContactAndOpportunityAction($triggerable, $contextData);
+            case 'create_contact':
+                return $this->executeCreateContactAction($triggerable, $contextData);
             
+            case 'create_opportunity':
+                return $this->executeCreateOpportunityAction($triggerable, $contextData);
 
+            case 'assign_to_sales':
+                return $this->executeAssignToSalesAction($triggerable, $contextData, $stepImplement, $stepData);
             default:
                 return $this->executeCustomAction($actionKey, $triggerable, $contextData);
         }
@@ -432,6 +503,78 @@ class AutomationWorkflowExecutorService
             return true;
         } catch (\Exception $e) {
             Log::error("Error executing assign to team action: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Execute assign to sales action
+     */
+    private function executeAssignToSalesAction(Model $triggerable, array $contextData, ?AutomationStepsImplement $stepImplement = null, ?array $stepData = null): bool
+    {
+        try {
+            // Get contact_id based on triggerable type
+            $contactId = $this->getContactIdFromTriggerable($triggerable);
+            
+            if (!$contactId) {
+                Log::warning("Could not extract contact_id for assign to sales action", [
+                    'triggerable_type' => get_class($triggerable),
+                    'triggerable_id' => $triggerable->id ?? null
+                ]);
+                return false;
+            }
+
+            // Get assignment type from stepData, contextData, or default
+            $assignmentType = $stepData['assignment_type'] ?? $contextData['assignment_type'] ?? 'specific_user';
+            
+            // Get trigger key from workflow
+            $triggerKey = null;
+            if ($stepImplement && $stepImplement->automationWorkflow) {
+                $workflow = $stepImplement->automationWorkflow;
+                if ($workflow->automationTrigger) {
+                    $triggerKey = $workflow->automationTrigger->key;
+                }
+            }
+
+            // If trigger is contact_created and assignment type is specific_user, update contact user_id
+            if ($triggerKey === 'contact_created' && $assignmentType === 'specific_user') {
+                if ($triggerable instanceof Contact) {
+                    // Get user_id from stepData or contextData (should be set when configuring the workflow)
+                    $userId = $stepData['user_id'] ?? $contextData['user_id'] ?? null;
+                    
+                    if ($userId) {
+                        $triggerable->update(['user_id' => $userId]);
+                        Log::info("Contact user_id updated via assign to sales action", [
+                            'contact_id' => $contactId,
+                            'user_id' => $userId,
+                            'assignment_type' => $assignmentType,
+                            'trigger_key' => $triggerKey
+                        ]);
+                        return true;
+                    } else {
+                        Log::warning("user_id not provided for specific_user assignment", [
+                            'contact_id' => $contactId,
+                            'assignment_type' => $assignmentType,
+                            'trigger_key' => $triggerKey,
+                            'step_data' => $stepData,
+                            'context_data' => $contextData
+                        ]);
+                    }
+                }
+            }
+            
+            // Implementation for other assignment types will be added later
+            Log::info("Assign to sales action executed", [
+                'contact_id' => $contactId,
+                'assignment_type' => $assignmentType,
+                'trigger_key' => $triggerKey,
+                'triggerable_type' => get_class($triggerable),
+                'triggerable_id' => $triggerable->id ?? null
+            ]);
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error executing assign to sales action: " . $e->getMessage());
             return false;
         }
     }
@@ -719,7 +862,7 @@ class AutomationWorkflowExecutorService
     /**
      * Execute create contact and opportunity action
      */
-    private function executeCreateContactAndOpportunityAction(Model $triggerable, array $contextData): bool
+    private function executeCreateContactAction(Model $triggerable, array $contextData): bool
     {
         try {
             // Create records and trigger assignment
@@ -730,6 +873,38 @@ class AutomationWorkflowExecutorService
             return true;
         } catch (\Exception $e) {
             Log::error("Error executing create contact and opportunity action: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Execute create opportunity action
+     */
+    private function executeCreateOpportunityAction(Model $triggerable, array $contextData): bool
+    {
+        try {
+            // Get contact_id based on triggerable type
+            $contactId = $this->getContactIdFromTriggerable($triggerable);
+            
+            if (!$contactId) {
+                Log::error("Could not extract contact_id for create opportunity action", [
+                    'triggerable_type' => get_class($triggerable),
+                    'triggerable_id' => $triggerable->id ?? null
+                ]);
+                return false;
+            }
+
+            // Create opportunity
+            $leadDTO = LeadDTO::fromArray([
+                'contact_id' => $contactId,
+                'status' => 'open',
+                'stage_id' => $contextData['stage_id'] ?? null,
+                'assigned_to_id' => null,
+            ]);
+            $this->opportunityService->store($leadDTO);   
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error executing create opportunity action: " . $e->getMessage());
             return false;
         }
     }

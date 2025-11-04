@@ -224,15 +224,15 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Reminder if accepted; reschedule if declined'
             ],
             [
-                'key' => 'create_contact_and_opportunity',
+                'key' => 'create_contact',
                 'icon' => 'user-plus',
                 'name' => [
-                    'ar' => 'إنشاء جهة اتصال وفرصة',
-                    'en' => 'Create Contact & Opportunity',
-                    'fr' => 'Créer contact et opportunité',
-                    'es' => 'Crear contacto y oportunidad'
+                    'ar' => 'إنشاء جهة اتصال',
+                    'en' => 'Create Contact',
+                    'fr' => 'Créer contact',
+                    'es' => 'Crear contacto'
                 ],
-                'description' => 'Create records and trigger assignment'
+                'description' => 'Create contact'
             ],
             [
                 'key' => 'notify_admin',
@@ -246,16 +246,129 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Alert ops to fix mapping issues'
             ],
             [
-                'key' => 'assign_opportunity_to_sales',
+                'key' => 'assign_to_sales',
                 'icon' => 'alert-circle',
                 'name' => [
-                    'ar' => '',
-                    'en' => 'Notify Admin',
-                    'fr' => 'Notifier l\'admin',
-                    'es' => 'Notificar administrador'
+                    'ar' => 'تعيين للمبيعات',
+                    'en' => 'Assign to Sales',
+                    'fr' => 'Assigner à la vente',
+                    'es' => 'Asignar a la venta'
                 ],
-                'description' => 'Alert ops to fix mapping issues'
-            ]
+                'description' => 'Assign to sales rep/team based on criteria',
+                'configs' => [
+                    'assignment_type' => [
+                        'type' => 'select',
+                        'label' => [
+                            'ar' => 'نوع التعيين',
+                            'en' => 'Assignment Type',
+                            'fr' => 'Type d\'assignation',
+                            'es' => 'Tipo de asignación'
+                        ],
+                        'options' => [
+                            [
+                                'value' => 'specific_user',
+                                'label' => [
+                                    'ar' => 'حسب مستخدم محدد',
+                                    'en' => 'According to specific user',
+                                    'fr' => 'Selon un utilisateur spécifique',
+                                    'es' => 'Según usuario específico'
+                                ],
+                                'config' => [
+                                    'show_user_dropdown' => true
+                                ]
+                            ],
+                            [
+                                'value' => 'owner_user',
+                                'label' => [
+                                    'ar' => 'حسب المستخدم المالك',
+                                    'en' => 'According to Owner user',
+                                    'fr' => 'Selon l\'utilisateur propriétaire',
+                                    'es' => 'Según usuario propietario'
+                                ],
+                                'config' => [
+                                    'exclude_triggers' => ['contact_created']
+                                ]
+                            ],
+                            [
+                                'value' => 'round_robin_sequential',
+                                'label' => [
+                                    'ar' => 'Round Robile Sequention',
+                                    'en' => 'Round Robin Sequential',
+                                    'fr' => 'Round Robin Séquentiel',
+                                    'es' => 'Round Robin Secuencial'
+                                ],
+                                'config' => [
+                                    'requires_table' => 'employee_assignments'
+                                ]
+                            ],
+                            [
+                                'value' => 'round_robin_active_opportunities',
+                                'label' => [
+                                    'ar' => 'Round Robile Random According to Active Opportunity',
+                                    'en' => 'Round Robin Random According to Active Opportunity',
+                                    'fr' => 'Round Robin Aléatoire selon Opportunités Actives',
+                                    'es' => 'Round Robin Aleatorio según Oportunidades Activas'
+                                ]
+                            ],
+                            [
+                                'value' => 'round_robin_active_tasks',
+                                'label' => [
+                                    'ar' => 'Round Robile Random According to Active Tasks',
+                                    'en' => 'Round Robin Random According to Active Tasks',
+                                    'fr' => 'Round Robin Aléatoire selon Tâches Actives',
+                                    'es' => 'Round Robin Aleatorio según Tareas Activas'
+                                ]
+                            ],
+                            [
+                                'value' => 'round_robin_performance',
+                                'label' => [
+                                    'ar' => 'Round Robile Random According to Performance',
+                                    'en' => 'Round Robin Random According to Performance',
+                                    'fr' => 'Round Robin Aléatoire selon Performance',
+                                    'es' => 'Round Robin Aleatorio según Rendimiento'
+                                ]
+                            ],
+                            [
+                                'value' => 'round_robin_best_seller',
+                                'label' => [
+                                    'ar' => 'Round Robile Random According to Best seller',
+                                    'en' => 'Round Robin Random According to Best seller',
+                                    'fr' => 'Round Robin Aléatoire selon Meilleur Vendeur',
+                                    'es' => 'Round Robin Aleatorio según Mejor Vendedor'
+                                ],
+                                'config' => [
+                                    'based_on' => 'deals_won_last_3_months',
+                                    'description' => [
+                                        'ar' => 'بناء على أكثر حد باع في آخر 3 شهور بناء على ال Deals Won',
+                                        'en' => 'Based on highest sales in last 3 months from Deals Won',
+                                        'fr' => 'Basé sur les ventes les plus élevées dans les 3 derniers mois des Deals Won',
+                                        'es' => 'Basado en las ventas más altas en los últimos 3 meses de Deals Won'
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'default' => 'specific_user',
+                        'required' => true
+                    ]
+                ]
+            ],
+            [
+                'key' => 'create_opportunity',
+                'icon' => 'user-plus',
+                'name' => [
+                    'ar' => 'إنشاء فرصة',
+                    'en' => 'Create Opportunity',
+                    'fr' => 'Créer opportunité',
+                    'es' => 'Crear oportunidad'
+                ],
+                'description' => 'Create opportunity',
+                'configs' => [
+                    'stage_id' => [
+                        'type' => 'select',
+                        'rules' => 'required|exists:stages,id',
+                    ]
+                ]
+            ],
         ];
 
         foreach ($actions as $action) {
