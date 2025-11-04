@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\DTO\Contact\ContactMergeDTO;
+use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Tenant\ContactMerge\ContactMergeResource;
 use App\Services\ContactMergeService;
@@ -37,10 +38,15 @@ class ContactMergeController extends Controller
         }
     }
 
-    public function mergeList()
+    public function mergeList(Request $request)
     {
         $contactMerge = $this->contactMergeService->mergeList();
-        return ApiResponse(message: 'contact merge list', data: ContactMergeResource::collection($contactMerge));
+        if ($request->has('ddl')) {
+            $data = ContactMergeResource::collection($contactMerge);
+        } else {
+            $data = ContactMergeResource::collection($contactMerge)->response()->getData(true);
+        }
+        return ApiResponse(message: 'contact merge list', data: $data);
     }
 
     public function merge()
@@ -70,13 +76,13 @@ class ContactMergeController extends Controller
     {
         try {
             DB::beginTransaction();
-            $result = $this->contactMergeService->handleMergeById($id);
+            $this->contactMergeService->handleMergeById($id);
             DB::commit();
-            if ($result) {
-                return ApiResponse(message: 'contact merged successfully');
-            }
+            return ApiResponse(message: 'contact merged successfully');
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'merge contact not found', code: Response::HTTP_NOT_FOUND);
+        } catch (GeneralException $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
