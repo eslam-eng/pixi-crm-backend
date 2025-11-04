@@ -3,14 +3,18 @@
 namespace App\Services;
 
 use App\DTO\Tenant\LeadDTO;
+use App\DTO\Tenant\LeadItemDTO;
 use App\QueryFilters\LeadFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\Exceptions\GeneralException;
 use App\Models\Tenant\Item;
 use App\Models\Tenant\Lead;
 use App\Notifications\Tenant\UpdateAssignOpportunityNotification;
+use App\Services\Tenant\ItemService;
 use App\Services\Tenant\Users\UserService;
 use Auth;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 class LeadService extends BaseService
 {
@@ -19,6 +23,7 @@ class LeadService extends BaseService
         public Item $itemModel,
         public StageService $stageService,
         public UserService $userService,
+        public ItemService $itemService,
     ) {}
 
     public function getModel(): Lead
@@ -74,35 +79,32 @@ class LeadService extends BaseService
 
     public function store(LeadDTO $leadDTO)
     {
-        $itemsCol = collect($leadDTO->items ?? [])
-            ->filter(
-                fn($r) =>
-                // filter any row with price and quantity
-                isset($r['price'], $r['quantity']) &&
-                    (int)$r['quantity'] > 0 &&
-                    (float)$r['price'] >= 0
-            );
+        $items = collect($leadDTO->items ?? [])->map(fn($r) => LeadItemDTO::fromArray($r));
 
-        $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r['price'] * (int)$r['quantity']);
+        $itemsCol = $items
+            ->filter(fn($r) => !empty($r->item_id));
+
+        $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r->price * (int)($r->quantity ?? 1));
 
         // divide the items by the presence of variant_id
-        [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r['variant_id']));
+        [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r->variant_id));
+
+        $this->checkUncountableServiceItems($withItemOnly);
 
         $variantsPayload = $withVariant
             ->mapWithKeys(fn($r) => [
-                (int)$r['variant_id'] => [
-                    'price'    => (float)$r['price'],
-                    'quantity' => (int)$r['quantity'],
+                (int)$r->variant_id => [
+                    'price'    => (float)$r->price,
+                    'quantity' => (int)$r->quantity,
                 ],
             ])
             ->all();
 
         $itemsPayload = $withItemOnly
-            ->filter(fn($r) => !empty($r['item_id']))
             ->mapWithKeys(fn($r) => [
-                (int)$r['item_id'] => [
-                    'price'    => (float)$r['price'],
-                    'quantity' => (int)$r['quantity'],
+                (int)$r->item_id => [
+                    'price'    => (float)$r->price,
+                    'quantity' => $r->quantity ?? 1,
                 ],
             ])
             ->all();
@@ -117,7 +119,7 @@ class LeadService extends BaseService
             $lead->items()->sync($itemsPayload, true);
         }
 
-        return $lead->load('variants', 'items');
+        return $lead->load('variants', 'items.product', 'items.service');
     }
 
     public function show(int $id)
@@ -131,35 +133,31 @@ class LeadService extends BaseService
     {
         $lead = $this->findById($id);
         if ($leadDTO->items) {
-            $itemsCol = collect($leadDTO->items ?? [])
-                ->filter(
-                    fn($r) =>
-                    // filter any row with price and quantity
-                    isset($r['price'], $r['quantity']) &&
-                        (int)$r['quantity'] > 0 &&
-                        (float)$r['price'] >= 0
-                );
+            $itemsCol = collect($leadDTO->items ?? [])->map(fn($r) => LeadItemDTO::fromArray($r))
+                ->filter(fn($r) => !empty($r->item_id));
 
-            $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r['price'] * (int)$r['quantity']);
+            $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r->price * (int)($r->quantity ?? 1));
 
             // divide the items by the presence of variant_id
-            [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r['variant_id']));
+            [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r->variant_id));
+
+            $this->checkUncountableServiceItems($withItemOnly);
 
             $variantsPayload = $withVariant
                 ->mapWithKeys(fn($r) => [
-                    (int)$r['variant_id'] => [
-                        'price'    => (float)$r['price'],
-                        'quantity' => (int)$r['quantity'],
+                    (int)$r->variant_id => [
+                        'price'    => (float)$r->price,
+                        'quantity' => (int)$r->quantity,
                     ],
                 ])
                 ->all();
 
             $itemsPayload = $withItemOnly
-                ->filter(fn($r) => !empty($r['item_id']))
+                ->filter(fn($r) => !empty($r->item_id))
                 ->mapWithKeys(fn($r) => [
-                    (int)$r['item_id'] => [
-                        'price'    => (float)$r['price'],
-                        'quantity' => (int)$r['quantity'],
+                    (int)$r->item_id => [
+                        'price'    => (float)$r->price,
+                        'quantity' => (int)$r->quantity,
                     ],
                 ])
                 ->all();
@@ -211,5 +209,27 @@ class LeadService extends BaseService
             ],
             filters: ['assigned_to_id' => Auth::user()->id]
         )->get();
+    }
+
+    public function checkUncountableServiceItems(Collection $withItemOnly): void
+    {
+        foreach ($withItemOnly as $item) {
+            $itemInOrder = $this->itemService->getModel()->find($item->item_id);
+            if ($itemInOrder->itemable_type == 'service' && $item->quantity > 1) {
+                throw ValidationException::withMessages(['items' => __('app.service_items_not_countable') . " with id :" . ' ' . $itemInOrder->id]);
+            }
+        }
+    }
+
+    /**
+     * Update opportunity status to WON
+     */
+    public function markAsWon(int $id): Lead
+    {
+        $lead = $this->findById($id);
+        if ($lead->status !== \App\Enums\OpportunityStatus::WON) {
+            $lead->update(['status' => \App\Enums\OpportunityStatus::WON]);
+        }
+        return $lead;
     }
 }

@@ -9,11 +9,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
@@ -31,6 +26,8 @@ class UserResource extends JsonResource
             'is_active' => $this->is_active,
             'lang' => $this->lang,
             'role' => $this->whenLoaded('roles', fn() => $this->roles->first()?->name),
+            'attendance_status' =>
+            $this->whenLoaded('latestAttendancePunch', fn() => $this->latestAttendancePunch?->type === 'in' ? true : false),
         ];
     }
 }

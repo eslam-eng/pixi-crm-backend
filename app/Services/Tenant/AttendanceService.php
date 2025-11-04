@@ -136,4 +136,13 @@ class AttendanceService
     {
         return AttendancePunch::where('user_id', $userId)->orderBy('happened_at', 'desc')->get();
     }
+
+    public function getUserStatus(int $userId)
+    {
+        $userStatus = AttendancePunch::where('user_id', $userId)->latest()->first();
+        if (!$userStatus) {
+            return null;
+        }
+        return $userStatus->type === 'in' ? true : false;
+    }
 }

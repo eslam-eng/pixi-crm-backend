@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Integrations;
 
 use App\Enums\IntegrationStatusEnum;
+use App\Enums\PlatformEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Tenant;
 use App\Models\Tenant\Integration;
 use App\Models\Tenant\IntegratedForm;
 use App\Models\Tenant\IntegratedFormFieldMapping;
@@ -20,7 +22,7 @@ class FacebookController extends Controller
      */
     public function getBusinessAccounts(Request $request)
     {
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -61,7 +63,7 @@ class FacebookController extends Controller
             'business_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -97,7 +99,7 @@ class FacebookController extends Controller
      */
     public function getStatus()
     {
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration) {
             return apiResponse(message: 'Meta (Facebook) integration not found', code: 404);
@@ -124,7 +126,7 @@ class FacebookController extends Controller
             'expires_in' => 'required|integer',
         ]);
 
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration) {
             return apiResponse(message: 'Meta (Facebook) integration not found', code: 404);
@@ -148,7 +150,7 @@ class FacebookController extends Controller
             'page_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -669,7 +671,7 @@ class FacebookController extends Controller
             'form_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -730,7 +732,7 @@ class FacebookController extends Controller
             'limit' => 'integer|min:1|max:100'
         ]);
 
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -770,6 +772,10 @@ class FacebookController extends Controller
         $redirectUri = $this->getTenantRedirectUri();
         $configId = env('FACEBOOK_CONFIG_ID', '1699506300921951');
 
+        // Get current tenant ID
+        $tenant = tenant();
+        $tenantId = $tenant ? $tenant->id : '';
+
         // Required permissions for Business Manager, Ad Accounts, and Lead Ads
         $scope = implode(',', [
             'public_profile',
@@ -784,6 +790,12 @@ class FacebookController extends Controller
             'pages_read_user_content',   // Read page content
         ]);
 
+        // Include tenant ID in state parameter for callback identification
+        $state = base64_encode(json_encode([
+            'tenant_id' => $tenantId,
+            'random' => bin2hex(random_bytes(16))
+        ]));
+
         // Use Facebook Login for Business with config_id
         $authUrl = 'https://www.facebook.com/v20.0/dialog/oauth?' . http_build_query([
             'client_id' => env('FACEBOOK_CLIENT_ID'),
@@ -791,7 +803,7 @@ class FacebookController extends Controller
             'config_id' => $configId,
             'response_type' => 'code',
             'scope' => $scope,
-            'state' => $request->get('state', bin2hex(random_bytes(16)))
+            'state' => $state
         ]);
 
         $data = [
@@ -812,13 +824,49 @@ class FacebookController extends Controller
     {
         $code = $request->get('code');
         $error = $request->get('error');
+        $state = $request->get('state');
+        
+        // Extract tenant ID from state parameter
+        $tenantId = null;
+        if ($state) {
+            try {
+                $stateData = json_decode(base64_decode($state), true);
+                $tenantId = $stateData['tenant_id'] ?? null;
+            } catch (\Exception $e) {
+                Log::error('Failed to decode state parameter: ' . $e->getMessage());
+            }
+        }
 
+        // Initialize tenancy if tenant ID is found
+        if ($tenantId) {
+            try {
+                $tenant = Tenant::find($tenantId);
+                if ($tenant) {
+                    tenancy()->initialize($tenant);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to initialize tenancy: ' . $e->getMessage());
+            }
+        }
+
+        // Handle error cases with HTML response
         if ($error) {
-            return apiResponse(message: 'Facebook authorization failed: ' . $request->get('error_description', 'Unknown error'), code: 400);
+            $errorMessage = $request->get('error_description', 'Unknown error');
+            $errorPayload = [
+                'status' => false,
+                'message' => 'Facebook authorization failed: ' . $errorMessage,
+                'data' => null,
+            ];
+            return $this->returnHtmlCallback($errorPayload);
         }
 
         if (!$code) {
-            return apiResponse(message: 'Authorization code not provided', code: 400);
+            $errorPayload = [
+                'status' => false,
+                'message' => 'Authorization code not provided',
+                'data' => null,
+            ];
+            return $this->returnHtmlCallback($errorPayload);
         }
 
         // Exchange code for access token
@@ -834,14 +882,19 @@ class FacebookController extends Controller
         $data = $response->json();
 
         if (isset($data['error'])) {
-            return apiResponse(message: 'Facebook OAuth error: ' . $data['error'], code: 400);
+            $errorPayload = [
+                'status' => false,
+                'message' => 'Facebook OAuth error: ' . $data['error'],
+                'data' => null,
+            ];
+            return $this->returnHtmlCallback($errorPayload);
         }
         // Store access token
         $accessToken = $data['access_token'];
         // $expiresIn = $data['expires_in'];
 
         // Save to database
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
         if ($integration) {
             $integration->update([
                 'access_token' => $accessToken,
@@ -860,13 +913,30 @@ class FacebookController extends Controller
 
         $user = $userResponse->json();
 
-        $data = [
-            'access_token' => $accessToken,
-            // 'expires_in' => $expiresIn,
-            'user' => $user,
-            'integration' => $integration->fresh()
+        // Get integration data without casting enums
+        $integrationData = DB::table('integrations')
+            ->where('id', $integration->id)
+            ->first();
+        
+        $successPayload = [
+            'status' => true,
+            'message' => 'Facebook OAuth successful',
+            'data' => [
+                'access_token' => $accessToken,
+                'user' => $user,
+                'integration' => $integrationData
+            ],
         ];
-        return apiResponse($data, 'Facebook OAuth successful');
+
+        return $this->returnHtmlCallback($successPayload);
+    }
+
+    /**
+     * Return HTML callback page that posts message to opener window
+     */
+    private function returnHtmlCallback(array $payload)
+    {
+        return view('facebook.oauth-callback', ['payload' => $payload]);
     }
 
     /**
@@ -874,7 +944,7 @@ class FacebookController extends Controller
      */
     public function validateFacebookToken(Request $request)
     {
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -929,7 +999,7 @@ class FacebookController extends Controller
      */
     public function revokeToken(Request $request)
     {
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No access token found', code: 404);
@@ -965,11 +1035,9 @@ class FacebookController extends Controller
             $baseUrl = str_replace('http://', 'https://', $baseUrl);
         }
 
-        if ($tenant) {
-            $subdomain = $tenant->id;
-            $baseUrl = str_replace('://', "://{$subdomain}.", $baseUrl);
-        }
-
+        // For callback, use a base URL without tenant subdomain
+        // This allows us to use a single redirect URI in Meta settings
+        // The tenant will be determined from state parameter in the callback
         return $baseUrl . '/api/facebook/callback';
     }
 
@@ -1039,7 +1107,7 @@ class FacebookController extends Controller
             'ad_account_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -1216,7 +1284,7 @@ class FacebookController extends Controller
             'ad_account_id' => 'required|string'
         ]);
 
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -1258,7 +1326,7 @@ class FacebookController extends Controller
      */
     public function checkPermissions(Request $request)
     {
-        $integration = Integration::where('platform', 'Meta')->first();
+        $integration = $this->getMetaIntegration();
 
         if (!$integration || !$integration->access_token) {
             return apiResponse(message: 'No Facebook access token found', code: 404);
@@ -1334,5 +1402,13 @@ class FacebookController extends Controller
         } catch (\Exception $e) {
             return apiResponse(message: 'Failed to check permissions: ' . $e->getMessage(), code: 400);
         }
+    }
+
+    /**
+     * Get the Meta integration
+     */
+    private function getMetaIntegration()
+    {
+        return Integration::where('platform', PlatformEnum::META->value)->first();
     }
 }
