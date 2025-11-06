@@ -37,9 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (Exception $e, Illuminate\Http\Request $request) {
-            return ApiExceptionHandler::handle($e, $request);
-        });
+        // $exceptions->render(function (Exception $e, Illuminate\Http\Request $request) {
+        //     return ApiExceptionHandler::handle($e, $request);
+        // });
         $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, $request) {
             return apiResponse(
                 message: 'You do not have the required authorization.',

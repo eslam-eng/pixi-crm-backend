@@ -407,7 +407,7 @@ class FacebookController extends Controller
     {
         DB::beginTransaction();
         $request->validate([
-            'external_form_id' => 'required|string',
+            'external_form_id' => 'required|string|unique:integrated_forms,external_form_id',
             'form_name' => 'required|string|max:255',
             'mappings' => 'required|array',
             'mappings.*.external_field_key' => 'required|string',
