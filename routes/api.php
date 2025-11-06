@@ -357,6 +357,7 @@ Route::middleware([
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
+        Route::post('teams/team-bulk-assign', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkAssign']);
         Route::apiResource('teams', \App\Http\Controllers\Api\TeamsController::class);
 
         // pipeline and stage routes

@@ -16,18 +16,26 @@ class Team extends Model
     protected $fillable = [
         'title',
         'leader_id',
+        'description',
+        'status',
         'is_target',
+        'period_type',
+        'leader_has_target',
     ];
-
 
     protected $casts = [
         'is_target' => 'boolean',
+        'leader_has_target' => 'boolean',
     ];
-
 
     public function leader()
     {
         return $this->hasOne(User::class, 'id', 'leader_id');
+    }
+
+    public function members()
+    {
+        return $this->hasMany(User::class, 'team_id', 'id');
     }
 
     /**
