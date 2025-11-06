@@ -15,7 +15,6 @@ class ChairResource extends JsonResource
         return [
             'id' => $this->id,
             'started_at' => $this->started_at,
-            'ended_at' => $this->ended_at,
             'user' => UserResource::make($this->whenLoaded('user')),
             'team' => TeamResource::make($this->whenLoaded('team')),
             'targets' => ChairTargetResource::collection($this->whenLoaded('targets')),
