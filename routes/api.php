@@ -360,6 +360,10 @@ Route::middleware([
         Route::post('teams/team-bulk-assign', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkAssign']);
         Route::apiResource('teams', \App\Http\Controllers\Api\TeamsController::class);
 
+        // Template routes
+        Route::post('templates/send', [\App\Http\Controllers\Api\TemplatesController::class, 'send']);
+        Route::apiResource('templates', \App\Http\Controllers\Api\TemplatesController::class);
+
         // pipeline and stage routes
         Route::apiResource('pipelines', \App\Http\Controllers\Api\PipelineController::class);
         Route::get('pipelines/{pipelineId}/stages', [\App\Http\Controllers\Api\StageController::class, 'index']);
@@ -522,4 +526,3 @@ Route::prefix('facebook')->group(function () {
     Route::get('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'verify']);
     Route::post('/webhook', [App\Http\Controllers\Api\FacebookLeadWebhookController::class, 'handle']);
 });
-
