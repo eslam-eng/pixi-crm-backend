@@ -28,7 +28,7 @@ class UpdateAssignContactNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -42,5 +42,25 @@ class UpdateAssignContactNotification extends Notification
             ->line('The contact has been assigned to'. $this->contact->user->name)
             ->action('View Contact', url('/contacts/' . $this->contact->id))
             ->line('Thank you for using our application!');
+    }
+
+    /**
+     * Get the array representation for database storage.
+     *
+     * @return array<string, mixed>
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'message' => 'The contact has been assigned to'. $this->contact->user->name,
+            'contact_id' => $this->contact->id,
+            'contact_name' => $this->contact->name,
+            'contact_user_id' => $this->contact->user->id,
+            'contact_user_name' => $this->contact->user->name,
+            'action_url' => '/contacts/' . $this->contact->id,
+            'type' => 'contact_assigned',
+            'created_by' => auth()->id() ?? null, // If you have authentication
+            'icon' => 'fas fa-user-plus', // For UI display
+        ];
     }
 }
