@@ -112,9 +112,9 @@ Route::middleware([
     \Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain::class,
     \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
 ])->group(function () {
-    Route::group(['prefix' => 'authentication', 'middleware' => 'guest', 'name' => 'authentication.'], function () {
-        Route::post('/signup', [AuthController::class, 'signup'])->name('tenant.signup');
-    });
+    // Route::group(['prefix' => 'authentication', 'middleware' => 'guest', 'name' => 'authentication.'], function () {
+    //     Route::post('/signup', [AuthController::class, 'signup'])->name('tenant.signup');
+    // });
     Route::post('authentication/login', [AuthController::class, 'login'])->middleware('redirect_if_authenticated:api_tenant')->name('tenant.login');
 
     Route::group(['middleware' => 'auth:api_tenant'], function () {
@@ -395,7 +395,6 @@ Route::middleware([
             Route::patch('/industries/{industry}/locale', [TranslatableExampleController::class, 'changeLocale']);
         });
 
-
         Route::prefix('task-types')->group(function () {
             // Form CRUD
             Route::get('/', [TaskTypeController::class, 'index']);
@@ -408,112 +407,112 @@ Route::middleware([
             Route::post('/', [App\Http\Controllers\Api\FcmTokenController::class, 'store']);
             Route::delete('/', [App\Http\Controllers\Api\FcmTokenController::class, 'destroy']);
         });
-    });
 
-    // Report routes
-    Route::prefix('reports')->middleware('auth:api_tenant')->group(function () {
-        // Sales Performance Reports
-        Route::prefix('sales-performance')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'index']);
-            Route::get('/deals-performance', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'dealsPerformance']);
-            Route::get('/revenue-analysis', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'revenueAnalysis']);
-            Route::get('/pipeline-funnel', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'pipelineFunnel']);
-            Route::get('/win-loss-analysis', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'winLossAnalysis']);
-            Route::get('/sales-rep-performance', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'salesRepPerformance']);
-        });
+        // Report routes
+        Route::prefix('reports')->middleware('auth:api_tenant')->group(function () {
+            // Sales Performance Reports
+            Route::prefix('sales-performance')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'index']);
+                Route::get('/deals-performance', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'dealsPerformance']);
+                Route::get('/revenue-analysis', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'revenueAnalysis']);
+                Route::get('/pipeline-funnel', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'pipelineFunnel']);
+                Route::get('/win-loss-analysis', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'winLossAnalysis']);
+                Route::get('/sales-rep-performance', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'salesRepPerformance']);
+            });
 
-        // Revenue Analysis Reports
-        Route::prefix('revenue-analysis')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'index']);
-            Route::get('/revenue-trends', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueTrends']);
-            Route::get('/revenue-by-product', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueByProduct']);
-            Route::get('/revenue-by-customer-segment', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueByCustomerSegment']);
-            Route::get('/revenue-forecast-vs-actual', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueForecastVsActual']);
-        });
+            // Revenue Analysis Reports
+            Route::prefix('revenue-analysis')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'index']);
+                Route::get('/revenue-trends', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueTrends']);
+                Route::get('/revenue-by-product', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueByProduct']);
+                Route::get('/revenue-by-customer-segment', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueByCustomerSegment']);
+                Route::get('/revenue-forecast-vs-actual', [\App\Http\Controllers\Api\Report\RevenueAnalysisController::class, 'revenueForecastVsActual']);
+            });
 
-        // Deal Analysis Reports
-        Route::prefix('deal-analysis')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'index']);
-            Route::get('/deals-over-time', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealsOverTime']);
-            Route::get('/deals-by-stage', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealsByStage']);
-            Route::get('/deals-by-source', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealsBySource']);
-            Route::get('/deal-value-by-stage', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealValueByStage']);
-            Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'conversionFunnel']);
-        });
+            // Deal Analysis Reports
+            Route::prefix('deal-analysis')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'index']);
+                Route::get('/deals-over-time', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealsOverTime']);
+                Route::get('/deals-by-stage', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealsByStage']);
+                Route::get('/deals-by-source', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealsBySource']);
+                Route::get('/deal-value-by-stage', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'dealValueByStage']);
+                Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\DealAnalysisController::class, 'conversionFunnel']);
+            });
 
-        // Win/Loss Analysis Reports
-        Route::prefix('win-loss-analysis')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'index']);
-            Route::get('/win-loss-trends', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'winLossTrends']);
-            Route::get('/win-rate-trend', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'winRateTrend']);
-            Route::get('/top-win-reasons', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'topWinReasons']);
-            Route::get('/top-loss-reasons', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'topLossReasons']);
-        });
+            // Win/Loss Analysis Reports
+            Route::prefix('win-loss-analysis')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'index']);
+                Route::get('/win-loss-trends', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'winLossTrends']);
+                Route::get('/win-rate-trend', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'winRateTrend']);
+                Route::get('/top-win-reasons', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'topWinReasons']);
+                Route::get('/top-loss-reasons', [\App\Http\Controllers\Api\Report\WinLossAnalysisController::class, 'topLossReasons']);
+            });
 
-        // Contact Management Reports
-        Route::prefix('contact-management')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'index']);
-            Route::get('/contact-analysis', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactAnalysis']);
-            Route::get('/contact-engagement-metrics', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactEngagementMetrics']);
-            Route::get('/contact-source-analysis', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactSourceAnalysis']);
-        });
+            // Contact Management Reports
+            Route::prefix('contact-management')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'index']);
+                Route::get('/contact-analysis', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactAnalysis']);
+                Route::get('/contact-engagement-metrics', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactEngagementMetrics']);
+                Route::get('/contact-source-analysis', [\App\Http\Controllers\Api\Report\ContactManagementController::class, 'contactSourceAnalysis']);
+            });
 
-        // Contact to Opportunity Conversion Reports
-        Route::prefix('contact-opportunity-conversion')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'index']);
-            Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'conversionFunnel']);
-            Route::get('/conversion-trends', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'conversionTrends']);
-            Route::get('/conversion-by-source', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'conversionBySource']);
-        });
+            // Contact to Opportunity Conversion Reports
+            Route::prefix('contact-opportunity-conversion')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'index']);
+                Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'conversionFunnel']);
+                Route::get('/conversion-trends', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'conversionTrends']);
+                Route::get('/conversion-by-source', [\App\Http\Controllers\Api\Report\ContactOpportunityConversionController::class, 'conversionBySource']);
+            });
 
-        // Contact Overview Reports
-        Route::prefix('contact-overview')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'index']);
-            Route::get('/growth-trends', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'growthTrends']);
-            Route::get('/source-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'sourceDistribution']);
-            Route::get('/type-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'typeDistribution']);
-            Route::get('/geographic-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'geographicDistribution']);
-            Route::get('/industry-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'industryDistribution']);
-            Route::get('/company-size-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'companySizeDistribution']);
-            Route::get('/quality-score-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'qualityScoreDistribution']);
-        });
+            // Contact Overview Reports
+            Route::prefix('contact-overview')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'index']);
+                Route::get('/growth-trends', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'growthTrends']);
+                Route::get('/source-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'sourceDistribution']);
+                Route::get('/type-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'typeDistribution']);
+                Route::get('/geographic-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'geographicDistribution']);
+                Route::get('/industry-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'industryDistribution']);
+                Route::get('/company-size-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'companySizeDistribution']);
+                Route::get('/quality-score-distribution', [\App\Http\Controllers\Api\Report\ContactOverviewController::class, 'qualityScoreDistribution']);
+            });
 
-        // Opportunity Pipeline Reports
-        Route::prefix('opportunity-pipeline')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'index']);
-            Route::get('/pipeline-by-stage', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'pipelineByStage']);
-            Route::get('/opportunity-trends', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'opportunityTrends']);
-            Route::get('/opportunities-by-source', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'opportunitiesBySource']);
-            Route::get('/deal-size-distribution', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'dealSizeDistribution']);
-            Route::get('/sales-velocity', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'salesVelocity']);
-            Route::get('/win-rate-by-stage', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'winRateByStage']);
-            Route::get('/top-sales-reps', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'topSalesReps']);
-            Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'conversionFunnel']);
-        });
+            // Opportunity Pipeline Reports
+            Route::prefix('opportunity-pipeline')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'index']);
+                Route::get('/pipeline-by-stage', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'pipelineByStage']);
+                Route::get('/opportunity-trends', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'opportunityTrends']);
+                Route::get('/opportunities-by-source', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'opportunitiesBySource']);
+                Route::get('/deal-size-distribution', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'dealSizeDistribution']);
+                Route::get('/sales-velocity', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'salesVelocity']);
+                Route::get('/win-rate-by-stage', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'winRateByStage']);
+                Route::get('/top-sales-reps', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'topSalesReps']);
+                Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\OpportunityPipelineController::class, 'conversionFunnel']);
+            });
 
-        // Opportunity Forecast Reports
-        Route::prefix('opportunity-forecast')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'index']);
-            Route::get('/forecast-vs-actual', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'forecastVsActual']);
-            Route::get('/weighted-pipeline', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'weightedPipeline']);
-            Route::get('/quarterly-forecast', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'quarterlyForecast']);
-            Route::get('/forecast-accuracy-trend', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'forecastAccuracyTrend']);
-            Route::get('/forecast-by-category', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'forecastByCategory']);
-            Route::get('/sales-velocity', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'salesVelocity']);
-            Route::get('/pipeline-coverage-ratio', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'pipelineCoverageRatio']);
-        });
+            // Opportunity Forecast Reports
+            Route::prefix('opportunity-forecast')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'index']);
+                Route::get('/forecast-vs-actual', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'forecastVsActual']);
+                Route::get('/weighted-pipeline', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'weightedPipeline']);
+                Route::get('/quarterly-forecast', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'quarterlyForecast']);
+                Route::get('/forecast-accuracy-trend', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'forecastAccuracyTrend']);
+                Route::get('/forecast-by-category', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'forecastByCategory']);
+                Route::get('/sales-velocity', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'salesVelocity']);
+                Route::get('/pipeline-coverage-ratio', [\App\Http\Controllers\Api\Report\OpportunityForecastController::class, 'pipelineCoverageRatio']);
+            });
 
-        // Conversion Rate Analysis Reports
-        Route::prefix('conversion-rate-analysis')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'index']);
-            Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionFunnel']);
-            Route::get('/stage-conversion-rates', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'stageConversionRates']);
-            Route::get('/conversion-trend', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionTrend']);
-            Route::get('/conversion-by-source', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionBySource']);
-            Route::get('/time-to-conversion', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'timeToConversion']);
-            Route::get('/team-performance', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'teamPerformance']);
-            Route::get('/monthly-conversion-funnel', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'monthlyConversionFunnel']);
-            Route::get('/conversion-by-deal-size', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionByDealSize']);
+            // Conversion Rate Analysis Reports
+            Route::prefix('conversion-rate-analysis')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'index']);
+                Route::get('/conversion-funnel', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionFunnel']);
+                Route::get('/stage-conversion-rates', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'stageConversionRates']);
+                Route::get('/conversion-trend', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionTrend']);
+                Route::get('/conversion-by-source', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionBySource']);
+                Route::get('/time-to-conversion', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'timeToConversion']);
+                Route::get('/team-performance', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'teamPerformance']);
+                Route::get('/monthly-conversion-funnel', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'monthlyConversionFunnel']);
+                Route::get('/conversion-by-deal-size', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionByDealSize']);
+            });
         });
     });
 });
