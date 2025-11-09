@@ -50,13 +50,13 @@ class OpportunityController extends Controller
         if ($request->has('ddl')) {
             $opportunities = $this->leadService->index(
                 $filters,
-                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user']
+                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user', 'items.category.parent']
             );
             $data = OpportunityDDLResource::collection($opportunities);
         } else {
             $opportunities = $this->leadService->index(
                 $filters,
-                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user'],
+                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user', 'items.category.parent'],
                 $filters['per_page'] ?? 10
             );
             $data = OpportunityResource::collection($opportunities)->response()->getData(true);

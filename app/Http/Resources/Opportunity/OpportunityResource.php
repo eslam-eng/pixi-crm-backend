@@ -28,7 +28,12 @@ class OpportunityResource extends JsonResource
                     'name' => $item['name'],
                     'price' => $item['price'],
                     'quantity' => $item['quantity'],
-                    'type' => 'item',
+                    'category_id' => $item['category_id'],
+                    'category_name' => $item['category_name'],
+                    'sub_category_id' => $item['sub_category_id'],
+                    'sub_category_name' => $item['sub_category_name'],
+                    'service_type' => $item['service_type'],
+                    'type' => $item['type'],
                 ];
             })->values()->all()
             : [];
@@ -41,7 +46,12 @@ class OpportunityResource extends JsonResource
                     'name' => $variant->product->item->name ?? 'Unknown Variant',
                     'price' => $variant->pivot->price ?? 0,
                     'quantity' => $variant->pivot->quantity ?? 0,
-                    'type' => 'variant',
+                    'category_id' => $variant->product->item->category->parent->id,
+                    'category_name' => $variant->product->item->category->parent->name,
+                    'sub_category_id' => $variant->product->item->category->id,
+                    'sub_category_name' => $variant->product->item->category->name,
+                    'service_type' => null,
+                    'type' => $variant->product->item->itemable_type,
                 ];
             })->values()->all()
             : [];

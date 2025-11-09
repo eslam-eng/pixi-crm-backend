@@ -73,6 +73,7 @@ class ItemStoreRequest extends BaseRequest
             if ($validator->errors()->isNotEmpty()) {
                 return; // base rules failed → skip custom checks
             }
+            $this->validateCategoryDependence($validator);
             $this->validateAttributesExist($validator);
             $this->validateAttributeValuesExist($validator);
             $this->validateUniqueVariantCombinations($validator);
@@ -244,6 +245,16 @@ class ItemStoreRequest extends BaseRequest
                     }
                 }
             }
+        }
+    }
+
+    private function validateCategoryDependence($validator): void
+    {
+        $categoryId = $this->input('category_id');
+        $type = $this->input('type');
+        $category = \App\Models\Tenant\ItemCategory::where('id', $categoryId)->where('type', $type)->whereNotNull('parent_id')->exists();
+        if (!$category) {
+            $validator->errors()->add('category_id', 'Category is invalid');
         }
     }
 }

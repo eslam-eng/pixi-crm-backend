@@ -125,7 +125,7 @@ class LeadService extends BaseService
     public function show(int $id)
     {
         $lead = $this->findById($id);
-        return $lead->load('contact', 'city', 'stage', 'user', 'variants', 'items.itemable');
+        return $lead->load(['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user', 'items.category.parent']);
     }
 
 
