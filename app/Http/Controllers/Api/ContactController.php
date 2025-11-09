@@ -127,7 +127,7 @@ class ContactController extends Controller
             $importSettings = $request->input('import_settings', []);
 
             // Validate mapping
-            $requiredFields = ['first_name', 'last_name'];
+            $requiredFields = ['first_name', 'email'];
             foreach ($requiredFields as $field) {
                 if (empty($columnMapping[$field])) {
                     return ApiResponse(message: "The field '{$field}' is required and must be mapped.", code: 422);
