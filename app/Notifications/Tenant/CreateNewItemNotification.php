@@ -28,7 +28,7 @@ class CreateNewItemNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -42,5 +42,24 @@ class CreateNewItemNotification extends Notification
             ->line('A new ' . $this->item->type?->value . ' has been created: '  . $this->item->name)
             ->action('View Item', url('/items/' . $this->item->id))
             ->line('Thank you for using our application!');
+    }
+
+    /**
+     * Get the array representation for database storage.
+     *
+     * @return array<string, mixed>
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'message' => 'A new ' . $this->item->type?->value . ' has been created: '  . $this->item->name,
+            'item_id' => $this->item->id,
+            'item_name' => $this->item->name,
+            'item_type' => $this->item->type?->value,
+            'action_url' => '/items/' . $this->item->id,
+            'type' => 'item_created',
+            'created_by' => auth()->id() ?? null, // If you have authentication
+            'icon' => 'fas fa-plus', // For UI display
+        ];
     }
 }
