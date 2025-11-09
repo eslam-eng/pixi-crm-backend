@@ -23,7 +23,7 @@ class WelcomeNewUserNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -36,5 +36,24 @@ class WelcomeNewUserNotification extends Notification
             ->greeting('Hello!')
             ->line('welcome to our application.')
             ->line('Thank you for using our application!');
+    }
+
+    /**
+     * Get the array representation for database storage.
+     *
+     * @return array<string, mixed>
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'message' => 'A new user has been created: ' . $notifiable->name,
+            'user_id' => $notifiable->id,
+            'user_name' => $notifiable->name,
+            'user_email' => $notifiable->email,
+            'action_url' => '/users/' . $notifiable->id,
+            'type' => 'user_created',
+            'created_by' => auth()->id() ?? null, // If you have authentication
+            'icon' => 'fas fa-user-plus', // For UI display
+        ];
     }
 }

@@ -11,7 +11,8 @@ class ChairTargetResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'month' => now()->month($this->period_number)->format('M'),
+            'period_type' => $this->period_type,
+            'period_number' => $this->period_number,
             'year' => $this->year,
             'target_value' => $this->target_value,
             'effective_from' => $this->effective_from,

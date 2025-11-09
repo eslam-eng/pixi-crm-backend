@@ -8,6 +8,7 @@ use App\DTO\Contact\ContactDTO;
 use App\DTO\Contact\ContactMergeDTO;
 use App\Enums\IdenticalContactType;
 use App\Enums\MergeContactType;
+use App\Exceptions\GeneralException;
 use App\Models\Tenant\ContactMerge;
 
 class ContactMergeService extends BaseService
@@ -103,11 +104,9 @@ class ContactMergeService extends BaseService
             $phoneIsExists = $this->checkContactPhone($contactDTO->contact_phones[0]['phone']);
             $maxOfPhones = $this->checkNumberOfPhones($contactData->contactPhones->toArray());
             if ($phoneIsExists) {
-                $error = 'Phone already exists for ' . $contactDTO->contact_phones[0]['phone'];
-                return $error;
+                throw new GeneralException('Phone already exists for ' . $contactDTO->contact_phones[0]['phone']);
             } elseif ($maxOfPhones) {
-                $error = 'Maximum number of phones is 5' . ' for ' . $contactDTO->email;
-                return $error;
+                throw new GeneralException('Maximum number of phones is 5' . ' for ' . $contactDTO->email);
             } else {
                 $this->contactService->updateMerge($contactData->id, $contactDTO);
             }

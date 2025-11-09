@@ -28,7 +28,7 @@ class CreateNewContactNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -42,5 +42,24 @@ class CreateNewContactNotification extends Notification
             ->line('A new contact has been created.')
             ->action('View Contact', url('/contacts/' . $this->contact->id))
             ->line('Thank you for using our application!');
+    }
+
+        /**
+     * Get the array representation for database storage.
+     *
+     * @return array<string, mixed>
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'message' => 'A new contact has been created: ' . $this->contact->name,
+            'contact_id' => $this->contact->id,
+            'contact_name' => $this->contact->name,
+            'contact_email' => $this->contact->email,
+            'action_url' => '/contacts/' . $this->contact->id,
+            'type' => 'contact_created',
+            'created_by' => auth()->id() ?? null, // If you have authentication
+            'icon' => 'fas fa-user-plus', // For UI display
+        ];
     }
 }

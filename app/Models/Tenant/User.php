@@ -42,6 +42,7 @@ class User extends Authenticatable
         'job_title',
         'team_id',
         'lang',
+        'landlord_user_id',
     ];
 
     protected $casts = [
@@ -296,5 +297,10 @@ class User extends Authenticatable
             ->dontSubmitEmptyLogs()
             ->useLogName('user')
             ->setDescriptionForEvent(fn(string $eventName) => "User has been {$eventName}");
+    }
+
+    public function generateToken(string $name = 'auth_token', array $abilities = ['*']): string
+    {
+        return $this->createToken($name, $abilities)->plainTextToken;
     }
 }

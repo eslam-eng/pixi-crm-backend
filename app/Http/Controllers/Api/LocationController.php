@@ -6,13 +6,14 @@ use App\Http\Resources\LocationCollection;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\LocationService;
+use App\Services\Tenant\LocationService;
+use Illuminate\Http\JsonResponse;
 
 class LocationController extends Controller
 {
     public function __construct(public LocationService $locationService) {}
 
-    public function getCountries(Request $request): \Illuminate\Http\JsonResponse
+    public function getCountries(Request $request): JsonResponse
     {
         try {
             $perPage = $request->query('per_page');
@@ -29,7 +30,7 @@ class LocationController extends Controller
         }
     }
 
-    public function getCities(Request $request, $country_id): \Illuminate\Http\JsonResponse
+    public function getCities(Request $request, $country_id): JsonResponse
     {
         try {
             $perPage = $request->query('per_page');
@@ -44,7 +45,7 @@ class LocationController extends Controller
         }
     }
 
-    public function getAreas(Request $request, $city_id): \Illuminate\Http\JsonResponse
+    public function getAreas(Request $request, $city_id): JsonResponse
     {
         try {
             $perPage = $request->query('per_page');

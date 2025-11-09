@@ -2,63 +2,48 @@
 
 namespace App\Http\Controllers\Central\Api;
 
+use App\DTO\Central\ActivationCodeDTO;
+use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreActivationCodeRequest;
-use App\Http\Requests\UpdateActivationCodeRequest;
-use App\Http\Resources\ActivationCodeCollection;
-use App\Services\Central\ActivationCodeService;
+use App\Http\Requests\Central\ActivationCodeRequest;
+use App\Http\Resources\Central\ActivationCodeResource;
+use App\Models\Central\ActivationCode;
+use App\Services\Central\ActivationCode\ActivationCodeService;
 use Illuminate\Http\Request;
 
 class ActivationCodeController extends Controller
 {
-    public function __construct(
-        public ActivationCodeService $activationCodeService
-    ) {}
-
-    public function get_statistics()
-    {
-        $statistics = $this->activationCodeService->statistics();
-        return apiResponse($statistics, 'Statistics retrieved successfully.');
-    }
+    public function __construct(private readonly ActivationCodeService $activationCodeService) {}
 
     public function index(Request $request)
     {
-        $filter['using_state'] = $request->query('using_state', 'all');
-        $activationCodes = $this->activationCodeService->index(
-            filters: $filter,
-            withRelations: ['tier', 'createBy']
-        );
-        return apiResponse(new ActivationCodeCollection($activationCodes), 'Activation codes retrieved successfully.');
+        $filters = $request->all();
+        $limit = $request->input('limit', 15);
+        $activationCodes = $this->activationCodeService->paginate(filters: $filters, perPage: $limit);
+
+        return ActivationCodeResource::collection($activationCodes);
     }
 
-    public function store(StoreActivationCodeRequest $request)
+    public function store(ActivationCodeRequest $request)
     {
-        $data = $request->validated();
-        $message = $this->activationCodeService->store($data);
-        return apiResponse($message, 'Operation completed successfully.');
+        $activationCodeDTO = ActivationCodeDTO::fromRequest($request);
+        $this->activationCodeService->generate($activationCodeDTO);
+
+        return ApiResponse::success(message: 'Activation codes generated successfully');
     }
 
-    public function update(UpdateActivationCodeRequest $request, $id)
+    public function delete(ActivationCode|int $activation_code)
     {
-        try {
-            $data = $request->validated();
-            $data['id'] = $id;
-            $message = $this->activationCodeService->update($data);
-            return apiResponse($message, 'Operation completed successfully.');
-        } catch (\Exception $e) {
-            return apiResponse($e->getMessage(), 'update failed.', 500);
-        }
+        $this->activationCodeService->delete($activation_code);
+
+        return ApiResponse::success(message: 'Activation code deleted successfully');
     }
 
-    public function show($id, array $withRelations = ['tier'])
+    public function statics()
     {
-        $activationCode = $this->activationCodeService->show($id, $withRelations);
-        return apiResponse($activationCode, 'Activation code retrieved successfully.');
-    }
+        $statics = $this->activationCodeService->statics();
+        $statics = array_map('intval', $statics->toArray());
 
-    public function destroy($id)
-    {
-        $message = $this->activationCodeService->destroy($id);
-        return apiResponse($message, 'Operation completed successfully.');
+        return ApiResponse::success(data: $statics);
     }
 }

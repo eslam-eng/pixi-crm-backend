@@ -140,6 +140,9 @@ class AttendanceService
     public function getUserStatus(int $userId)
     {
         $userStatus = AttendancePunch::where('user_id', $userId)->latest()->first();
+        if (!$userStatus) {
+            return null;
+        }
         return $userStatus->type === 'in' ? true : false;
     }
 }
