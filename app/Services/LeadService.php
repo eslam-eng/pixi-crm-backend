@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTO\Tenant\LeadDTO;
 use App\DTO\Tenant\LeadItemDTO;
+use App\Enums\OpportunityStatus;
 use App\QueryFilters\LeadFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\Exceptions\GeneralException;
@@ -125,7 +126,7 @@ class LeadService extends BaseService
     public function show(int $id)
     {
         $lead = $this->findById($id);
-        return $lead->load('contact', 'city', 'stage', 'user', 'variants', 'items.itemable');
+        return $lead->load(['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user', 'items.category.parent']);
     }
 
 
@@ -231,5 +232,20 @@ class LeadService extends BaseService
             $lead->update(['status' => \App\Enums\OpportunityStatus::WON]);
         }
         return $lead;
+    }
+
+    public function changeStatus(int $id, OpportunityStatus $status): void
+    {
+        $lead = $this->findById($id);
+
+        if ($status === OpportunityStatus::WON) {
+            throw new GeneralException('Opportunity cannot be marked as won without a deal');
+        }
+
+        if ($lead->status !== $status) {
+            $lead->update(['status' => $status]);
+        } else {
+            throw new GeneralException('Opportunity status is already ' . $status->value);
+        }
     }
 }

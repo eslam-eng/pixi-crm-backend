@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTO\Tenant\LeadDTO;
+use App\Enums\OpportunityStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Opportunity\OpportunityRequest;
+use App\Http\Requests\Tenant\Opportunity\StatusRequest;
 use App\Http\Resources\AuditOpportunityResource;
 use App\Http\Resources\Opportunity\OpportunityResource;
 use App\Http\Resources\Tenant\Opportunity\OpportunityDDLResource;
@@ -50,13 +52,13 @@ class OpportunityController extends Controller
         if ($request->has('ddl')) {
             $opportunities = $this->leadService->index(
                 $filters,
-                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user']
+                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user', 'items.category.parent']
             );
             $data = OpportunityDDLResource::collection($opportunities);
         } else {
             $opportunities = $this->leadService->index(
                 $filters,
-                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user'],
+                ['contact.contactPhones', 'city', 'stage', 'items.itemable', 'variants.product', 'user', 'items.category.parent'],
                 $filters['per_page'] ?? 10
             );
             $data = OpportunityResource::collection($opportunities)->response()->getData(true);
@@ -132,6 +134,21 @@ class OpportunityController extends Controller
             $opportunity->update($validated);
             DB::commit();
             return ApiResponse(message: 'Opportunity stage changed successfully', code: 200);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function changeStatus(StatusRequest $request, int $opportunity_id)
+    {
+        try {
+            DB::beginTransaction();
+            $this->leadService->changeStatus($opportunity_id, OpportunityStatus::from($request->validated('status')));
+            DB::commit();
+            return ApiResponse(message: 'Opportunity status changed successfully', code: 200);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
