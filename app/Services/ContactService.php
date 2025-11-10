@@ -156,7 +156,7 @@ class ContactService extends BaseService
             ],
             'last_name' => [
                 'label' => 'Last Name',
-                'required' => true,
+                'required' => false,
                 'type' => 'string'
             ],
             'email' => [
