@@ -514,6 +514,20 @@ Route::middleware([
                 Route::get('/monthly-conversion-funnel', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'monthlyConversionFunnel']);
                 Route::get('/conversion-by-deal-size', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionByDealSize']);
             });
+
+            // Team Performance Reports
+            Route::prefix('team-performance')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'index']);
+                Route::get('/kpis', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'kpis']);
+                Route::get('/individual-performance', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'individualPerformance']);
+                Route::get('/win-rate-by-team-member', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'winRateByTeamMember']);
+                Route::get('/activity-distribution', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'activityDistribution']);
+                Route::get('/team-activity-trend', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'teamActivityTrend']);
+                Route::get('/quota-attainment-trend', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'quotaAttainmentTrend']);
+                Route::get('/monthly-revenue-by-team-member', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'monthlyRevenueByTeamMember']);
+                Route::get('/pipeline-contribution', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'pipelineContribution']);
+                Route::get('/team-skills-assessment', [\App\Http\Controllers\Api\Report\TeamPerformanceController::class, 'teamSkillsAssessment']);
+            });
         });
     });
 });

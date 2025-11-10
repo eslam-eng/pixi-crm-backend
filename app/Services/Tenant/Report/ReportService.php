@@ -28,13 +28,24 @@ class ReportService extends BaseService
      */
     public function executeSalesPerformanceReport($filters = null): array
     {
+        dd($filters);
         $query = DB::table('leads')
             ->leftJoin('contacts', 'leads.contact_id', '=', 'contacts.id')
             ->leftJoin('users', 'leads.assigned_to_id', '=', 'users.id')
             ->leftJoin('stages', 'leads.stage_id', '=', 'stages.id')
             ->leftJoin('sources', 'contacts.source_id', '=', 'sources.id')
-            ->leftJoin('teams', 'users.team_id', '=', 'teams.id')
-            ->leftJoin('deals', 'deals.lead_id', '=', 'leads.id');
+            ->leftJoin('deals', 'deals.lead_id', '=', 'leads.id')
+            ->leftJoin('chairs', function ($join) {
+                $join->on('users.id', '=', 'chairs.user_id')
+                    ->where(function ($q) {
+                        $q->whereColumn('chairs.started_at', '<=', 'leads.created_at')
+                            ->where(function ($q2) {
+                                $q2->whereNull('chairs.ended_at')
+                                    ->orWhereColumn('chairs.ended_at', '>=', 'leads.created_at');
+                            });
+                    });
+            })
+            ->leftJoin('teams', 'chairs.team_id', '=', 'teams.id');
 
         // Apply filters
         if ($filters) {
@@ -77,7 +88,17 @@ class ReportService extends BaseService
             ->leftJoin('users', 'leads.assigned_to_id', '=', 'users.id')
             ->leftJoin('stages', 'leads.stage_id', '=', 'stages.id')
             ->leftJoin('sources', 'contacts.source_id', '=', 'sources.id')
-            ->leftJoin('teams', 'users.team_id', '=', 'teams.id');
+            ->leftJoin('chairs', function ($join) {
+                $join->on('users.id', '=', 'chairs.user_id')
+                    ->where(function ($q) {
+                        $q->whereColumn('chairs.started_at', '<=', 'leads.created_at')
+                            ->where(function ($q2) {
+                                $q2->whereNull('chairs.ended_at')
+                                    ->orWhereColumn('chairs.ended_at', '>=', 'leads.created_at');
+                            });
+                    });
+            })
+            ->leftJoin('teams', 'chairs.team_id', '=', 'teams.id');
 
         // Apply filters
         if ($filters) {
@@ -210,7 +231,17 @@ class ReportService extends BaseService
     {
         $query = DB::table('tasks')
             ->leftJoin('users', 'tasks.assigned_to_id', '=', 'users.id')
-            ->leftJoin('teams', 'users.team_id', '=', 'teams.id')
+            ->leftJoin('chairs', function ($join) {
+                $join->on('users.id', '=', 'chairs.user_id')
+                    ->where(function ($q) {
+                        $q->whereColumn('chairs.started_at', '<=', 'tasks.created_at')
+                            ->where(function ($q2) {
+                                $q2->whereNull('chairs.ended_at')
+                                    ->orWhereColumn('chairs.ended_at', '>=', 'tasks.created_at');
+                            });
+                    });
+            })
+            ->leftJoin('teams', 'chairs.team_id', '=', 'teams.id')
             ->leftJoin('priorities', 'tasks.priority_id', '=', 'priorities.id');
 
         // Apply filters
@@ -257,7 +288,17 @@ class ReportService extends BaseService
             ->leftJoin('leads', 'deals.lead_id', '=', 'leads.id')
             ->leftJoin('contacts', 'leads.contact_id', '=', 'contacts.id')
             ->leftJoin('users', 'deals.assigned_to_id', '=', 'users.id')
-            ->leftJoin('teams', 'users.team_id', '=', 'teams.id');
+            ->leftJoin('chairs', function ($join) {
+                $join->on('users.id', '=', 'chairs.user_id')
+                    ->where(function ($q) {
+                        $q->whereColumn('chairs.started_at', '<=', 'deals.sale_date')
+                            ->where(function ($q2) {
+                                $q2->whereNull('chairs.ended_at')
+                                    ->orWhereColumn('chairs.ended_at', '>=', 'deals.sale_date');
+                            });
+                    });
+            })
+            ->leftJoin('teams', 'chairs.team_id', '=', 'teams.id');
 
         // Apply filters
         if ($filters) {
@@ -303,7 +344,17 @@ class ReportService extends BaseService
             ->leftJoin('contacts', 'leads.contact_id', '=', 'contacts.id')
             ->leftJoin('users', 'leads.assigned_to_id', '=', 'users.id')
             ->leftJoin('stages', 'leads.stage_id', '=', 'stages.id')
-            ->leftJoin('teams', 'users.team_id', '=', 'teams.id');
+            ->leftJoin('chairs', function ($join) {
+                $join->on('users.id', '=', 'chairs.user_id')
+                    ->where(function ($q) {
+                        $q->whereColumn('chairs.started_at', '<=', 'leads.created_at')
+                            ->where(function ($q2) {
+                                $q2->whereNull('chairs.ended_at')
+                                    ->orWhereColumn('chairs.ended_at', '>=', 'leads.created_at');
+                            });
+                    });
+            })
+            ->leftJoin('teams', 'chairs.team_id', '=', 'teams.id');
 
         // Apply filters
         if ($filters) {
@@ -503,9 +554,11 @@ class ReportService extends BaseService
         }
 
         if (method_exists($filters, 'hasTeamFilter') && $filters->hasTeamFilter()) {
-            $query->whereIn('users.team_id', $filters->team_ids);
+            // Filter by team through chairs table (all main queries now join through chairs)
+            $query->whereIn('chairs.team_id', $filters->team_ids);
         } elseif (property_exists($filters, 'team_ids') && !empty($filters->team_ids)) {
-            $query->whereIn('users.team_id', $filters->team_ids);
+            // Filter by team through chairs table
+            $query->whereIn('chairs.team_id', $filters->team_ids);
         }
 
         if (method_exists($filters, 'hasStageFilter') && $filters->hasStageFilter()) {
