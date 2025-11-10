@@ -354,6 +354,7 @@ Route::middleware([
         Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList'])->middleware('auth:api_tenant');
         Route::get('/opportunities/statistics', [\App\Http\Controllers\Api\OpportunityController::class, 'statistics']);
         Route::patch('opportunities/{opportunity}/change-stage', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStage']);
+        Route::patch('opportunities/{opportunity}/change-status', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStatus']);
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
