@@ -28,6 +28,12 @@ class UsersFilters extends QueryFilter
 
     public function role($term)
     {
+        if (gettype($term) == 'array') {
+            return $this->builder->whereHas('roles', function ($query) use ($term) {
+                $query->whereIn('name', $term);
+            });
+        }
+
         return $this->builder->role($term);
     }
 
