@@ -5,7 +5,7 @@ namespace App\Services\Central\Subscription;
 use App\Enums\Landlord\SubscriptionTypeEnum;
 use App\Models\Central\Invoice;
 use App\Models\Central\Plan;
-use App\Models\Tenant\User;
+use App\Models\Central\User;
 use App\Services\Central\Subscription\Factory\SubscriptionFactory;
 
 class SubscriptionManager

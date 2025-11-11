@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
-            $table->id();
-            $table->json('name'); // Multilingual names: {en: "Sales", ar: "المبيعات", fr: "Ventes", es: "Ventas"}
-            $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
+        // Schema::create('departments', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->json('name'); // Multilingual names: {en: "Sales", ar: "المبيعات", fr: "Ventes", es: "Ventas"}
+        //     $table->text('description')->nullable();
+        //     $table->boolean('is_active')->default(true);
+        //     $table->timestamps();
+        // });
     }
 
     /**

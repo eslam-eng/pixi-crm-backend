@@ -51,6 +51,7 @@ class RegisterService
                 ];
             });
         } catch (\Throwable $e) {
+            dd($e);
             // If tenant was created, drop its database
             if ($this->createdTenant) {
                 $databaseName = $this->createdTenant->database()->getName();
@@ -65,6 +66,7 @@ class RegisterService
 
     private function registerUserWithTenant(UserDTO $registerDTO): array
     {
+        // dd($registerDTO);
         $tenant = $this->createTenantFromDTO($registerDTO);
 
         $this->createdTenant = $tenant; // Track for cleanup

@@ -10,7 +10,7 @@ use App\Exceptions\DiscountCodeException;
 use App\Models\Central\DiscountCodeUsage;
 use App\Models\Central\Invoice;
 use App\Models\Central\Plan;
-use App\Models\Tenant\User;
+use App\Models\Central\User;
 use App\Services\Central\Subscription\CreateSubscriptionService;
 use App\Services\Central\Discount\DiscountCodeService;
 use App\Services\Central\Invoice\InvoiceService;

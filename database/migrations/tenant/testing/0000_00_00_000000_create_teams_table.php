@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('teams', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->unsignedBigInteger('leader_id')->nullable(); // no ->constrained() yet
-            $table->timestamps();
+        // Schema::create('teams', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('title');
+        //     $table->unsignedBigInteger('leader_id')->nullable(); // no ->constrained() yet
+        //     $table->timestamps();
 
-            $table->index('leader_id');
-        });
+        //     $table->index('leader_id');
+        // });
     }
 
     public function down(): void

@@ -9,7 +9,7 @@ use App\Enums\Landlord\SubscriptionTypeEnum;
 use App\Exceptions\VerificationCode\ActivationCodeException;
 use App\Models\Central\ActivationCode;
 use App\Models\Central\Invoice;
-use App\Models\Tenant\User;
+use App\Models\Central\User;
 use Illuminate\Support\Arr;
 
 class ActivationCodeSubscriptionStrategy extends AbstractSubscriptionStrategy

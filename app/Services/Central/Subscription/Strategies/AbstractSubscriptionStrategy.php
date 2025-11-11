@@ -5,7 +5,7 @@ namespace App\Services\Central\Subscription\Strategies;
 use App\DTO\Central\SubscriptionDTO;
 use App\Exceptions\TrialException;
 use App\Models\Central\Invoice;
-use App\Models\Tenant\User;
+use App\Models\Central\User;
 use App\Services\Central\Subscription\CreateSubscriptionService;
 use App\Services\Central\Subscription\Interfaces\SubscriptionStrategyInterface;
 use App\Services\Central\Invoice\InvoiceService;

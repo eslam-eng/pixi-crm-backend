@@ -6,7 +6,7 @@ use App\DTO\Central\SubscriptionDTO;
 use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Enums\Landlord\SubscriptionTypeEnum;
 use App\Models\Central\Invoice;
-use App\Models\Tenant\User;
+use App\Models\Central\User;
 use Illuminate\Support\Arr;
 
 class FreeTrialSubscriptionStrategy extends AbstractSubscriptionStrategy

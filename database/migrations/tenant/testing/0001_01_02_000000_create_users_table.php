@@ -20,31 +20,31 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique();
             $table->string('job_title')->nullable();
-            $table->foreignId('team_id')->nullable()->constrained('teams');
+            // $table->foreignId('team_id')->nullable()->constrained('teams');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('lang')->default('en');
             $table->timestamp('last_login_at')->nullable();
             $table->string('phone')->nullable();
-            $table->foreignId('department_id')->nullable()->constrained('departments');
+            // $table->foreignId('department_id')->nullable()->constrained('departments');
             $table->boolean('is_active')->default(1);
             $table->rememberToken();
             $table->timestamps();
         });
 
-        Schema::create('user_targets', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->decimal('target_value', 10, 2);
-            $table->timestamps();
-            $table->index(['user_id', 'created_at']);
-        });
+        // Schema::create('user_targets', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        //     $table->decimal('target_value', 10, 2);
+        //     $table->timestamps();
+        //     $table->index(['user_id', 'created_at']);
+        // });
 
-        Schema::table('teams', function (Blueprint $table) {
-            $table->foreign('leader_id')
-                ->references('id')->on('users')
-                ->nullOnDelete(); // or ->cascadeOnDelete()
-        });
+        // Schema::table('teams', function (Blueprint $table) {
+        //     $table->foreign('leader_id')
+        //         ->references('id')->on('users')
+        //         ->nullOnDelete(); // or ->cascadeOnDelete()
+        // });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
