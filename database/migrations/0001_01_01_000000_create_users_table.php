@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\Landlord\ActivationStatusEnum;
+use App\Models\Central\Tenant;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,6 +22,9 @@ return new class extends Migration
             $table->string('password');
             $table->string('address')->nullable();
             $table->string('phone')->nullable();
+            $table->foreignIdFor(Tenant::class)->nullable()->comment('current tenant id')->index();
+            $table->boolean('is_active')->default(ActivationStatusEnum::ACTIVE->value);
+            $table->boolean('is_tenant_owner')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

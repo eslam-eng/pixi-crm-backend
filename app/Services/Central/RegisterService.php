@@ -66,21 +66,13 @@ class RegisterService
 
     private function registerUserWithTenant(UserDTO $registerDTO): array
     {
-        // dd($registerDTO);
         $tenant = $this->createTenantFromDTO($registerDTO);
-
         $this->createdTenant = $tenant; // Track for cleanup
         // create tenant user
-        $user = $this->createUser($registerDTO, $tenant);
+        $landlordUser = $this->createUser($registerDTO, $tenant);
 
-        // Generate token within tenant context and refresh user
-        [$refreshedUser, $token] = $tenant->run(function () use ($user) {
-            $freshUser = $user->fresh();
-            $token = $freshUser->generateToken('auth_token');
-            return [$freshUser, $token];
-        });
-
-        return [$refreshedUser, $token];
+        $token = $landlordUser->generateToken('auth_token');
+        return [$landlordUser, $token];
     }
 
     private function createTenantFromDTO(UserDTO $registerDTO): Tenant
@@ -97,28 +89,9 @@ class RegisterService
         return $tenant;
     }
 
-    private function createUser(UserDTO $registerDTO, Tenant $tenant): TenantUser
+    private function createUser(UserDTO $registerDTO, Tenant $tenant): LandlordUser
     {
         $registerDTO->tenant_id = $tenant->id;
-        // $landlordUser = $this->userService->create($registerDTO);
-        // dd($tenant);
-        // $landlordUser = $tenant->user();
-        // $role = Role::query()->where('name', RolesEnum::ADMIN->value)->first();
-
-        // $tenantUserDTO = new TenantUserDTO(
-        //     name: $registerDTO->name,
-        //     email: $registerDTO->email,
-        //     role: $role,
-        //     password: $registerDTO->password,
-        //     landlordUser: $landlordUser,
-        //     email_verified_at: null,
-        //     send_credential_email: false,
-        // );
-
-        // $this->createTenantUserService->handle($tenantUserDTO);
-        //        $tenant->users()->attach($landlordUser->id, ['is_owner' => true]);
-        // $tenant->update(['owner_id' => $landlordUser->id]);
-
         $landlordUser = LandlordUser::create([
             'first_name' => $registerDTO->name,
             'last_name' => $registerDTO->name,
@@ -126,23 +99,22 @@ class RegisterService
             'password' => bcrypt($registerDTO->password),
             'lang' => 'en',
         ]);
-
         $tenant->update(['owner_id' => $landlordUser->id]);
 
-        $tenantUser = $tenant->run(function () use ($registerDTO, $landlordUser) {
-            $role = Role::query()->where('name', RolesEnum::ADMIN->value)->first();
-            $tenantUser = TenantUser::create([
-                'first_name' => $registerDTO->name,
-                'last_name' => $registerDTO->name,
-                'email' => $registerDTO->email,
-                'password' => bcrypt($registerDTO->password),
-                'lang' => 'en',
-                'landlord_user_id' => $landlordUser->id,
-            ]);
-            $tenantUser->assignRole($role);
-            return $tenantUser;
-        });
-        return $tenantUser;
+        // $tenantUser = $tenant->run(function () use ($registerDTO, $landlordUser) {
+        //     $role = Role::query()->where('name', RolesEnum::ADMIN->value)->first();
+        //     $tenantUser = TenantUser::create([
+        //         'first_name' => $registerDTO->name,
+        //         'last_name' => $registerDTO->name,
+        //         'email' => $registerDTO->email,
+        //         'password' => bcrypt($registerDTO->password),
+        //         'lang' => 'en',
+        //         'landlord_user_id' => $landlordUser->id,
+        //     ]);
+        //     $tenantUser->assignRole($role);
+        //     return $tenantUser;
+        // });
+        return $landlordUser;
     }
 
     // Drop the tenant database if needed

@@ -33,6 +33,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'name',
         'status',
         'owner_id',
+        'has_used_trial',
+        'trial_plan_id',
     ];
 
 
@@ -42,6 +44,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'id',
             'name',
             'owner_id',
+            'has_used_trial',
+            'trial_plan_id',
         ];
     }
 
@@ -121,62 +125,6 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $this->hasMany(Invoice::class);
     }
 
-    // protected static function boot(): void
-    // {
-    //     parent::boot();
-
-    //     static::creating(function ($tenant) {
-    //         // Generate database name if not provided
-    //         if (empty($tenant->database)) {
-    //             $ulid = (string) Str::ulid(); // e.g., '01HZG8Z8X1CWVRYKX84Z7KT8AZ'
-    //             $lastFive = substr($ulid, -5); // e.g., '8AZ'
-    //             $tenant->database = 'tenant_' . Str::slug($tenant->name) . '_' . $lastFive;
-    //         }
-    //     });
-
-    //     static::created(function ($tenant) {
-    //         $tenant->makeCurrent();
-
-    //         if (app()->environment('local')) {
-    //             // Create the tenant database
-    //             static::createDatabase($tenant->database);
-    //             // Set the current tenant to the newly created tenant
-    //             // Run migrations for the tenant
-    //             Artisan::call('migrate:fresh', [
-    //                 '--database' => 'tenant',
-    //                 '--force' => true,
-    //             ]);
-    //         } else {
-    //             static::cloneFromTemplate($tenant->database);
-    //             // 4. Run seeders for tenant
-    //             Artisan::call('db:seed', [
-    //                 '--class' => 'TenantDatabaseSeeder',
-    //                 '--database' => 'tenant',
-    //                 '--force' => true,
-    //             ]);
-    //         }
-    //     });
-    // }
-
-    // public static function cloneFromTemplate($database_name): bool
-    // {
-    //     // Create new database
-    //     DB::statement("CREATE DATABASE IF NOT EXISTS `$database_name`");
-
-    //     // Get all tables from template
-    //     $templateDb = config('database.tenant_template_db');
-
-    //     $tables = DB::select("SHOW TABLES FROM `$templateDb`");
-
-    //     foreach ($tables as $table) {
-    //         $tableName = array_values((array) $table)[0];
-    //         // Clone table structure and data
-    //         DB::statement("CREATE TABLE `$database_name`.`$tableName` LIKE `$templateDb`.`$tableName`");
-    //     }
-
-    //     return true;
-    // }
-
     public function latestSubscription()
     {
         return $this->hasOne(Subscription::class)->latestOfMany(); // latest active
@@ -198,10 +146,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     //     return DB::statement("CREATE DATABASE IF NOT EXISTS `$database_name`");
     // }
 
-    // public function hasHadTrial()
-    // {
-    //     return $this->has_used_trial;
-    // }
+    public function hasHadTrial()
+    {
+        return $this->has_used_trial;
+    }
 
     /**
      * Mark user as having used their free trial

@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Tenant\User;
+use App\Models\Central\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
