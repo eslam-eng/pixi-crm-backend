@@ -50,6 +50,7 @@ use App\Http\Controllers\Central\Api\RoleController as RoleCentralController;
 use App\Http\Controllers\Central\Api\SourceController;
 use App\Http\Controllers\Central\Api\TimeZoneController;
 use App\Http\Controllers\Central\Api\Auth\RegisterController;
+use App\Http\Controllers\Central\Api\TenantController;
 
 // //////////// landlord routes
 foreach (config('tenancy.central_domains') as $domain) {
@@ -76,6 +77,7 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::post('admins/{admin}/status', [AdminController::class, 'toggleStatus']);
             Route::get('admins/profile', [AdminController::class, 'profile']);
             Route::apiResource('admins', AdminController::class);
+            Route::get('tenants/statics', [TenantController::class, 'statics']);
             Route::put('locale', [AdminController::class, 'updateLocale']);
 
             Route::get('plans/statics', [PlanController::class, 'statics']);

@@ -30,7 +30,12 @@ class User extends Authenticatable implements HasMedia
         'email_verified_at',
         'email',
         'password',
-        'owner_id',
+        'tenant_id',
+        'is_tenant_owner',
+    ];
+
+    protected $casts = [
+        'is_tenant_owner' => 'boolean',
     ];
 
     /**

@@ -28,7 +28,7 @@ abstract class AbstractSubscriptionStrategy implements SubscriptionStrategyInter
 
         $subscriptionDTO = $this->buildSubscriptionDTO($params, $user);
 
-        return DB::connection('Central')->transaction(function () use ($subscriptionDTO, $params, $user) {
+        return DB::connection('landlord')->transaction(function () use ($subscriptionDTO, $params, $user) {
             $invoice = $this->createSubscriptionService->handle($subscriptionDTO); // always return InvoiceObject or null
 
             $this->postProcess(params: $params, user: $user, invoice: $invoice);

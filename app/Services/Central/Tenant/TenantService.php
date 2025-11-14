@@ -3,11 +3,11 @@
 namespace App\Services\Central\Tenant;
 
 use App\DTO\Central\TenantDTO;
-use App\Enum\SubscriptionStatusEnum;
+use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Models\Central\Filters\TenantFilters;
 use App\Models\Central\Tenant;
 use App\Models\Central\User;
-use App\Services\BaseService;
+use App\Services\Central\BaseService;
 use App\Services\Central\Subscription\SubscriptionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +38,6 @@ class TenantService extends BaseService
     public function statics(): array
     {
         $countsGroupedByStatus = $this->planSubscriptionService->staticsByStatus();
-
         $trialCount = $countsGroupedByStatus
             ->where('status', SubscriptionStatusEnum::TRIAL)
             ->first()?->total ?? 0;

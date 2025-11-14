@@ -98,6 +98,7 @@ class RegisterService
             'email' => $registerDTO->email,
             'password' => bcrypt($registerDTO->password),
             'lang' => 'en',
+            'tenant_id' => $tenant->id,
         ]);
         $tenant->update(['owner_id' => $landlordUser->id]);
 
