@@ -11,8 +11,10 @@ use App\Services\Tenant\TemplateService;
 use App\Services\Tenant\WhatsAppService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TemplatesController extends Controller
 {
@@ -106,16 +108,16 @@ class TemplatesController extends Controller
                 return ApiResponse(message: 'Template not found', code: 404);
             }
 
-            $renderedBody = $this->templateService->render($template, $data['variables'] ?? []);
             $results = [];
 
             foreach ($data['recipients'] as $recipient) {
                 try {
                     if ($template->type === 'email' && isset($recipient['email'])) {
+                        $renderedBody = $this->templateService->render($template, $recipient['email'], $data['variables'] ?? []);
                         // Render subject with variables
                         $allVariables = array_merge($data['variables'] ?? [], ['recipient_name' => $recipient['name'] ?? '']);
                         $renderedSubject = $template->subject
-                            ? $this->templateService->renderSubject($template->subject, $allVariables)
+                            ? $this->templateService->renderSubject($template->subject, $recipient['email'], $allVariables)
                             : 'No Subject';
 
                         Mail::to($recipient['email'])->send(
@@ -132,6 +134,7 @@ class TemplatesController extends Controller
                             'type' => 'email'
                         ];
                     } elseif ($template->type === 'whatsapp' && isset($recipient['phone'])) {
+                        $renderedBody = $this->templateService->render($template, $recipient['phone'], $data['variables'] ?? []);
                         $this->whatsAppService->send(
                             $recipient['phone'],
                             $renderedBody
@@ -161,8 +164,16 @@ class TemplatesController extends Controller
                 ['results' => $results],
                 'Template sending completed'
             );
+        } catch (NotFoundHttpException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
+    }
+
+    public function getContactKeys(Request $request): JsonResponse
+    {
+        $keys = $this->templateService->getContactVariablesKeys($request->only('search'));
+        return ApiResponse($keys, 'Contact keys retrieved successfully');
     }
 }
