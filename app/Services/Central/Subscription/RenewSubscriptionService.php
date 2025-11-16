@@ -3,16 +3,16 @@
 namespace App\Services\Central\Subscription;
 
 use App\DTOs\Landlord\InvoiceDTO;
-use App\Enum\InvoiceStatusEnum;
-use App\Enum\SubscriptionBillingCycleEnum;
-use App\Enum\SubscriptionStatusEnum;
+use App\Enums\Landlord\InvoiceStatusEnum;
+use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Exceptions\DiscountCodeException;
-use App\Models\Landlord\FeatureSubscription;
-use App\Models\Landlord\Plan;
-use App\Models\Landlord\Subscription;
-use App\Models\Landlord\Tenant;
-use App\Services\Landlord\Discount\DiscountCodeService;
-use App\Services\Landlord\Invoice\InvoiceService;
+use App\Models\Central\FeatureSubscription;
+use App\Models\Central\Plan;
+use App\Models\Central\Subscription;
+use App\Models\Central\Tenant;
+use App\Services\Central\Discount\DiscountCodeService;
+use App\Services\Central\Invoice\InvoiceService;
 use Illuminate\Support\Facades\DB;
 
 class RenewSubscriptionService

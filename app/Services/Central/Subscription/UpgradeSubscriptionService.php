@@ -2,15 +2,15 @@
 
 namespace App\Services\Central\Subscription;
 
-use App\DTOs\Landlord\InvoiceDTO;
+use App\DTO\Central\InvoiceDTO;
 use App\DTOs\Landlord\SubscriptionDTO;
-use App\Enum\InvoiceStatusEnum;
-use App\Enum\SubscriptionBillingCycleEnum;
-use App\Enum\SubscriptionStatusEnum;
-use App\Models\Landlord\Plan;
-use App\Models\Landlord\Subscription;
-use App\Models\Landlord\Tenant;
-use App\Services\Landlord\Discount\DiscountCodeService;
+use App\Enums\Landlord\InvoiceStatusEnum;
+use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Models\Central\Plan;
+use App\Models\Central\Subscription;
+use App\Models\Central\Tenant;
+use App\Services\Central\Discount\DiscountCodeService;
 use Illuminate\Support\Facades\DB;
 
 readonly class UpgradeSubscriptionService

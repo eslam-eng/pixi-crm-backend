@@ -18,7 +18,7 @@ use App\Models\Central\InvoiceItem;
 use App\Models\Central\Plan;
 use App\Models\Central\Subscription;
 use App\Models\Central\User;
-use App\Services\BaseService;
+use App\Services\Central\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;

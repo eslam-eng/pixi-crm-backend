@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ItemAttributeController;
 use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
+use App\Http\Controllers\Central\Api\Subscription\SubscriptionController;
 use App\Http\Controllers\Api\TranslatableExampleController;
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
 use App\Http\Controllers\Central\Api\ActivationCodeController;
@@ -70,6 +71,12 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         // for tenant and shared tables for tenant section
         Route::middleware(['auth:sanctum', 'users.only'])->group(function () {
+
+            Route::group(['prefix' => 'subscriptions'], function () {
+                Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
+                Route::post('/{subscription_id}/renew', [SubscriptionController::class, 'renew']);
+                Route::post('/upgrade', [SubscriptionController::class, 'upgrade']);
+            });
             Route::get('discount-codes/{discount_code}/plans/{plan}', [DiscountCodeController::class, 'validateDiscountCode']);
         });
 
@@ -103,6 +110,12 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::get('permissions', [RoleCentralController::class, 'permissionsList']);
             Route::apiResource('roles', RoleCentralController::class);
             Route::apiResource('discount-codes', DiscountCodeController::class);
+
+            Route::group(['prefix' => 'subscriptions'], function () {
+                Route::get('/', [SubscriptionController::class, 'index']);
+                Route::get('/statics', [SubscriptionController::class, 'statics']);
+                Route::get('/{subscription_id}/invoices', [SubscriptionController::class, 'subscriptionInvoices']);
+            });
 
             Route::apiResource('sources', SourceController::class);
         });

@@ -29,11 +29,11 @@ class SubscriptionResource extends JsonResource
             ] : null,
 
             'currency' => $this->currency,
-            'billing_cycle' => $this->billing_cycle->value,
-            'billing_cycle_text' => $this->billing_cycle->getLabel(),
+            'billing_cycle' => $this->billing_cycle?->value,
+            'billing_cycle_text' => $this->billing_cycle?->getLabel(),
 
-            'status' => $this->status->value,
-            'status_text' => $this->status->getLabel(),
+            'status' => $this->status?->value,
+            'status_text' => $this->status?->getLabel(),
 
             'amount' => $this->amount,
             'starts_at' => $this->starts_at_formatted,

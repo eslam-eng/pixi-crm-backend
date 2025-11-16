@@ -35,9 +35,9 @@ class InvoiceResource extends JsonResource
 
             'subtotal' => $this->subtotal,
 
-            'payment_method' => $this->payment_method->value,
+            'payment_method' => $this->payment_method?->value,
 
-            'payment_method_text' => $this->payment_method->getLabel(),
+            'payment_method_text' => $this->payment_method?->getLabel(),
 
             'payment_reference' => $this->payment_reference,
 
@@ -45,9 +45,9 @@ class InvoiceResource extends JsonResource
 
             'currency' => $this->currency,
 
-            'status' => $this->status->value,
+            'status' => $this->status?->value,
 
-            'status_text' => $this->status->getLabel(),
+            'status_text' => $this->status?->getLabel(),
 
             'starts_at' => $this->starts_at,
 
