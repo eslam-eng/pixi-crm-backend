@@ -363,6 +363,7 @@ Route::middleware([
 
         // Template routes
         Route::post('templates/send', [\App\Http\Controllers\Api\TemplatesController::class, 'send']);
+        Route::get('templates/get-contact-variables', [\App\Http\Controllers\Api\TemplatesController::class, 'getContactKeys']);
         Route::apiResource('templates', \App\Http\Controllers\Api\TemplatesController::class);
 
         // pipeline and stage routes

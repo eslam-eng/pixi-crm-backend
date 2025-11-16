@@ -6,6 +6,7 @@ use App\DTO\Tenant\Template\TemplateDTO;
 use App\Exceptions\GeneralException;
 use App\Models\Tenant\Template;
 use App\Services\BaseService;
+use App\Services\ContactService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -81,29 +82,110 @@ class TemplateService extends BaseService
     /**
      * Render template with variables
      */
-    public function render(Template $template, array $variables = []): string
+    public function render(Template $template, string $emailOrPhone, array $variables = []): string
     {
-        return $this->renderText($template->body, $variables);
+        return $this->renderText($template->body, $emailOrPhone, $variables);
     }
 
     /**
      * Render subject with variables
      */
-    public function renderSubject(string $subject, array $variables = []): string
+    public function renderSubject(string $subject, string $emailOrPhone, array $variables = []): string
     {
-        return $this->renderText($subject, $variables);
+        return $this->renderText($subject, $emailOrPhone, $variables);
     }
 
     /**
      * Render text with variables
      */
-    private function renderText(string $text, array $variables = []): string
+    private function renderText(string $text, string $emailOrPhone, array $variables = []): string
     {
-        foreach ($variables as $key => $value) {
-            $text = str_replace('{{' . $key . '}}', $value, $text);
-            $text = str_replace('{{ ' . $key . ' }}', $value, $text);
-        }
+        $mainkeys = [
+            'first_name',
+            'last_name',
+            'email',
+            'address',
+            'state',
+            'zip_code',
+            'company_name',
+            'job_title',
+            'department',
+            'campaign_name',
+            'website',
+            'industry',
+            'company_size',
+            'notes'
+        ];
 
+        $relations = [
+            'source:id,name',
+            'user:id,first_name,last_name',
+            'city:id,name',
+            'country:id,name',
+            'phone'
+        ];
+
+        $contact = app(ContactService::class)
+            ->queryGet(withRelations: $relations)
+            ->select(
+                'id',
+                'source_id',
+                'user_id',
+                'email',
+                'first_name',
+                'last_name',
+                'address',
+                'state',
+                'zip_code',
+                'city_id',
+                'country_id',
+                'company_name',
+                'job_title',
+                'department',
+                'status',
+                'contact_method',
+                'campaign_name',
+                'website',
+                'industry',
+                'company_size',
+                'notes'
+            )->where('email', $emailOrPhone)->orWhereHas('phone', function ($query) use ($emailOrPhone) {
+                $query->where('phone', $emailOrPhone);
+            })->first();
+
+        foreach ($contact->toArray() as $key => $value) {
+            if (in_array($key, $mainkeys)) {
+                $text = str_replace('{{' . $key . '}}', $value, $text);
+                $text = str_replace('{{ ' . $key . ' }}', $value, $text);
+                continue;
+            }
+
+            if ($key === 'source') {
+                $text = str_replace('{{' . $key . '}}', $contact->source->name, $text);
+                $text = str_replace('{{ ' . $key . ' }}', $contact->source->name, $text);
+                continue;
+            }
+            if ($key === 'user') {
+                $text = str_replace('{{' . $key . '}}', $contact->user->first_name, $text);
+                $text = str_replace('{{ ' . $key . ' }}', $contact->user->first_name, $text);
+                continue;
+            }
+            if ($key === 'city') {
+                $text = str_replace('{{' . $key . '}}', $contact->city->name, $text);
+                $text = str_replace('{{ ' . $key . ' }}', $contact->city->name, $text);
+                continue;
+            }
+            if ($key === 'country') {
+                $text = str_replace('{{' . $key . '}}', $contact->country->name, $text);
+                $text = str_replace('{{ ' . $key . ' }}', $contact->country->name, $text);
+                continue;
+            }
+            if ($key === 'phone') {
+                $text = str_replace('{{' . $key . '}}', $contact->phone, $text);
+                $text = str_replace('{{ ' . $key . ' }}', $contact->phone, $text);
+                continue;
+            }
+        }
         return $text;
     }
 
@@ -113,5 +195,41 @@ class TemplateService extends BaseService
     public function findBySlug(string $slug, string $type = 'email'): ?Template
     {
         return Template::findBySlug($slug, $type);
+    }
+
+    public function getContactVariablesKeys(): array
+    {
+        $mainkeys = [
+            'first_name',
+            'last_name',
+            'email',
+            'address',
+            'state',
+            'zip_code',
+            'company_name',
+            'job_title',
+            'department',
+            'campaign_name',
+            'website',
+            'industry',
+            'company_size',
+            'notes'
+        ];
+        $relations = [
+            'source',
+            'user',
+            'city',
+            'country',
+            'phone'
+        ];
+
+        return collect(array_merge($mainkeys, $relations))
+            ->mapWithKeys(fn($field) => [
+                $field => [
+                    'label' => str($field)->replace('_', ' ')->title()->toString(),
+                    'value' => '{{ ' . $field . ' }}',
+                    'description' => "get the " . str($field)->replace('_', ' ')->title()->toString() . " of the contact",
+                ]
+            ])->toArray();
     }
 }
