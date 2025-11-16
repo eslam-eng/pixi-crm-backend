@@ -11,8 +11,10 @@ use App\Services\Tenant\TemplateService;
 use App\Services\Tenant\WhatsAppService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TemplatesController extends Controller
 {
@@ -162,14 +164,16 @@ class TemplatesController extends Controller
                 ['results' => $results],
                 'Template sending completed'
             );
+        } catch (NotFoundHttpException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
     }
 
-    public function getContactKeys(): JsonResponse
+    public function getContactKeys(Request $request): JsonResponse
     {
-        $keys = $this->templateService->getContactVariablesKeys();
+        $keys = $this->templateService->getContactVariablesKeys($request->only('search'));
         return ApiResponse($keys, 'Contact keys retrieved successfully');
     }
 }

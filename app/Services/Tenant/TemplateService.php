@@ -9,6 +9,7 @@ use App\Services\BaseService;
 use App\Services\ContactService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TemplateService extends BaseService
 {
@@ -149,9 +150,13 @@ class TemplateService extends BaseService
                 'industry',
                 'company_size',
                 'notes'
-            )->where('email', $emailOrPhone)->orWhereHas('phone', function ($query) use ($emailOrPhone) {
+            )->where('email', $emailOrPhone)->whereHas('phone', function ($query) use ($emailOrPhone) {
                 $query->where('phone', $emailOrPhone);
             })->first();
+
+        if ($contact == null) {
+            throw new NotFoundHttpException('Contact not found');
+        }
 
         foreach ($contact->toArray() as $key => $value) {
             if (in_array($key, $mainkeys)) {
@@ -197,7 +202,7 @@ class TemplateService extends BaseService
         return Template::findBySlug($slug, $type);
     }
 
-    public function getContactVariablesKeys(): array
+    public function getContactVariablesKeys(array $search = []): array
     {
         $mainkeys = [
             'first_name',
@@ -224,6 +229,7 @@ class TemplateService extends BaseService
         ];
 
         return collect(array_merge($mainkeys, $relations))
+            ->filter(fn($field) => str_contains($field, $search['search'] ?? ''))
             ->mapWithKeys(fn($field) => [
                 $field => [
                     'label' => str($field)->replace('_', ' ')->title()->toString(),
