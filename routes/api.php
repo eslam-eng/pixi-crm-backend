@@ -252,6 +252,10 @@ Route::middleware([
         // Reminder routes
         Route::apiResource('reminders', ReminderController::class);
         Route::patch('reminders/{reminder}/set-default', [ReminderController::class, 'setDefault']);
+
+        // Automation Workflows routes
+        Route::apiResource('automation-workflows', AutomationWorkflowController::class);
+        Route::patch('automation-workflows/{id}/toggle-active', [AutomationWorkflowController::class, 'toggleActive']);
     });
 
 
@@ -338,8 +342,4 @@ Route::middleware([
     Route::prefix('automation-actions')->group(function () {
         Route::get('/', [AutomationActionController::class, 'index']);
     });
-
-    // Automation Workflows routes
-    Route::apiResource('automation-workflows', AutomationWorkflowController::class);
-    Route::patch('automation-workflows/{id}/toggle-active', [AutomationWorkflowController::class, 'toggleActive']);
 });

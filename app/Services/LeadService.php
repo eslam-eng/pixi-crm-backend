@@ -10,9 +10,6 @@ use App\Models\Tenant\Item;
 use App\Models\Tenant\Lead;
 use App\Notifications\Tenant\UpdateAssignOpportunityNotification;
 use App\Services\Tenant\Users\UserService;
-use App\Events\Contacts\ContactLeadQualified;
-use App\Events\Opportunity\OpportunityCreated;
-use App\Events\Opportunity\OpportunityStageChanged;
 use Auth;
 
 class LeadService extends BaseService
@@ -140,7 +137,6 @@ class LeadService extends BaseService
             ]
         ];
         
-        event(new OpportunityCreated($lead, $creationData, $configuration));
 
         return $lead->load('variants', 'items');
     }
@@ -206,36 +202,6 @@ class LeadService extends BaseService
             $lead->items()->sync($itemsPayload, true);
         } else {
             $lead->items()->detach();
-        }
-
-        // Check if lead became qualified
-        $isQualified = $this->isLeadQualified($lead, $originalStatus, $originalStageId);
-        if ($isQualified) {
-            $qualificationData = [
-                'old_status' => $originalStatus,
-                'new_status' => $lead->status,
-                'old_stage_id' => $originalStageId,
-                'new_stage_id' => $lead->stage_id,
-                'qualified_at' => now(),
-            ];
-            event(new ContactLeadQualified($lead->contact, $lead, $qualificationData));
-        }
-
-        // Check if stage changed
-        if ($originalStageId !== $lead->stage_id) {
-            $oldStage = $originalStageId ? \App\Models\Stage::find($originalStageId) : null;
-            $newStage = $lead->stage_id ? \App\Models\Stage::find($lead->stage_id) : null;
-            
-            $stageChangeData = [
-                'old_stage_id' => $originalStageId,
-                'new_stage_id' => $lead->stage_id,
-                'old_stage_name' => $oldStage?->name,
-                'new_stage_name' => $newStage?->name,
-                'old_stage_probability' => $oldStage?->probability,
-                'new_stage_probability' => $newStage?->probability,
-                'changed_at' => now(),
-            ];
-            event(new OpportunityStageChanged($lead, $oldStage, $newStage, $stageChangeData));
         }
 
         if ($lead->wasChanged('assigned_to_id')) {

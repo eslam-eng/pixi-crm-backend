@@ -2,6 +2,7 @@
 
 namespace App\Services\Tenant\Automation;
 
+use App\Jobs\ExecuteWorkflowJob;
 use App\Models\Tenant\AutomationWorkflow;
 use App\Models\Tenant\AutomationStepsImplement;
 use App\Models\Tenant\AutomationWorkflowStep;
@@ -50,6 +51,33 @@ class AutomationWorkflowFireService
                 'triggerable_id' => $triggerable->id,
                 'exception' => $e
             ]);
+        }
+    }
+
+    public function fireTrigger(string $triggerKey, array $context): void
+    {
+        Log::info("Trigger fired: {$triggerKey}", [
+            'context_keys' => array_keys($context),
+        ]);
+
+        // Find all active workflows for this trigger
+        $workflows = AutomationWorkflow::active()
+            ->whereHas('automationTrigger', function($query) use ($triggerKey) {
+                $query->where('key', $triggerKey) 
+                    ->where('is_active', true);
+            })
+            ->with(['automationTrigger', 'steps'])
+            ->get();
+
+        Log::info("Found {$workflows->count()} workflows for trigger: {$triggerKey}");
+
+        // Queue each workflow for execution
+        foreach ($workflows as $workflow) {
+            Log::info("Queuing workflow: {$workflow->name}", [
+                'workflow_id' => $workflow->id,
+            ]);
+
+            ExecuteWorkflowJob::dispatch($workflow->id, $context);
         }
     }
 
@@ -144,7 +172,7 @@ class AutomationWorkflowFireService
 
             // Execute immediate steps (condition, action)
             try {
-                $success = $this->executorService->executeStep($stepImplement);
+                $success = $this->executorService->executeStep($stepImplement, $stepImplement->context_data ?? []);
                 
                 if ($success) {
                     Log::info("Step {$stepImplement->id} executed successfully", [

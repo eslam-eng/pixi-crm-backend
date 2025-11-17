@@ -13,7 +13,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Contacts\ContactRequest;
 use App\Http\Resources\ContactResource;
 use App\Imports\ContactsImport;
-use App\Models\Tenant\Contact;
 use App\Services\ContactService;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\HeadingRowImport;

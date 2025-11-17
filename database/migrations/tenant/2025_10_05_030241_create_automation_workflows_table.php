@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('automation_trigger_id')->unique()->constrained('automation_triggers', 'id', 'fk_aw_trigger_id')->onDelete('cascade');
             $table->boolean('is_active')->default(true);
             $table->integer('total_runs')->default(0);
+            $table->timestamp('last_run_at')->nullable();
             $table->timestamps();
             
             // Add indexes for better performance

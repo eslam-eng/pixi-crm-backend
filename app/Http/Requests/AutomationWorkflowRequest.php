@@ -178,7 +178,8 @@ class AutomationWorkflowRequest extends FormRequest
             \Log::info('Sorted orders:', $sortedOrders);
             
             // Check if orders start from 1
-            if ($sortedOrders[0] !== 1) {
+          
+            if ($sortedOrders[0] != 1) {
                 $validator->errors()->add('steps', 'Step orders must start from 1');
                 return;
             }
@@ -186,8 +187,7 @@ class AutomationWorkflowRequest extends FormRequest
             // Check if orders are sequential (1, 2, 3, 4, ...)
             $expectedSequence = range(1, count($sortedOrders));
             \Log::info('Expected sequence:', $expectedSequence);
-            
-            if ($sortedOrders !== $expectedSequence) {
+            if ($sortedOrders != $expectedSequence) {
                 $validator->errors()->add('steps', 'Step orders must be sequential starting from 1 (1, 2, 3, ...)');
                 return;
             }

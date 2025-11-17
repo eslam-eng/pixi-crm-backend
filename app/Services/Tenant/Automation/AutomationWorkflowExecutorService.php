@@ -3,9 +3,12 @@
 namespace App\Services\Tenant\Automation;
 
 use App\DTO\Tenant\LeadDTO;
+use App\Jobs\ContinueWorkflowExecutionJob;
 use App\Models\Tenant\AutomationStepsImplement;
 use App\Models\Tenant\AutomationDelay;
 use App\Models\Tenant\AutomationAction;
+use App\Models\Tenant\AutomationLog;
+use App\Models\Tenant\AutomationWorkflow;
 use App\Models\Tenant\Contact;
 use App\Models\Tenant\Lead;
 use App\Services\LeadService;
@@ -16,55 +19,263 @@ use Illuminate\Support\Facades\Log;
 class AutomationWorkflowExecutorService
 {
     public LeadService $opportunityService;
-
-    public function __construct(LeadService $opportunityService)
+    public ConditionService $conditionService;
+    public function __construct(LeadService $opportunityService, ConditionService $conditionService)
     {
         $this->opportunityService = $opportunityService;
+        $this->conditionService = $conditionService;
+    }
+
+    // /**
+    //  * Execute a specific step implementation
+    //  */
+    // public function executeStep(AutomationStepsImplement $stepImplement): bool
+    // {
+    //     try {
+    //         DB::transaction(function () use ($stepImplement) {
+    //             switch($stepImplement->type) {
+    //                 case 'condition':
+    //                     $result = $this->executeConditionStep($stepImplement);
+    //                     break;
+    //                 case 'action':
+    //                     $result = $this->executeActionStep($stepImplement);
+    //                     break;
+    //                 case 'delay':
+    //                     $result = $this->executeDelayStep($stepImplement);
+    //                     break;
+    //                 default:
+    //                     throw new \InvalidArgumentException("Unknown step type: {$stepImplement->type}");
+    //             }
+
+    //             if ($result) {
+    //                 $stepImplement->markAsImplemented();
+    //                 Log::info("Step {$stepImplement->id} executed successfully", [
+    //                     'step_type' => $stepImplement->type,
+    //                     'triggerable_type' => $stepImplement->triggerable_type,
+    //                     'triggerable_id' => $stepImplement->triggerable_id,
+    //                 ]);
+    //             }
+    //         });
+
+    //         return true;
+
+    //     } catch (\Exception $e) {
+    //         Log::error("Error executing step {$stepImplement->id}: " . $e->getMessage(), [
+    //             'step_id' => $stepImplement->id,
+    //             'step_type' => $stepImplement->type,
+    //             'triggerable_type' => $stepImplement->triggerable_type,
+    //             'triggerable_id' => $stepImplement->triggerable_id,
+    //             'exception' => $e
+    //         ]);
+    //         return false;
+    //     }
+    // }
+
+
+    /**
+     * Execute a single workflow step
+     */
+    public function executeStep($step, array $context): array
+    {
+        try {
+            // Check conditions first
+            if ($step->condition()->exists()) {
+                $conditionsPassed = $this->evaluateStepConditions($step, $context);
+                
+                if (!$conditionsPassed) {
+                    return [
+                        'success' => true,
+                        'message' => 'Conditions not met, skipping step',
+                        'skipped' => true,
+                    ];
+                }
+            }
+
+            // Execute the step
+            return $step->execute($context);
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
     }
 
     /**
-     * Execute a specific step implementation
+     * Evaluate step conditions (single condition per step)
      */
-    public function executeStep(AutomationStepsImplement $stepImplement): bool
+    private function evaluateStepConditions($step, array $context): bool
     {
-        try {
-            DB::transaction(function () use ($stepImplement) {
-                switch($stepImplement->type) {
-                    case 'condition':
-                        $result = $this->executeConditionStep($stepImplement);
-                        break;
-                    case 'action':
-                        $result = $this->executeActionStep($stepImplement);
-                        break;
-                    case 'delay':
-                        $result = $this->executeDelayStep($stepImplement);
-                        break;
-                    default:
-                        throw new \InvalidArgumentException("Unknown step type: {$stepImplement->type}");
-                }
-
-                if ($result) {
-                    $stepImplement->markAsImplemented();
-                    Log::info("Step {$stepImplement->id} executed successfully", [
-                        'step_type' => $stepImplement->type,
-                        'triggerable_type' => $stepImplement->triggerable_type,
-                        'triggerable_id' => $stepImplement->triggerable_id,
-                    ]);
-                }
-            });
-
+        // Get the single condition for this step
+        $condition = $step->condition;
+        
+        if (!$condition) {
+            // No condition means it always passes
             return true;
+        }
+
+        // Evaluate the single condition
+        return $this->conditionService->evaluateCondition(
+            $condition->field,
+            $condition->operation,
+            $condition->value,
+            $context
+        );
+    }
+      /**
+     * Execute a workflow
+     */
+    public function executeWorkflow(AutomationWorkflow $workflow, array $context): array
+    {
+        Log::info("Executing workflow: {$workflow->name}", [
+            'workflow_id' => $workflow->id,
+            'trigger' => $workflow->automationTrigger->key,
+        ]);
+
+        // Check if workflow should execute
+        // if (!$workflow->shouldExecute($context)) {
+        //     return [
+        //         'success' => false,
+        //         'message' => 'Workflow conditions not met',
+        //     ];
+        // }
+
+        // Start transaction
+        DB::beginTransaction();
+
+        try {
+            $results = [];
+            $executionLog = $this->startExecutionLog($workflow, $context);
+
+            // Execute each step in order
+            foreach ($workflow->steps as $step) {
+                Log::info("Executing step: {$step->name}", [
+                    'step_id' => $step->id,
+                    'type' => $step->step_type,
+                ]);
+
+                $stepResult = $this->executeStep($step, $context);
+                $results[] = $stepResult;
+
+                // Log step execution
+                $this->logStepExecution($executionLog, $step, $stepResult);
+
+                // Handle step failure
+                if (!$stepResult['success']) {
+                    Log::warning("Step failed: {$step->name}", $stepResult);
+                    
+                    // Continue or stop based on configuration
+                    if ($step->configuration['stop_on_error'] ?? false) {
+                        throw new \Exception("Step failed: " . ($stepResult['message'] ?? 'Unknown error'));
+                    }
+                }
+
+                // Handle delay
+                if ( $step->delay()->exists() ) {
+                    // Queue the rest of the workflow for later
+                    $this->scheduleDelayedExecution($workflow, $step, $context, $step->delay->calculateDelayUntil());
+                    DB::commit();
+                    return [
+                        'success' => true,
+                        'message' => 'Workflow paused for delay',
+                        'delayed_until' => $step->delay->calculateDelayUntil(),
+                    ];
+                }
+
+                // Update context with step results
+                $context = array_merge($context, $stepResult['data'] ?? []);
+            }
+
+            // Mark workflow as completed
+            $workflow->incrementExecutions();
+            $this->completeExecutionLog($executionLog, true);
+
+            DB::commit();
+
+            Log::info("Workflow completed successfully: {$workflow->name}");
+
+            return [
+                'success' => true,
+                'message' => 'Workflow executed successfully',
+                'results' => $results,
+            ];
 
         } catch (\Exception $e) {
-            Log::error("Error executing step {$stepImplement->id}: " . $e->getMessage(), [
-                'step_id' => $stepImplement->id,
-                'step_type' => $stepImplement->type,
-                'triggerable_type' => $stepImplement->triggerable_type,
-                'triggerable_id' => $stepImplement->triggerable_id,
-                'exception' => $e
+            DB::rollBack();
+
+            Log::error("Workflow execution failed: {$workflow->name}", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
-            return false;
+
+            if (isset($executionLog)) {
+                $this->completeExecutionLog($executionLog, false, $e->getMessage());
+            }
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
         }
+    }
+
+       /**
+     * Start execution log
+     */
+    private function startExecutionLog(AutomationWorkflow $workflow, array $context)
+    {
+        return AutomationLog::create([
+            'automation_type' => $workflow->automationTrigger->key,
+            'entity_type' => 'AutomationWorkflow',
+            'entity_id' => $workflow->id,
+            'status' => 'running',
+            'action_taken' => 'Workflow started',
+            'metadata' => $context,
+            'error_message' => null,
+            'triggered_by_id' => null,
+  
+        ]);
+    }
+
+      /**
+     * Log step execution
+     */
+    private function logStepExecution($executionLog, $step, array $result): void
+    {
+        // Add step result to execution log
+        $steps = $executionLog->steps ?? [];
+        $steps[] = [
+            'step_id' => $step->id,
+            'step_name' => $step->name,
+            'result' => $result,
+            'executed_at' => now()->toIso8601String(),
+        ];
+
+        $executionLog->update(['steps' => $steps]);
+    }
+
+       /**
+     * Complete execution log
+     */
+    private function completeExecutionLog($executionLog, bool $success, ?string $error = null): void
+    {
+        $executionLog->update([
+            'status' => $success ? 'success' : 'failed',
+            'completed_at' => now(),
+            'error_message' => $error,
+        ]);
+    }
+
+    
+    /**
+     * Schedule delayed execution
+     */
+    private function scheduleDelayedExecution(AutomationWorkflow $workflow, $step, array $context, $delayUntil): void
+    {
+        // Queue a job to continue execution after delay
+        ContinueWorkflowExecutionJob::dispatch($workflow->id, $step->id, $context)
+            ->delay($delayUntil);
     }
 
     /**
@@ -912,31 +1123,31 @@ class AutomationWorkflowExecutorService
     /**
      * Process delayed steps that are ready to execute
      */
-    public function processDelayedSteps(): int
-    {
-        $delays = AutomationDelay::getReadyToExecute();
-        $processedCount = 0;
+    // public function processDelayedSteps(): int
+    // {
+    //     $delays = AutomationDelay::getReadyToExecute();
+    //     $processedCount = 0;
 
-        foreach ($delays as $delay) {
-            try {
-                $stepImplement = $delay->automationStepsImplement;
+    //     foreach ($delays as $delay) {
+    //         try {
+    //             $stepImplement = $delay->automationStepsImplement;
                 
-                if ($stepImplement && !$stepImplement->implemented) {
-                    // Execute the delayed step
-                    $this->executeStep($stepImplement);
-                    $delay->markAsProcessed();
-                    $processedCount++;
+    //             if ($stepImplement && !$stepImplement->implemented) {
+    //                 // Execute the delayed step
+    //                 $this->executeStep($stepImplement);
+    //                 $delay->markAsProcessed();
+    //                 $processedCount++;
                     
-                    // Continue with next steps after delay
-                    $this->continueWorkflowAfterDelay($stepImplement);
-                }
-            } catch (\Exception $e) {
-                Log::error("Error processing delayed step {$delay->id}: " . $e->getMessage());
-            }
-        }
+    //                 // Continue with next steps after delay
+    //                 $this->continueWorkflowAfterDelay($stepImplement);
+    //             }
+    //         } catch (\Exception $e) {
+    //             Log::error("Error processing delayed step {$delay->id}: " . $e->getMessage());
+    //         }
+    //     }
 
-        return $processedCount;
-    }
+    //     return $processedCount;
+    // }
 
     /**
      * Continue workflow execution after a delay step is completed
@@ -971,7 +1182,7 @@ class AutomationWorkflowExecutorService
                         break; // Stop execution chain at delay steps
                     } else {
                         // Execute non-delay steps immediately
-                        $this->executeStep($nextStep);
+                        $this->executeStep($nextStep, $completedDelayStep->context_data);
                         Log::info("Executed next step {$nextStep->id} after delay");
                     }
                 } catch (\Exception $e) {
@@ -1024,7 +1235,7 @@ class AutomationWorkflowExecutorService
         $executedCount = 0;
 
         foreach ($pendingSteps as $step) {
-            if ($this->executeStep($step)) {
+            if ($this->executeStep($step, $step->context_data ?? [])) {
                 $executedCount++;
             }
         }

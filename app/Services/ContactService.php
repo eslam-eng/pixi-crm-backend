@@ -6,13 +6,10 @@ use App\Models\Tenant\Contact;
 use App\QueryFilters\ContactFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\DTO\Contact\ContactDTO;
-use App\Models\Tenant\User;
+
 use App\Notifications\Tenant\CreateNewContactNotification;
 use App\Notifications\Tenant\UpdateAssignContactNotification;
 use App\Services\Tenant\Users\UserService;
-use App\Events\Contacts\ContactCreated;
-use App\Events\Contacts\ContactUpdated;
-use App\Events\Contacts\ContactTagAdded;
 use Excel;
 
 class ContactService extends BaseService
@@ -65,8 +62,7 @@ class ContactService extends BaseService
             $admin->notify(new CreateNewContactNotification($contact));
         }
         
-        // Dispatch ContactCreated event to fire automation workflows
-        event(new ContactCreated($contact));
+        \Log::info("Contact created: {$contact->name}");
         
         $contact->load('country', 'city', 'user', 'source', 'contactPhones');
         return $contact;
@@ -110,21 +106,6 @@ class ContactService extends BaseService
                     $addedTags = array_diff($newTags, $oldTags);
                 }
             }
-        }
-        
-        // Dispatch ContactUpdated event if there were changes
-        if (!empty($changedFields)) {
-            event(new ContactUpdated($contact, $changedFields));
-        }
-        
-        // Dispatch ContactTagAdded event for each new tag
-        foreach ($addedTags as $tag) {
-            $tagData = [
-                'old_tags' => $originalData['tags'] ?? [],
-                'new_tags' => $contactDTO->tags ?? [],
-                'added_at' => now(),
-            ];
-            event(new ContactTagAdded($contact, $tag, $tagData));
         }
         
         if ($contact->wasChanged('user_id')) {
