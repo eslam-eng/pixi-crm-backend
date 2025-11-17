@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Central\Api\Subscription;
 use App\Enums\Landlord\SubscriptionBillingCycleEnum;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Central\RenewSubscriptionRequest;
-use App\Http\Requests\Central\SubscriptionRequest;
-use App\Http\Requests\Central\UpgradeSubscriptionRequest;
+use App\Http\Requests\Central\Subscribe\RenewSubscriptionRequest;
+use App\Http\Requests\Central\Subscribe\SubscriptionRequest;
+use App\Http\Requests\Central\Subscribe\UpgradeSubscriptionRequest;
 use App\Http\Resources\Central\SubscriptionResource;
 use App\Models\Central\DiscountCode;
 use App\Services\Central\Stripe\StripeService;
@@ -24,7 +24,7 @@ class SubscriptionController extends Controller
         private readonly SubscriptionManager $subscriptionManager,
         private readonly RenewSubscriptionService $renewSubscriptionService,
         private readonly UpgradeSubscriptionService $upgradeSubscriptionService,
-        // private readonly StripeService $stripeService,
+        private readonly StripeService $stripeService,
     ) {}
 
     public function index(Request $request)
@@ -81,7 +81,7 @@ class SubscriptionController extends Controller
         $billingCycle = SubscriptionBillingCycleEnum::from($upgradeSubscriptionRequest->billing_cycle);
         $user = auth()->user();
         $tenant = $user->tenant;
-        $invoice = $this->upgradeSubscriptionService->handle(newPlan: $upgradeSubscriptionRequest->new_plan_id, subscriptionDurationEnum: $billingCycle, discount_code: $upgradeSubscriptionRequest->discount_code, tenant: $tenant);
+        $invoice = $this->upgradeSubscriptionService->handle(planId: $upgradeSubscriptionRequest->new_plan_id, subscriptionDurationEnum: $billingCycle, discount_code: $upgradeSubscriptionRequest->discount_code, tenant: $tenant);
         $payIntent = $this->stripeService->pay($invoice);
 
         return ApiResponse::success(data: $payIntent, message: 'Subscription upgraded successfully,please confirm payment');

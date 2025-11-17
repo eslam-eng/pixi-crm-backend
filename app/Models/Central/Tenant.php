@@ -44,6 +44,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'id',
             'name',
             'owner_id',
+            'status',
             'has_used_trial',
             'trial_plan_id',
         ];
@@ -53,10 +54,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'status' => ActivationStatusEnum::class,
     ];
 
-    // public function users()
-    // {
-    //     return $this->hasMany(User::class);
-    // }
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 
     // todo return to in when use pivot table for multiple access per user for multiple tenants
     //    public function users()

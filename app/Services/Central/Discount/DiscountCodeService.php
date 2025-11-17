@@ -5,6 +5,7 @@ namespace App\Services\Central\Discount;
 use App\DTO\Central\DiscountCodeDTO;
 use App\Exceptions\DiscountCodeException;
 use App\Models\Central\DiscountCode;
+use App\Models\Central\Tenant;
 use App\Services\Central\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -62,7 +63,7 @@ class DiscountCodeService extends BaseService
     /**
      * @throws DiscountCodeException
      */
-    public function validateDiscountForPlan(string $code, int $planId, Tenant $tenant): DiscountCode
+    public function validateDiscountForPlan(?string $code, int $planId, Tenant $tenant): DiscountCode
     {
         $discountCode = $this->baseQuery()
             ->where('discount_code', $code)

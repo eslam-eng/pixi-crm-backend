@@ -51,6 +51,8 @@ use App\Http\Controllers\Central\Api\RoleController as RoleCentralController;
 use App\Http\Controllers\Central\Api\SourceController;
 use App\Http\Controllers\Central\Api\TimeZoneController;
 use App\Http\Controllers\Central\Api\Auth\RegisterController;
+use App\Http\Controllers\Central\Api\Auth\AuthController as CentralAuthController;
+use App\Http\Controllers\Central\Api\Subscription\InvoiceController;
 use App\Http\Controllers\Central\Api\TenantController;
 
 // //////////// landlord routes
@@ -59,6 +61,7 @@ foreach (config('tenancy.central_domains') as $domain) {
 
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
+            Route::post('login', CentralAuthController::class);
             Route::post('admin/login', AdminAuthController::class);
             Route::post('free-trial', RegisterController::class)->name('landlord.auth.free-trial');
         });
@@ -85,6 +88,8 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::get('admins/profile', [AdminController::class, 'profile']);
             Route::apiResource('admins', AdminController::class);
             Route::get('tenants/statics', [TenantController::class, 'statics']);
+            Route::patch('tenants/{tenant_id}/toggle-status', [TenantController::class, 'toggleStatus']);
+            Route::apiResource('tenants', TenantController::class);
             Route::put('locale', [AdminController::class, 'updateLocale']);
 
             Route::get('plans/statics', [PlanController::class, 'statics']);
@@ -115,6 +120,11 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::get('/', [SubscriptionController::class, 'index']);
                 Route::get('/statics', [SubscriptionController::class, 'statics']);
                 Route::get('/{subscription_id}/invoices', [SubscriptionController::class, 'subscriptionInvoices']);
+            });
+
+            Route::group(['prefix' => 'invoices'], function () {
+                Route::get('/', [InvoiceController::class, 'index']);
+                Route::get('{invoice_id}', [InvoiceController::class, 'show']);
             });
 
             Route::apiResource('sources', SourceController::class);

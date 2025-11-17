@@ -26,9 +26,9 @@ class InvoiceResource extends JsonResource
             ] : null,
 
             'tenant_owner' => $isTenantLoaded && $this->tenant->relationLoaded('owner') ? [
-                'id' => $this->tenant->owner->id,
-                'name' => $this->tenant->owner->name,
-                'email' => $this->tenant->owner->email,
+                'id' => $this->tenant->owner?->id,
+                'name' => $this->tenant->owner?->name,
+                'email' => $this->tenant->owner?->email,
             ] : null,
 
             'discount_percentage' => $this->discount_percentage,

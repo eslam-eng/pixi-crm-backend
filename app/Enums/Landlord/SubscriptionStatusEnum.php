@@ -5,7 +5,6 @@ namespace App\Enums\Landlord;
 enum SubscriptionStatusEnum: int
 {
     case PENDING = 0;
-
     case ACTIVE = 1;
     case TRIAL = 2;
     case CANCELED = 3;
@@ -23,6 +22,7 @@ enum SubscriptionStatusEnum: int
         return match ($this) {
             self::PENDING => __('app.subscription.pending'),
             self::ACTIVE => __('app.subscription.active'),
+            self::TRIAL => __('app.subscription.trial'),
             self::CANCELED => __('app.subscription.canceled'),
             self::EXPIRED => __('app.subscription.expired'),
             self::SUSPENDED => __('app.subscription.suspended'),

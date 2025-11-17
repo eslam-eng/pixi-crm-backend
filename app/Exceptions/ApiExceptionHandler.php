@@ -9,6 +9,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ApiExceptionHandler
@@ -24,6 +25,7 @@ class ApiExceptionHandler
             $e instanceof NotFoundHttpException => self::handleNoResourceNotfoundException($e, $request),
             $e instanceof AuthorizationException => ApiResponse::forbidden(message: 'Access denied.'),
             $e instanceof ThrottleRequestsException => self::handleThrottleException($e, $request),
+            $e instanceof ValidationException => self::handleValidationException($e, $request),
             default => self::handleGenericException($e),
         };
     }
@@ -48,6 +50,11 @@ class ApiExceptionHandler
             message: 'Too many requests. Please try again later.',
             retryAfter: $e->getHeaders()['Retry-After'] ?? null
         );
+    }
+
+    private static function handleValidationException(ValidationException $e, Request $request): JsonResponse
+    {
+        return ApiResponse::validationErrors(message: $e->getMessage(), errors: $e->errors());
     }
 
     private static function handleGenericException($e): JsonResponse

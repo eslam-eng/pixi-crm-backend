@@ -2,7 +2,7 @@
 
 namespace App\Services\Central\Subscription;
 
-use App\DTOs\Landlord\InvoiceDTO;
+use App\DTO\Central\InvoiceDTO;
 use App\Enums\Landlord\InvoiceStatusEnum;
 use App\Enums\Landlord\SubscriptionBillingCycleEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
@@ -27,12 +27,13 @@ class RenewSubscriptionService
     /**
      * @throws \Throwable
      */
-    public function handle(Subscription|int $currentSubscription, ?string $discount_code = null): Subscription
+    public function handle(Subscription|string $currentSubscription, ?string $discount_code = null): Subscription
     {
         return DB::connection('landlord')
             ->transaction(function () use ($discount_code, $currentSubscription) {
+                $currentSubscription = Subscription::findOrFail($currentSubscription);
 
-                $subscriptionDurationEnum = SubscriptionBillingCycleEnum::from($currentSubscription->billing_cycle);
+                $subscriptionDurationEnum = SubscriptionBillingCycleEnum::from($currentSubscription->billing_cycle->value);
 
                 // Get plan snapshot from the current subscription
 
@@ -61,9 +62,7 @@ class RenewSubscriptionService
                 $invoiceDTO = $this->prepareInvoiceDTO(tenant: $tenant, newSubscription: $currentSubscription, discount_code: $discount_code);
 
                 return $this->invoiceService->create(invoiceDTO: $invoiceDTO);
-
             });
-
     }
 
     protected function calculateSubscriptionEndDate(SubscriptionBillingCycleEnum $duration): ?\DateTime
@@ -98,7 +97,10 @@ class RenewSubscriptionService
     private function prepareInvoiceDTO(Tenant $tenant, Subscription $newSubscription, ?string $discount_code = null): InvoiceDTO
     {
         // check discount code
-        $discountCode = $this->discountCodeService->validateDiscountForPlan(code: $discount_code, planId: $newSubscription->plan_id, tenant: $tenant);
+        // if($discount_code){
+            $discountCode = $this->discountCodeService->validateDiscountForPlan(code: $discount_code, planId: $newSubscription->plan_id, tenant: $tenant);
+        // }
+        
         $discountAmount = 0;
         if ($discountCode) {
             $discountAmount = ($newSubscription->amount * $discountCode->discount_percentage) / 100;
@@ -112,7 +114,7 @@ class RenewSubscriptionService
             status: InvoiceStatusEnum::PENDING->value,
             due_date: now(),
             notes: "Renewal for plan {$newSubscription->plan->name}",
-            discountCode: $discountCode,
+            discountCode: $discountCode ? $discountCode : null,
         );
         $items[] = [
             'description' => $invoiceDTO->notes,

@@ -3,31 +3,42 @@
 namespace App\Services\Central\Subscription;
 
 use App\DTO\Central\InvoiceDTO;
-use App\DTOs\Landlord\SubscriptionDTO;
+use App\DTO\Central\SubscriptionDTO;
 use App\Enums\Landlord\InvoiceStatusEnum;
 use App\Enums\Landlord\SubscriptionBillingCycleEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Models\Central\Invoice;
 use App\Models\Central\Plan;
 use App\Models\Central\Subscription;
 use App\Models\Central\Tenant;
 use App\Services\Central\Discount\DiscountCodeService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Expr\Instanceof_;
 
 readonly class UpgradeSubscriptionService
 {
     public function __construct(
         protected CreateSubscriptionService $createSubscriptionService,
-        protected DiscountCodeService $discountCodeService) {}
+        protected DiscountCodeService $discountCodeService
+    ) {}
 
     public function handle(
-        Plan $newPlan,
+        string|int $planId,
         Tenant $tenant,
         SubscriptionBillingCycleEnum $subscriptionDurationEnum,
-        ?string $discount_code = null): Subscription
-    {
+        ?string $discount_code = null
+    ): Invoice {
         return DB::connection('landlord')
-            ->transaction(function () use ($tenant, $newPlan, $subscriptionDurationEnum, $discount_code) {
+            ->transaction(function () use ($tenant, $planId, $subscriptionDurationEnum, $discount_code) {
+                $newPlan = Plan::query()->findOrFail($planId);
+
+                /** @var Subscription|null $currentSubscription */
                 $currentSubscription = $tenant->activeSubscription;
+
+                if (!$currentSubscription) {
+                    throw new \RuntimeException('Cannot upgrade subscription: tenant has no active subscription.');
+                }
 
                 $invoiceDTO = $this->prepareInvoiceData(
                     tenant: $tenant,
@@ -48,7 +59,13 @@ readonly class UpgradeSubscriptionService
                     shouldCreateInvoice: true
                 );
 
-                return $this->createSubscriptionService->handle(subscriptionDTO: $subscriptionDTO);
+                $invoice = $this->createSubscriptionService->handle(subscriptionDTO: $subscriptionDTO);
+
+                if (!$invoice || !$invoice->subscription_id) {
+                    throw new \RuntimeException('Failed to create subscription or invoice.');
+                }
+
+                return $invoice;
             });
     }
 
@@ -59,16 +76,19 @@ readonly class UpgradeSubscriptionService
         $proratedAmount = $this->calculateProration(oldSubscription: $currentSubscription, new_subscription_amount: $new_subscription_amount);
         // check discount code
         $discountCode = $this->discountCodeService->validateDiscountForPlan(code: $discount_code, planId: $newPlan->id, tenant: $tenant);
+        if (!$discountCode) {
+            $discountCode = 1;
+        }
         $finalAmount = $new_subscription_amount - $proratedAmount;
         if ($discountCode) {
-            $discountAmount = ($finalAmount * $discountCode->discount_percentage) / 100;
+            $discountAmount = ($finalAmount *  $discountCode? $discountCode->discount_percentage :1) / 100;
         }
 
         $invoiceDTO = new InvoiceDTO(
             tenant_id: $tenant->id,
             user_id: auth()->id(),
             subtotal: $new_subscription_amount,
-            total: $finalAmount - $discountAmount,
+            total: $finalAmount - $discountAmount??0,
             status: InvoiceStatusEnum::PENDING->value,
             due_date: now(),
             notes: "Upgrade from {$currentSubscription->plan->name} to {$newPlan->name}",
@@ -100,8 +120,16 @@ readonly class UpgradeSubscriptionService
     {
         $now = now();
 
-        $daysLeft = $now->diffInDays($oldSubscription->ends_at);
-        $totalDays = $oldSubscription->starts_at->diffInDays($oldSubscription->ends_at);
+        $startsAt = Carbon::parse($oldSubscription->starts_at);
+        $endsAt = Carbon::parse($oldSubscription->ends_at);
+
+        $daysLeft = $now->diffInDays($endsAt);
+        $totalDays = $startsAt->diffInDays($endsAt);
+
+        // Prevent division by zero
+        if ($totalDays <= 0) {
+            return 0;
+        }
 
         $unusedValue = ($oldSubscription->plan->price / $totalDays) * $daysLeft;
         $newValue = ($new_subscription_amount / $totalDays) * $daysLeft;

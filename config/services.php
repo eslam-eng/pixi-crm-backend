@@ -42,4 +42,9 @@ return [
         'app_id' => env('FACEBOOK_CLIENT_ID'),
     ],
 
+    'stripe' => [
+        'publish_key' => env('STRIP_PUBLISH_KEY'),
+        'secret_key' => env('STRIP_SECRET_KEY'),
+        'webhook_secret' => env('STRIP_WEBHOOK_SECRET'),
+    ],
 ];

@@ -4,6 +4,7 @@ namespace App\Services\Central\Tenant;
 
 use App\DTO\Central\TenantDTO;
 use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Exceptions\ApiExceptionHandler;
 use App\Models\Central\Filters\TenantFilters;
 use App\Models\Central\Tenant;
 use App\Models\Central\User;
@@ -12,6 +13,7 @@ use App\Services\Central\Subscription\SubscriptionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 
 class TenantService extends BaseService
 {
@@ -78,9 +80,15 @@ class TenantService extends BaseService
         return $this->findById($tenant_id, $withRelations);
     }
 
-    public function delete(int $id): bool
+    public function delete(string $id): bool
     {
         $tenant = $this->findById($id);
+
+        if ($tenant->activeSubscription) {
+            throw ValidationException::withMessages([
+                'active_subscription' => 'Tenant has an active subscription',
+            ]);
+        }
 
         return $tenant->delete();
     }
