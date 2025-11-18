@@ -6,6 +6,7 @@ use App\Models\Tenant\Contact;
 use App\QueryFilters\ContactFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\DTO\Contact\ContactDTO;
+use App\DTO\Contact\ContactMergeDTO;
 use App\Notifications\Tenant\CreateNewContactNotification;
 use App\Notifications\Tenant\UpdateAssignContactNotification;
 use App\Services\Tenant\Users\UserService;
@@ -122,8 +123,8 @@ class ContactService extends BaseService
     public function updateMerge(int $id, ContactDTO $contactDTO)
     {
         $contact = $this->findById($id);
-        if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
-            $this->contactPhoneService->store($contactDTO->contact_phones, $contact->id);
+        if ($contactDTO->contact_merge_phones && count($contactDTO->contact_merge_phones) > 0) {
+            $this->contactPhoneService->store($contactDTO->contact_merge_phones, $contact->id);
         }
         $contact->update($contactDTO->toArray());
         return $contact->load('contactPhones', 'country', 'city', 'user', 'source');
@@ -355,5 +356,10 @@ class ContactService extends BaseService
             'inactive_contacts' => $inactive_contacts,
             'pending_contacts' => $pending_contacts
         ];
+    }
+
+    public function storeMerge(ContactMergeDTO $contactMergeDTO): Contact
+    {
+        return $this->model->create($contactMergeDTO->toArray());
     }
 }
