@@ -79,7 +79,6 @@ class ContactMergeDTO extends BaseDTO
             'identical_contact_type' => $this->identical_contact_type,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'contact_phone' => $this->contact_phones[0],
             'email' => $this->email,
             'job_title' => $this->job_title,
             'department' => $this->department,
@@ -110,7 +109,6 @@ class ContactMergeDTO extends BaseDTO
         return [
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'contact_phones' => $this->contact_phones,
             'email' => $this->email,
             'job_title' => $this->job_title,
             'department' => $this->department,

@@ -33,6 +33,7 @@ class ContactDTO extends BaseDTO
         public ?string $user_id,
         public ?string $tags = null,
         public ?string $notes = null,
+        public ?array $contact_merge_phones = null,
     ) {}
 
     public static function fromRequest($request): BaseDTO
@@ -174,13 +175,7 @@ class ContactDTO extends BaseDTO
             first_name: Arr::get($data, 'first_name'),
             last_name: Arr::get($data, 'last_name'),
             email: Arr::get($data, 'email'),
-            contact_phones: Arr::get($data, 'contact_phone', '') ? [
-                [
-                    'phone' => Arr::get($data, 'contact_phone', ''),
-                    'is_primary' => false,
-                    'enable_whatsapp' => false,
-                ]
-            ] : [],
+            contact_phones: Arr::get($data, 'contact_phones'),
             job_title: Arr::get($data, 'job_title'),
             department: Arr::get($data, 'department'),
             status: Arr::get($data, 'status'),
@@ -202,6 +197,7 @@ class ContactDTO extends BaseDTO
             user_id: Arr::get($data, 'user_id'),
             tags: Arr::get($data, 'tags'),
             notes: Arr::get($data, 'notes'),
+            contact_merge_phones: Arr::get($data, 'contact_merge_phones'),
         );
     }
 }
