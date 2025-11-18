@@ -69,8 +69,12 @@ class RoleSeeder extends Seeder
             // Settings
             ['name' => 'manage-settings', 'group' => 'settings', 'description' => 'Manage system settings'],
 
-            // Dashboard
-            ['name' => 'view-dashboard', 'group' => 'dashboard', 'description' => 'View dashboard'],
+            // Admin dashboard
+            ['name' => 'view-admin-dashboard', 'group' => 'dashboard', 'description' => 'View admin dashboard'],
+            // Manager dashboard
+            ['name' => 'view-manager-dashboard', 'group' => 'dashboard', 'description' => 'View manager dashboard'],
+            // Agent dashboard
+            ['name' => 'view-agent-dashboard', 'group' => 'dashboard', 'description' => 'View agent dashboard'],
         ];
 
         foreach ($permissions as $permission) {
@@ -79,7 +83,6 @@ class RoleSeeder extends Seeder
                 $permission
             );
         }
-
 
         $admin = Role::firstOrCreate(
             ['name' => RolesEnum::ADMIN->value, 'guard_name' => 'api_tenant'],
@@ -105,10 +108,14 @@ class RoleSeeder extends Seeder
             ]
         );
 
-        $admin->syncPermissions(Permission::all());
-        $manager->syncPermissions(Permission::all());
+        $admin->syncPermissions(Permission::all()->reject(function ($permission) {
+            return in_array($permission->name, ['view-manager-dashboard', 'view-agent-dashboard']);
+        }));
+        $manager->syncPermissions(Permission::all()->reject(function ($permission) {
+            return in_array($permission->name, ['view-admin-dashboard', 'view-agent-dashboard']);
+        }));
         $agent->syncPermissions(Permission::all()->reject(function ($permission) {
-            return $permission->name == 'manage-settings';
+            return in_array($permission->name, ['view-admin-dashboard', 'view-manager-dashboard']);
         }));
 
         $this->command->info('Roles and permissions seeded successfully!');
