@@ -57,7 +57,6 @@ if (!function_exists('getAuthUser')) {
     {
         return auth($guard)->user();
     }
-
 }
 
 if (!function_exists('per_page')) {
@@ -65,7 +64,6 @@ if (!function_exists('per_page')) {
     function per_page()
     {
         return request()->get('per_page', 10);
-
     }
 }
 
@@ -76,5 +74,13 @@ if (!function_exists('upload')) {
         $fileName = time() . uniqid() . '.' . $file->getClientOriginalExtension();
         $file->storeAs('public/' . $dir, $fileName);
         return $fileName;
+    }
+}
+
+if (!function_exists('user_id')) {
+
+    function user_id()
+    {
+        return  auth('api_tenant')->user()->id;
     }
 }

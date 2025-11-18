@@ -59,7 +59,7 @@ class LeadFilters extends QueryFilter
 
     public function team_id($term)
     {
-        return $this->builder->whereHas('assigned_to', function ($query) use ($term) {
+        return $this->builder->whereHas('user', function ($query) use ($term) {
             $query->where('team_id', $term);
         });
     }

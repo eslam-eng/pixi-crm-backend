@@ -54,12 +54,11 @@ class DashboardController extends Controller
     public function getTodayTasks(DashboardRequest $request)
     {
         $filters = array_filter(
-            $request->only('user_id', 'team_id', 'start_date', 'end_date',),
+            $request->only('user_id', 'team_id'),
             function ($value) {
                 return !is_null($value) && $value !== '';
             }
         );
-
         $tasks = $this->dashboardService->getTodayTasks($filters);
         return apiResponse(data: $tasks);
     }
@@ -67,7 +66,7 @@ class DashboardController extends Controller
     public function getUserRecentActivities()
     {
         $activities = $this->dashboardService->getUserRecentActivities(
-            auth()->id(),
+            user_id(),
             5
         );
         return apiResponse(data: $activities);

@@ -72,4 +72,5 @@ class ApiResponse
     {
         return self::error($message, $errors, Response::HTTP_FORBIDDEN);
     }
+
 }

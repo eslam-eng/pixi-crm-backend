@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\SettingRequest;
+use App\Settings\ChartsSettings;
 use App\Settings\DealsSettings;
 use App\Settings\NotificationSettings;
 use App\Settings\TasksSettings;
@@ -133,6 +134,7 @@ class SettingController extends Controller
             'deals_settings' => DealsSettings::class,
             'notification_settings' => NotificationSettings::class,
             'users_settings' => UsersSettings::class,
+            'charts_settings' => ChartsSettings::class
             // Add more settings groups as needed
         ];
 

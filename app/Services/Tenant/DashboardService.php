@@ -9,6 +9,7 @@ use App\Services\Tenant\Deals\DealService;
 use App\Services\Tenant\Tasks\TaskService;
 use App\Services\Tenant\Users\UserService;
 use App\Services\ActivityService;
+use App\Settings\ChartsSettings;
 
 class DashboardService
 {
@@ -61,37 +62,41 @@ class DashboardService
 
     public function getTodayTasks(array $filters)
     {
-        unset($filters['start_date'], $filters['end_date']);
         $filters['due_today'] = true;
-        return $this->taskService->getQuery($filters)->orderBy('created_at', 'desc')->take(5)->get();
+        $filters['user_id'] = user_id();
+       
+        return $this->taskService->getQuery($filters)->take(3)->get();
     }
 
     public function getSaleFunnel(array $filters)
     {
+
+        $settings = app(ChartsSettings::class);
+        $third_phase_type_id = $settings->third_phase_type;
         $opportunities = $this->leadService->index($filters, ['tasks.taskType']);
         $qualifyingOpportunities = $opportunities->where('is_qualifying', 1);
-        $meetingOpportunities = $opportunities->filter(function ($opportunity) {
-            return $opportunity->tasks->contains(function ($task) {
-                return $task->taskType->name === 'Meeting';
+        $thirdPhase = $opportunities->filter(function ($opportunity) use ($third_phase_type_id) {
+            return $opportunity->tasks->contains(function ($task) use ($third_phase_type_id) {
+                return $task->taskType->id === $third_phase_type_id;
             });
         });
         $wonOpportunities = $opportunities->where('status', OpportunityStatus::WON->value);
-
-        $qualifyingPrecentage = $qualifyingOpportunities->count() / $opportunities->count() * 100;
-        $meetingPrecentage = $meetingOpportunities->count() / $opportunities->count() * 100;
-        $wonPrecentage = $wonOpportunities->count() / $opportunities->count() * 100;
+        $total_opportunty = $opportunities->count();
+        $qualifyingPrecentage = $qualifyingOpportunities->count() / $total_opportunty * 100;
+        $thirdPhasePrecentage = $thirdPhase->count() / $total_opportunty * 100;
+        $wonPrecentage = $wonOpportunities->count() / $total_opportunty * 100;
 
         return [
-            'total_opportunities' => $opportunities->count(),
+            'total_opportunities' => $total_opportunty,
             'qualifying_precentage' => $qualifyingPrecentage,
-            'meeting_precentage' => $meetingPrecentage,
+            'third_phase_precentage' => $thirdPhasePrecentage,
             'won_precentage' => $wonPrecentage,
         ];
     }
 
     public function getUserRecentActivities()
     {
-        return $this->activityService->getUserRecentActivities(auth()->id(), 5);
+        return $this->activityService->getUserRecentActivities(user_id(), 5);
     }
 
     private function getActiveLeads(array $filters)
