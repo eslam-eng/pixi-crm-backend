@@ -378,5 +378,6 @@ return array(
   'task_escalation_message' => 'Task ":title" is :hours hours overdue and requires immediate attention.',
   'task_escalation_not_specified' => 'Not specified',
   'task_escalation_not_assigned' => 'Not assigned',
+  'only_one_dashboard_type_allowed' => 'You can only select ONE dashboard type (view-admin-dashboard, view-manager-dashboard, or view-agent-dashboard)',
 
 );

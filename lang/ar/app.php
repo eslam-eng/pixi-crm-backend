@@ -61,5 +61,6 @@ return array(
   'task_escalation_message' => 'المهمة ":title" متأخرة :hours ساعة وتتطلب اهتماماً فورياً.',
   'task_escalation_not_specified' => 'غير محدد',
   'task_escalation_not_assigned' => 'غير مكلف',
+  'only_one_dashboard_type_allowed' => 'يمكنك اختيار نوع لوحة تحكم واحد فقط (view-admin-dashboard أو view-manager-dashboard أو view-agent-dashboard)',
 
 );

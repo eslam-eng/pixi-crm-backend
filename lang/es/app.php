@@ -377,5 +377,6 @@ return array(
   'task_escalation_message' => 'La tarea ":title" tiene :hours horas de retraso y requiere atención inmediata.',
   'task_escalation_not_specified' => 'No especificado',
   'task_escalation_not_assigned' => 'No asignado',
+  'only_one_dashboard_type_allowed' => 'Solo puede seleccionar UN tipo de panel (view-admin-dashboard, view-manager-dashboard o view-agent-dashboard)',
 
 );

@@ -85,7 +85,7 @@ class RoleService extends BaseService
         $selectedDashboards = array_intersect($dto->permissions, $this->dashboardPermissions);
         if (count($selectedDashboards) > 1) {
             throw ValidationException::withMessages([
-                'permissions' => 'You can only select ONE dashboard type (view-admin-dashboard, view-manager-dashboard, or view-agent-dashboard)'
+                'permissions' => __('app.only_one_dashboard_type_allowed')
             ]);
         }
         if ($dto->permissions) {
@@ -107,7 +107,7 @@ class RoleService extends BaseService
         $selectedDashboards = array_intersect($allPermission, $this->dashboardPermissions);
         if (count($selectedDashboards) > 1) {
             throw ValidationException::withMessages([
-                'permissions' => 'You can only select ONE dashboard type (view-admin-dashboard, view-manager-dashboard, or view-agent-dashboard)'
+                'permissions' => __('app.only_one_dashboard_type_allowed')
             ]);
         }
 

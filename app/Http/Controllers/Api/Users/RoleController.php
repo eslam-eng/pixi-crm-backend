@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class RoleController extends Controller
 {
@@ -47,6 +48,9 @@ class RoleController extends Controller
             $role = $this->roleService->create($dto);
             DB::commit();
             return apiResponse(new RoleResource($role), 'Role created successfully', code: Response::HTTP_CREATED);
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return apiResponse(message: $e->getMessage(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (Exception $e) {
             DB::rollBack();
             return apiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -73,9 +77,14 @@ class RoleController extends Controller
             $role = $this->roleService->update($role_id, $dto);
             DB::commit();
             return apiResponse(new RoleResource($role), 'Role updated successfully');
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return apiResponse(message: $e->getMessage(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (NotFoundException $e) {
+            DB::rollBack();
             return apiResponse(message: $e->getMessage(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (Exception $e) {
+            DB::rollBack();
             return apiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
