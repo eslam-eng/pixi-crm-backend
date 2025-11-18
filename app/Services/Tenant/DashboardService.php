@@ -140,6 +140,23 @@ class DashboardService
 
     private function getAvgTimeToAction(array $filters)
     {
-        return 'still working on it';
+        // Get all leads with filters applied
+        $leads = $this->leadService->getAll($filters);
+        
+        // Filter leads that have avg_action_time set (not null)
+        $leadsWithActionTime = $leads->filter(function ($lead) {
+            return !is_null($lead->avg_action_time) && $lead->avg_action_time > 0;
+        });
+        
+        // If no leads have action time, return 0
+        if ($leadsWithActionTime->isEmpty()) {
+            return 0;
+        }
+        
+        // Calculate average time to action in seconds
+        $avgSeconds = $leadsWithActionTime->avg('avg_action_time');
+        
+        // Return average in seconds (rounded to 2 decimal places)
+        return round($avgSeconds, 2);
     }
 }

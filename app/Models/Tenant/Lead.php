@@ -32,6 +32,9 @@ class Lead extends Model implements Auditable
         'assigned_to_id',
         'notes',
         'description',
+        'assigned_at',
+        'first_action_at',
+        'avg_action_time',
     ];
 
     protected $casts = [

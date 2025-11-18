@@ -18,13 +18,13 @@ class OpportunityRequest extends FormRequest
         $required = $this->isMethod('put') ? 'sometimes' : 'required';
         return [
             'contact_id' => $required . '|exists:contacts,id',
-            'status' => [$required, Rule::in(OpportunityStatus::values())],
+            'status' => ['required', Rule::in(OpportunityStatus::values())],
             'stage_id' => $required . '|exists:stages,id',
             'is_qualifying' => 'required|boolean',
             'deal_value' => 'required_without:items|numeric',
             'win_probability' => $this->isMethod('put') ? 'sometimes|numeric' : 'required|numeric',
             'expected_close_date' => $required . '|date',
-            'assigned_to_id' => $required . '|exists:users,id',
+            'assigned_to_id' => 'nullable|exists:users,id',
             'notes' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:255',
             'items' => 'bail|nullable|array',

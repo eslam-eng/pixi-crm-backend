@@ -127,13 +127,13 @@ class OpportunityController extends Controller
     {
         try {
             DB::beginTransaction();
-            $opportunity = Lead::findOrFail($opportunity);
             $validated = $request->validate([
                 'stage_id' => 'required|exists:stages,id',
             ]);
-            $opportunity->update($validated);
+            $opportunity = $this->leadService->changeStage($opportunity, $validated['stage_id']);
+            
             DB::commit();
-            return ApiResponse(message: 'Opportunity stage changed successfully', code: 200);
+            return ApiResponse(message: 'Opportunity stage changed successfully', code: 200, data: new OpportunityResource($opportunity));
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
