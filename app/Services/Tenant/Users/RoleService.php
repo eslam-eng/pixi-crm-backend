@@ -3,6 +3,7 @@
 namespace App\Services\Tenant\Users;
 
 use App\DTO\Tenant\Role\RoleDTO;
+use App\Enums\PermissionsEnum;
 use App\Services\BaseService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,7 +13,14 @@ use Spatie\Permission\Models\Role;
 
 class RoleService extends BaseService
 {
-    public $dashboardPermissions = ['view-admin-dashboard', 'view-manager-dashboard', 'view-agent-dashboard'];
+    public function getDashboardPermissions(): array
+    {
+        return [
+            PermissionsEnum::VIEW_ADMIN_DASHBOARD->value,
+            PermissionsEnum::VIEW_MANAGER_DASHBOARD->value,
+            PermissionsEnum::VIEW_AGENT_DASHBOARD->value,
+        ];
+    }
 
     public function __construct(private Role $model) {}
 
@@ -82,7 +90,7 @@ class RoleService extends BaseService
     {
         $role = $this->model->create($dto->toArray());
 
-        $selectedDashboards = array_intersect($dto->permissions, $this->dashboardPermissions);
+        $selectedDashboards = array_intersect($dto->permissions, $this->getDashboardPermissions());
         if (count($selectedDashboards) > 1) {
             throw ValidationException::withMessages([
                 'permissions' => __('app.only_one_dashboard_type_allowed')
@@ -104,7 +112,7 @@ class RoleService extends BaseService
 
         $allPermission = array_merge($exsitPermissionsName, $dto->permissions);
 
-        $selectedDashboards = array_intersect($allPermission, $this->dashboardPermissions);
+        $selectedDashboards = array_intersect($allPermission, $this->getDashboardPermissions());
         if (count($selectedDashboards) > 1) {
             throw ValidationException::withMessages([
                 'permissions' => __('app.only_one_dashboard_type_allowed')
