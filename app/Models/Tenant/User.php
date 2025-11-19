@@ -156,6 +156,11 @@ class User extends Authenticatable
         return $this->belongsTo(Team::class);
     }
 
+    public function teamManager()
+    {
+        return $this->hasOne(Team::class, 'leader_id');
+    }
+
     public function latestAttendancePunch()
     {
         return $this->hasOne(AttendancePunch::class)->latest('happened_at');

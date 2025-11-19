@@ -352,7 +352,7 @@ Route::middleware([
             Route::get('/sale-funnel', [DashboardController::class, 'getSaleFunnel']);
             Route::get('/today-tasks', [DashboardController::class, 'getTodayTasks']);
             Route::get('/recent-activities', [DashboardController::class, 'getUserRecentActivities']);
-            // Route::get('/top-performing-sales-reps', [DashboardController::class, '']); // still working on it
+            Route::get('/top-performing-sales-reps', [DashboardController::class, 'getTopPerformingSalesReps']); // still working on it
         });
 
         Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList']);
