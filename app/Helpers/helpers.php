@@ -84,3 +84,25 @@ if (!function_exists('user_id')) {
         return  auth('api_tenant')->user()->id;
     }
 }
+
+if (!function_exists('calcChange')) {
+
+    function calcChange($previous, $current)
+    {
+        $difference = $current - $previous;
+
+        if ($previous > 0) {
+            $percentage = ($difference / $previous) * 100;
+        } else {
+            $percentage = 0;
+        }
+
+        return [
+            'previous'   => $previous,
+            'current'    => $current,
+            'difference' => $difference,
+            'percentage' => round($percentage, 2),
+            'status'     => $difference > 0 ? 'increase' : ($difference < 0 ? 'decrease' : 'no_change'),
+        ];
+    }
+}

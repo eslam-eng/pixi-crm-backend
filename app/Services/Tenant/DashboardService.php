@@ -4,13 +4,13 @@ namespace App\Services\Tenant;
 
 use App\Enums\OpportunityStatus;
 use App\Enums\TaskStatusEnum;
-use App\Models\Tenant\Deal;
 use App\Services\LeadService;
 use App\Services\Tenant\Deals\DealService;
 use App\Services\Tenant\Tasks\TaskService;
 use App\Services\Tenant\Users\UserService;
 use App\Services\ActivityService;
 use App\Settings\ChartsSettings;
+use Carbon\Carbon;
 
 class DashboardService
 {
@@ -24,7 +24,7 @@ class DashboardService
 
     public function getWidgets(array $filters)
     {
-        $totalLeads = $this->leadService->getAll($filters)->count();
+        $totalLeadsWithCompare = $this->totalLeadsWithCompare($filters);
 
         $activeLeadsCount = $this->getActiveLeads($filters);
 
@@ -40,7 +40,7 @@ class DashboardService
         $target = $this->getTarget($filters);
 
         return [
-            'total_leads' => $totalLeads,
+            'total_leads' => $totalLeadsWithCompare,
             'active_leads' => $activeLeadsCount,
             'percentage_won_leads' => $percentageWonLeads,
             'average_of_deals_value' => $average_of_deals_value,
@@ -113,8 +113,9 @@ class DashboardService
 
     public function getTopPerformingSalesReps(array $filters)
     {
-        $deals = $this->dealService->queryGet(filters: $filters, withRelations: $relation)->get();
 
+        $deals = $this->dealService->queryGet(filters: $filters)->get();
+        
         $allUser = $deals->groupBy('assigned_to_id')->map(function ($leads, $user_id) {
             return [
                 'user_id' => $user_id,
@@ -192,5 +193,24 @@ class DashboardService
 
         // Return average in seconds (rounded to 2 decimal places)
         return round($avgSeconds, 2);
+    }
+
+    private function totalLeadsWithCompare(array $filters)
+    {
+        if (array_key_exists('user_id', $filters)) {
+            unset($filters['user_id']);
+        }
+
+        $totalLeadsNewRange = $this->leadService->queryGet(filters: $filters)->count();
+
+        $first_date = Carbon::parse($filters['start_date'])->copy();
+        $end_date = Carbon::parse($filters['end_date'])->copy();
+        $days = $first_date->diffInDays($end_date);
+
+        $filters['start_date'] = $first_date->subDay($days)->toDateString();
+        $filters['end_date'] = $end_date->subDay($days)->toDateString();
+
+        $totalLeadsOldRange = $this->leadService->queryGet(filters: $filters)->count();
+        return calcChange($totalLeadsOldRange, $totalLeadsNewRange);
     }
 }

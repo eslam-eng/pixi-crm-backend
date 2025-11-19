@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatusEnum;
 use App\Enums\PermissionsEnum;
 use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
@@ -33,6 +34,7 @@ class DashboardController extends Controller
                 return !is_null($value) && $value !== '';
             }
         );
+        $filters['dashboard_view'] = Auth::user();
 
         $widgets = $this->dashboardService->getWidgets($filters);
         return apiResponse(data: $widgets);
@@ -93,7 +95,8 @@ class DashboardController extends Controller
         ];
         $filters = [
             'get_Top_Performing_Sales_Reps' => Auth::user(),
-            'created_date_range' => $date_raget
+            'created_date_range' => $date_raget,
+            'approval_status' => ApprovalStatusEnum::APPROVED->value
         ];
         $topThree = $this->dashboardService->getTopPerformingSalesReps(filters: $filters);
         return apiResponse(data: $topThree);
