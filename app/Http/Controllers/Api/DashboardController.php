@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\PermissionsEnum;
 use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tenant\Dashboard\TopPerformingRequest;
 use App\Http\Requests\Tenant\DashboardRequest;
 use App\Http\Resources\TeamDDLResource;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
@@ -13,7 +14,7 @@ use App\Services\Tenant\DashboardService;
 use App\Services\Tenant\Users\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -84,10 +85,18 @@ class DashboardController extends Controller
         return apiResponse(data: $activities);
     }
 
-    public function getTopPerformingSalesReps(Request $request)
+    public function getTopPerformingSalesReps(TopPerformingRequest $request)
     {
-        $activities = $this->dashboardService->getTopPerformingSalesReps();
-        return apiResponse(data: $activities);
+        $date_raget = [
+            'start' => $request->get('start'),
+            'end' => $request->get('end')
+        ];
+        $filters = [
+            'get_Top_Performing_Sales_Reps' => Auth::user(),
+            'created_date_range' => $date_raget
+        ];
+        $topThree = $this->dashboardService->getTopPerformingSalesReps(filters: $filters);
+        return apiResponse(data: $topThree);
     }
 
     public function getfilterUsers(): JsonResponse

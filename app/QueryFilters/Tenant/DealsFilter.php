@@ -3,6 +3,7 @@
 namespace App\QueryFilters\Tenant;
 
 use App\Abstracts\QueryFilter;
+use App\Enums\PermissionsEnum;
 
 class DealsFilter extends QueryFilter
 {
@@ -127,7 +128,6 @@ class DealsFilter extends QueryFilter
     {
         return $this->builder->where('deal_type', $term);
     }
-    
     /**
      * Filter by multiple assigned users
      */
@@ -160,5 +160,22 @@ class DealsFilter extends QueryFilter
         return $this->builder->whereHas('assigned_to', function ($query) use ($term) {
             $query->where('team_id', $term);
         });
+    }
+
+    public function get_Top_Performing_Sales_Reps($term)
+    {
+        $user = $term;
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_ADMIN_DASHBOARD->value)) {
+            return $this->builder;
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_MANAGER_DASHBOARD->value)) {
+            $teamId = $user->teamManager()->value('id');
+            return $this->builder
+                ->whereHas('assigned_to', function ($query) use ($teamId) {
+                    $query->where('team_id', $teamId);
+                });
+        }
     }
 }
