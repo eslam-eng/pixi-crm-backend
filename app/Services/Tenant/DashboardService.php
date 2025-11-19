@@ -4,6 +4,7 @@ namespace App\Services\Tenant;
 
 use App\Enums\OpportunityStatus;
 use App\Enums\TaskStatusEnum;
+use App\Models\Tenant\Deal;
 use App\Services\LeadService;
 use App\Services\Tenant\Deals\DealService;
 use App\Services\Tenant\Tasks\TaskService;
@@ -75,23 +76,34 @@ class DashboardService
                 return $task->taskType->name === 'Meeting';
             });
         });
-        $wonOpportunities = $opportunities->where('status', OpportunityStatus::WON->value);
 
-        $qualifyingPrecentage = $qualifyingOpportunities->count() / $opportunities->count() * 100;
-        $meetingPrecentage = $meetingOpportunities->count() / $opportunities->count() * 100;
-        $wonPrecentage = $wonOpportunities->count() / $opportunities->count() * 100;
+        $wonOpportunities = $opportunities->where('status', OpportunityStatus::WON->value);
+        if ($opportunities->count() != 0) {
+            $qualifyingPrecentage = $qualifyingOpportunities->count() / $opportunities->count() * 100;
+            $meetingPrecentage = $meetingOpportunities->count() / $opportunities->count() * 100;
+            $wonPrecentage = $wonOpportunities->count() / $opportunities->count() * 100;
+        }
 
         return [
             'total_opportunities' => $opportunities->count(),
-            'qualifying_precentage' => $qualifyingPrecentage,
-            'meeting_precentage' => $meetingPrecentage,
-            'won_precentage' => $wonPrecentage,
+            'qualifying_precentage' => $qualifyingPrecentage ?? 0,
+            'meeting_precentage' => $meetingPrecentage ?? 0,
+            'won_precentage' => $wonPrecentage ?? 0,
         ];
     }
 
     public function getUserRecentActivities()
     {
         return $this->activityService->getUserRecentActivities(auth()->id(), 5);
+    }
+
+    public function getTopPerformingSalesReps()
+    {
+        $filters = [];
+        $relation = [];
+        $data = $this->dealService->queryGet(filters: $filters, withRelations:$relation);
+        dd()
+        dd(Deal::VisibleForPage(auth()->user()));
     }
 
     private function getActiveLeads(array $filters)

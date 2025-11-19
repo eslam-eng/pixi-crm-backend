@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\DashboardRequest;
 use App\Services\Tenant\DashboardService;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -70,6 +71,12 @@ class DashboardController extends Controller
             auth()->id(),
             5
         );
+        return apiResponse(data: $activities);
+    }
+
+    public function getTopPerformingSalesReps(Request $request)
+    {
+        $activities = $this->dashboardService->getTopPerformingSalesReps();
         return apiResponse(data: $activities);
     }
 }
