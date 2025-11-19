@@ -31,7 +31,8 @@ class DashboardService
 
         $average_of_deals_value = $this->getAverageDealsValue($filters);
 
-        $dueTasks = $this->getDueTasks($filters);
+        // $dueTasks = $this->getDueTasks($filters);
+        $dueTasks = $this->getAllTodayTasksCount($filters);
 
         $avgTimeToAction = $this->getAvgTimeToAction($filters);
 
@@ -66,6 +67,14 @@ class DashboardService
         $filters['user_id'] = user_id();
        
         return $this->taskService->getQuery($filters)->take(3)->get();
+    }
+
+    public function getAllTodayTasksCount(array $filters)
+    {
+        $filters['due_today'] = true;
+        $filters['user_id'] = user_id();
+       
+        return $this->taskService->getQuery($filters)->count();
     }
 
     public function getSaleFunnel(array $filters)
