@@ -14,6 +14,7 @@ use App\Notifications\Tenant\UpdateAssignOpportunityNotification;
 use App\Services\Tenant\ItemService;
 use App\Services\Tenant\Users\UserService;
 use Auth;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -120,6 +121,8 @@ class LeadService extends BaseService
             $lead->items()->sync($itemsPayload, true);
         }
 
+        $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
+
         return $lead->load('variants', 'items.product', 'items.service');
     }
 
@@ -179,6 +182,8 @@ class LeadService extends BaseService
         }
 
         if ($lead->wasChanged('assigned_to_id')) {
+            $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
+
             $currentUser = $lead->user;
             $managers = $this->userService->getModel()->role('manager')->get();
             foreach ($managers as $manager) {
@@ -187,6 +192,8 @@ class LeadService extends BaseService
             if ($currentUser) {
                 $currentUser->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
             }
+        } else {
+            $this->updateActionTimes($lead);
         }
         return $lead->load('variants', 'items');
     }
@@ -215,10 +222,51 @@ class LeadService extends BaseService
     public function checkUncountableServiceItems(Collection $withItemOnly): void
     {
         foreach ($withItemOnly as $item) {
+            /** @var LeadItemDTO $item */
             $itemInOrder = $this->itemService->getModel()->find($item->item_id);
-            if ($itemInOrder->itemable_type == 'service' && $item->quantity > 1) {
+            if ($itemInOrder && $itemInOrder->itemable_type == 'service' && $item->quantity > 1) {
                 throw ValidationException::withMessages(['items' => __('app.service_items_not_countable') . " with id :" . ' ' . $itemInOrder->id]);
             }
+        }
+    }
+
+    /**
+     * Update assigned_at timestamp when assignment changes
+     */
+    private function updateAssignedAt(Lead $lead, ?int $assignedToId): void
+    {
+        if (!empty($assignedToId)) {
+            $lead->assigned_at = Carbon::now();
+            $lead->first_action_at = null;
+            $lead->avg_action_time = null;
+            $lead->save();
+        }
+    }
+
+    /**
+     * Update first_action_at and avg_action_time after an update
+     */
+    private function updateActionTimes(Lead $lead): void
+    {
+        if (user_id() == $lead->assigned_to_id) {
+            // Only update if the lead is assigned
+            if (empty($lead->assigned_at)) {
+                return;
+            }
+
+            if (!empty($lead->first_action_at)) {
+                return;
+            }
+
+            $now = Carbon::now();
+            $lead->first_action_at = $now;
+
+            $assignedAt = Carbon::parse($lead->assigned_at);
+            $firstActionAt = Carbon::parse($lead->first_action_at);
+            $avgActionTime = $assignedAt->diffInSeconds($firstActionAt);
+
+            $lead->avg_action_time = $avgActionTime;
+            $lead->save();
         }
     }
 
@@ -238,14 +286,29 @@ class LeadService extends BaseService
     {
         $lead = $this->findById($id);
 
-        if ($status === OpportunityStatus::WON) {
-            throw new GeneralException('Opportunity cannot be marked as won without a deal');
-        }
+        // if ($status === OpportunityStatus::WON) {
+        //     throw new GeneralException('Opportunity cannot be marked as won without a deal');
+        // }
 
         if ($lead->status !== $status) {
             $lead->update(['status' => $status]);
+            $this->updateActionTimes($lead);
         } else {
             throw new GeneralException('Opportunity status is already ' . $status->value);
         }
+    }
+
+    /**
+     * Change the stage of an opportunity
+     */
+    public function changeStage(int $id, int $stageId): Lead
+    {
+        $lead = $this->findById($id);
+        $lead->update(['stage_id' => $stageId]);
+        
+        // Update action times after stage change
+        $this->updateActionTimes($lead);
+        
+        return $lead;
     }
 }

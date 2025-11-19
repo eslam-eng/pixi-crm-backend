@@ -121,9 +121,9 @@ class TaskFilters extends QueryFilter
     /**
      * Filter tasks due today
      */
-    public function due_today()
+    public function due_today($term = null)
     {
-        return $this->builder->where('due_date', Carbon::today());
+        return $this->builder->whereDate('due_date', Carbon::today());
     }
 
     /**
@@ -259,6 +259,7 @@ class TaskFilters extends QueryFilter
 
     public function user_id($term)
     {
+    
         return $this->builder->where('assigned_to_id', $term);
     }
 

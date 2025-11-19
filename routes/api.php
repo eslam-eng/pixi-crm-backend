@@ -342,7 +342,11 @@ Route::middleware([
             Route::get('/{form}/submissions', [FormSubmissionController::class, 'submissions']);
         });
 
-        Route::prefix('dashboard')->middleware('auth:api_tenant')->group(function () {
+        Route::prefix('dashboard')->group(function () {
+            Route::prefix('filter')->group(function () {
+                Route::get('/users', [DashboardController::class, 'getfilterUsers']);
+                Route::get('/teams', [DashboardController::class, 'getfilterTeams']);
+            });
             Route::get('/widgets', [DashboardController::class, 'getWidgets']);
             Route::get('/opportunities-by-stage', [DashboardController::class, 'getOpportunitiesByStage']);
             Route::get('/sale-funnel', [DashboardController::class, 'getSaleFunnel']);
@@ -351,7 +355,7 @@ Route::middleware([
             Route::get('/top-performing-sales-reps', [DashboardController::class, 'getTopPerformingSalesReps']); // still working on it
         });
 
-        Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList'])->middleware('auth:api_tenant');
+        Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList']);
         Route::get('/opportunities/statistics', [\App\Http\Controllers\Api\OpportunityController::class, 'statistics']);
         Route::patch('opportunities/{opportunity}/change-stage', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStage']);
         Route::patch('opportunities/{opportunity}/change-status', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStatus']);
@@ -411,7 +415,7 @@ Route::middleware([
         });
 
         // Report routes
-        Route::prefix('reports')->middleware('auth:api_tenant')->group(function () {
+        Route::prefix('reports')->group(function () {
             // Sales Performance Reports
             Route::prefix('sales-performance')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Api\Report\SalesPerformanceController::class, 'index']);

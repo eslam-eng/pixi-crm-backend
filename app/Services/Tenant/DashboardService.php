@@ -10,6 +10,7 @@ use App\Services\Tenant\Deals\DealService;
 use App\Services\Tenant\Tasks\TaskService;
 use App\Services\Tenant\Users\UserService;
 use App\Services\ActivityService;
+use App\Settings\ChartsSettings;
 
 class DashboardService
 {
@@ -31,7 +32,8 @@ class DashboardService
 
         $average_of_deals_value = $this->getAverageDealsValue($filters);
 
-        $dueTasks = $this->getDueTasks($filters);
+        // $dueTasks = $this->getDueTasks($filters);
+        $dueTasks = $this->getAllTodayTasksCount($filters);
 
         $avgTimeToAction = $this->getAvgTimeToAction($filters);
 
@@ -62,39 +64,51 @@ class DashboardService
 
     public function getTodayTasks(array $filters)
     {
-        unset($filters['start_date'], $filters['end_date']);
         $filters['due_today'] = true;
-        return $this->taskService->getQuery($filters)->orderBy('created_at', 'desc')->take(5)->get();
+        $filters['user_id'] = user_id();
+       
+        return $this->taskService->getQuery($filters)->take(3)->get();
+    }
+
+    public function getAllTodayTasksCount(array $filters)
+    {
+        $filters['due_today'] = true;
+        $filters['user_id'] = user_id();
+       
+        return $this->taskService->getQuery($filters)->count();
     }
 
     public function getSaleFunnel(array $filters)
     {
+        $settings = app(ChartsSettings::class);
+        $third_phase_type_id = $settings->third_phase_type;
         $opportunities = $this->leadService->index($filters, ['tasks.taskType']);
         $qualifyingOpportunities = $opportunities->where('is_qualifying', 1);
-        $meetingOpportunities = $opportunities->filter(function ($opportunity) {
-            return $opportunity->tasks->contains(function ($task) {
-                return $task->taskType->name === 'Meeting';
+        $thirdPhase = $opportunities->filter(function ($opportunity) use ($third_phase_type_id) {
+            return $opportunity->tasks->contains(function ($task) use ($third_phase_type_id) {
+                return $task->taskType->id === $third_phase_type_id;
             });
         });
 
         $wonOpportunities = $opportunities->where('status', OpportunityStatus::WON->value);
-        if ($opportunities->count() != 0) {
-            $qualifyingPrecentage = $qualifyingOpportunities->count() / $opportunities->count() * 100;
-            $meetingPrecentage = $meetingOpportunities->count() / $opportunities->count() * 100;
-            $wonPrecentage = $wonOpportunities->count() / $opportunities->count() * 100;
+        $total_opportunty = $opportunities->count();
+        if ($total_opportunty != 0) {
+            $qualifyingPrecentage = $qualifyingOpportunities->count() / $total_opportunty * 100;
+            $thirdPhasePrecentage = $thirdPhase->count() / $total_opportunty * 100;
+            $wonPrecentage = $wonOpportunities->count() / $total_opportunty * 100;
         }
 
         return [
-            'total_opportunities' => $opportunities->count(),
-            'qualifying_precentage' => $qualifyingPrecentage ?? 0,
-            'meeting_precentage' => $meetingPrecentage ?? 0,
-            'won_precentage' => $wonPrecentage ?? 0,
+            'total_opportunities' => $total_opportunty,
+            'qualifying_precentage' => $qualifyingPrecentage,
+            'third_phase_precentage' => $thirdPhasePrecentage,
+            'won_precentage' => $wonPrecentage,
         ];
     }
 
     public function getUserRecentActivities()
     {
-        return $this->activityService->getUserRecentActivities(auth()->id(), 5);
+        return $this->activityService->getUserRecentActivities(user_id(), 5);
     }
 
     public function getTopPerformingSalesReps()
@@ -102,8 +116,6 @@ class DashboardService
         $filters = [];
         $relation = [];
         $data = $this->dealService->queryGet(filters: $filters, withRelations:$relation);
-        dd()
-        dd(Deal::VisibleForPage(auth()->user()));
     }
 
     private function getActiveLeads(array $filters)
@@ -147,6 +159,23 @@ class DashboardService
 
     private function getAvgTimeToAction(array $filters)
     {
-        return 'still working on it';
+        // Get all leads with filters applied
+        $leads = $this->leadService->getAll($filters);
+        
+        // Filter leads that have avg_action_time set (not null)
+        $leadsWithActionTime = $leads->filter(function ($lead) {
+            return !is_null($lead->avg_action_time) && $lead->avg_action_time > 0;
+        });
+        
+        // If no leads have action time, return 0
+        if ($leadsWithActionTime->isEmpty()) {
+            return 0;
+        }
+        
+        // Calculate average time to action in seconds
+        $avgSeconds = $leadsWithActionTime->avg('avg_action_time');
+        
+        // Return average in seconds (rounded to 2 decimal places)
+        return round($avgSeconds, 2);
     }
 }

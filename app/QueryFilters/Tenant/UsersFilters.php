@@ -56,4 +56,9 @@ class UsersFilters extends QueryFilter
     {
         return $this->builder->whereNull('team_id');
     }
+
+    public function team_id($term)
+    {
+        return $this->builder->where('team_id', $term);
+    }
 }

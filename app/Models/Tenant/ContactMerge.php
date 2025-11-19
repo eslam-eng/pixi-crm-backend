@@ -5,7 +5,9 @@ namespace App\Models\Tenant;
 use App\Enums\IdenticalContactType;
 use App\Enums\MergeContactType;
 use App\Traits\Filterable;
+use App\Models\Source;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContactMerge extends Model
 {
@@ -19,11 +21,9 @@ class ContactMerge extends Model
         'first_name',
         'last_name',
         'email',
-        'contact_phone',
         'job_title',
         'department',
         'status',
-        'source_id',
         'contact_method',
         'email_permission',
         'phone_permission',
@@ -51,6 +51,10 @@ class ContactMerge extends Model
         'phone_permission' => 'boolean',
     ];
 
+    public function contactMergePhones(): HasMany
+    {
+        return $this->hasMany(ContactMergePhone::class, 'contact_merge_id');
+    }
 
     public function contact()
     {
