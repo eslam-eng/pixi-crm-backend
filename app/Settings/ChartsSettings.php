@@ -8,7 +8,7 @@ use Spatie\LaravelSettings\Settings;
 class ChartsSettings extends Settings
 {
     // Feature Toggles
-    public int $third_phrase_type;
+    public int $third_phase_type;
 
 
     public static function group(): string
@@ -19,7 +19,7 @@ class ChartsSettings extends Settings
     public static function defaults(): array
     {
         return [
-            'third_phrase_type' => 2,
+            'third_phase_type' => 2,
         ];
     }
 }

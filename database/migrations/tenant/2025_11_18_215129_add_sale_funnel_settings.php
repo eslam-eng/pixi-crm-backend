@@ -6,6 +6,6 @@ return new class extends SettingsMigration
 {
     public function up(): void
     {
-        $this->migrator->add('charts_settings.third_phrase_type', 2);
+        $this->migrator->add('charts_settings.third_phase_type', 2);
     }
 };

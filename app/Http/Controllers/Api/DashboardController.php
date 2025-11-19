@@ -84,25 +84,19 @@ class DashboardController extends Controller
         return apiResponse(data: $activities);
     }
 
-    public function getfilterUsers(Request $request): JsonResponse
+    public function getfilterUsers(): JsonResponse
     {
         try {
             $filters = array_filter(request()->query());
             /** @var \App\Models\Tenant\User|null $user */
             $user = auth('api_tenant')->user();
 
-            // Check if user has view-admin-dashboard permission
             if ($user && method_exists($user, 'can') && $user->can(PermissionsEnum::VIEW_ADMIN_DASHBOARD->value)) {
-                // Return all users
                 $users = $this->userService->index(filters: $filters);
-            }
-            // Check if user has view-manager-dashboard permission
-            elseif ($user && method_exists($user, 'can') && $user->can(PermissionsEnum::VIEW_MANAGER_DASHBOARD->value)) {
-                // Manager must have a team_id
+            } elseif ($user && method_exists($user, 'can') && $user->can(PermissionsEnum::VIEW_MANAGER_DASHBOARD->value)) {
                 if (!$user->team_id) {
                     throw new GeneralException(__('app.manager_must_have_team'));
                 }
-                // Filter by team_id
                 $filters['team_id'] = $user->team_id;
                 $users = $this->userService->index(filters: $filters);
             } else {
@@ -117,14 +111,12 @@ class DashboardController extends Controller
         }
     }
 
-    public function getfilterTeams(Request $request): JsonResponse
+    public function getfilterTeams(): JsonResponse
     {
         try {
             $filters = array_filter(request()->query());
             /** @var \App\Models\Tenant\User|null $user */
             $user = auth('api_tenant')->user();
-
-            // Check if user has view-admin-dashboard permission
             if ($user && method_exists($user, 'can') && $user->can(PermissionsEnum::VIEW_ADMIN_DASHBOARD->value)) {
                 $teams = $this->teamService->index(filters: $filters);
             } else {

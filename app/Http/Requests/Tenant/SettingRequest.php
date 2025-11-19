@@ -56,7 +56,7 @@ class SettingRequest extends FormRequest
                 $rules[] = 'max:8760';
                 break;
 
-            case 'third_phrase_type':
+            case 'third_phase_type':
                 $rules[] = 'required';
                 $rules[] = 'integer';
                 $rules[] = 'exists:task_types,id';
