@@ -84,25 +84,26 @@ class DashboardService
         $third_phase_type_id = $settings->third_phase_type;
         $opportunities = $this->leadService->index($filters, ['tasks.taskType']);
         $qualifyingOpportunities = $opportunities->where('is_qualifying', 1);
-        $thirdPhase = $opportunities->filter(function ($opportunity) use ($third_phase_type_id) {
+        $thirdPhase = $qualifyingOpportunities->filter(function ($opportunity) use ($third_phase_type_id) {
             return $opportunity->tasks->contains(function ($task) use ($third_phase_type_id) {
                 return $task->taskType->id === $third_phase_type_id;
             });
         });
 
-        $wonOpportunities = $opportunities->where('status', OpportunityStatus::WON->value);
+        $wonOpportunities = $thirdPhase->where('status', OpportunityStatus::WON->value);
         $total_opportunty = $opportunities->count();
+        
         if ($total_opportunty != 0) {
-            $qualifyingPrecentage = $qualifyingOpportunities->count() / $total_opportunty * 100;
-            $thirdPhasePrecentage = $thirdPhase->count() / $total_opportunty * 100;
-            $wonPrecentage = $wonOpportunities->count() / $total_opportunty * 100;
+            $qualifyingPrecentage = $qualifyingOpportunities->count() ;
+            $thirdPhase = $thirdPhase->count() ;
+            $wonPrecentage = $wonOpportunities->count();
         }
 
         return [
             'total_opportunities' => $total_opportunty,
-            'qualifying_precentage' => $qualifyingPrecentage,
-            'third_phase_precentage' => $thirdPhasePrecentage,
-            'won_precentage' => $wonPrecentage,
+            'qualifying' => $qualifyingPrecentage,
+            'third_phase' => $thirdPhase,
+            'won' => $wonPrecentage,
         ];
     }
 
