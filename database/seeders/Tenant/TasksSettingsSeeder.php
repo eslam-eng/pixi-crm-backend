@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\Tenant;
 
 use App\Settings\TasksSettings;
 use Illuminate\Database\Seeder;
