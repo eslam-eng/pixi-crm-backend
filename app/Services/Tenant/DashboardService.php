@@ -4,13 +4,13 @@ namespace App\Services\Tenant;
 
 use App\Enums\OpportunityStatus;
 use App\Enums\TaskStatusEnum;
-use App\Models\Tenant\Deal;
 use App\Services\LeadService;
 use App\Services\Tenant\Deals\DealService;
 use App\Services\Tenant\Tasks\TaskService;
 use App\Services\Tenant\Users\UserService;
 use App\Services\ActivityService;
 use App\Settings\ChartsSettings;
+use Carbon\Carbon;
 
 class DashboardService
 {
@@ -24,7 +24,7 @@ class DashboardService
 
     public function getWidgets(array $filters)
     {
-        $totalLeads = $this->leadService->getAll($filters)->count();
+        $totalLeadsWithCompare = $this->totalLeadsWithCompare($filters);
 
         $activeLeadsCount = $this->getActiveLeads($filters);
 
@@ -40,7 +40,7 @@ class DashboardService
         $target = $this->getTarget($filters);
 
         return [
-            'total_leads' => $totalLeads,
+            'total_leads' => $totalLeadsWithCompare,
             'active_leads' => $activeLeadsCount,
             'percentage_won_leads' => $percentageWonLeads,
             'average_of_deals_value' => $average_of_deals_value,
@@ -84,25 +84,26 @@ class DashboardService
         $third_phase_type_id = $settings->third_phase_type;
         $opportunities = $this->leadService->index($filters, ['tasks.taskType']);
         $qualifyingOpportunities = $opportunities->where('is_qualifying', 1);
-        $thirdPhase = $opportunities->filter(function ($opportunity) use ($third_phase_type_id) {
+        $thirdPhase = $qualifyingOpportunities->filter(function ($opportunity) use ($third_phase_type_id) {
             return $opportunity->tasks->contains(function ($task) use ($third_phase_type_id) {
                 return $task->taskType->id === $third_phase_type_id;
             });
         });
 
-        $wonOpportunities = $opportunities->where('status', OpportunityStatus::WON->value);
+        $wonOpportunities = $thirdPhase->where('status', OpportunityStatus::WON->value);
         $total_opportunty = $opportunities->count();
+        
         if ($total_opportunty != 0) {
-            $qualifyingPrecentage = $qualifyingOpportunities->count() / $total_opportunty * 100;
-            $thirdPhasePrecentage = $thirdPhase->count() / $total_opportunty * 100;
-            $wonPrecentage = $wonOpportunities->count() / $total_opportunty * 100;
+            $qualifyingPrecentage = $qualifyingOpportunities->count() ;
+            $thirdPhase = $thirdPhase->count() ;
+            $wonPrecentage = $wonOpportunities->count();
         }
 
         return [
             'total_opportunities' => $total_opportunty,
-            'qualifying_precentage' => $qualifyingPrecentage,
-            'third_phase_precentage' => $thirdPhasePrecentage,
-            'won_precentage' => $wonPrecentage,
+            'qualifying' => $qualifyingPrecentage,
+            'third_phase' => $thirdPhase,
+            'won' => $wonPrecentage,
         ];
     }
 
@@ -113,8 +114,9 @@ class DashboardService
 
     public function getTopPerformingSalesReps(array $filters)
     {
-        $deals = $this->dealService->queryGet(filters: $filters, withRelations: $relation)->get();
 
+        $deals = $this->dealService->queryGet(filters: $filters)->get();
+        
         $allUser = $deals->groupBy('assigned_to_id')->map(function ($leads, $user_id) {
             return [
                 'user_id' => $user_id,
@@ -192,5 +194,24 @@ class DashboardService
 
         // Return average in seconds (rounded to 2 decimal places)
         return round($avgSeconds, 2);
+    }
+
+    private function totalLeadsWithCompare(array $filters)
+    {
+        if (array_key_exists('user_id', $filters)) {
+            unset($filters['user_id']);
+        }
+
+        $totalLeadsNewRange = $this->leadService->queryGet(filters: $filters)->count();
+
+        $first_date = Carbon::parse($filters['start_date'])->copy();
+        $end_date = Carbon::parse($filters['end_date'])->copy();
+        $days = $first_date->diffInDays($end_date);
+
+        $filters['start_date'] = $first_date->subDay($days)->toDateString();
+        $filters['end_date'] = $end_date->subDay($days)->toDateString();
+
+        $totalLeadsOldRange = $this->leadService->queryGet(filters: $filters)->count();
+        return calcChange($totalLeadsOldRange, $totalLeadsNewRange);
     }
 }

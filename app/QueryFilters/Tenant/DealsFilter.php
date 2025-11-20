@@ -122,6 +122,14 @@ class DealsFilter extends QueryFilter
     }
 
     /**
+     * Filter by approval status
+     */
+    public function approval_status($term)
+    {
+        return $this->builder->where('approval_status', $term);
+    }
+
+    /**
      * Filter by deal type
      */
     public function deal_type($term)
