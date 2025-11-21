@@ -96,7 +96,6 @@ class DashboardController extends Controller
         $filters = [
             'get_Top_Performing_Sales_Reps' => Auth::user(),
             'created_date_range' => $date_raget,
-            'approval_status' => ApprovalStatusEnum::APPROVED->value
         ];
         $topThree = $this->dashboardService->getTopPerformingSalesReps(filters: $filters);
         return apiResponse(data: $topThree);
@@ -147,5 +146,17 @@ class DashboardController extends Controller
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
+    }
+
+    public function getTarget(DashboardRequest $request)
+    {
+        $filters = array_filter(
+            $request->only('start_date', 'end_date', 'user_id', 'team_id'),
+            function ($value) {
+                return !is_null($value) && $value !== '';
+            }
+        );
+        $target = $this->dashboardService->getTarget($filters);
+        return apiResponse(data: $target);
     }
 }

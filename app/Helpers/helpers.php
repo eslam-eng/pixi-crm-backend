@@ -93,16 +93,14 @@ if (!function_exists('calcChange')) {
 
         if ($previous > 0) {
             $percentage = ($difference / $previous) * 100;
+            $percentage = round($percentage, 2);
         } else {
-            $percentage = 0;
+            $percentage = 'no previous value';
         }
 
         return [
-            'previous'   => $previous,
             'current'    => $current,
-            'difference' => $difference,
-            'percentage' => round($percentage, 2),
-            'status'     => $difference > 0 ? 'increase' : ($difference < 0 ? 'decrease' : 'no_change'),
+            'percentage' => $percentage,
         ];
     }
 }
