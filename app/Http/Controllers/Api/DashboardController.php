@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\ApprovalStatusEnum;
 use App\Enums\PermissionsEnum;
 use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
