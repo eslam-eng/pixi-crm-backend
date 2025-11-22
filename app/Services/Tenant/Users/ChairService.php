@@ -14,6 +14,11 @@ class ChairService extends BaseService
 {
     public function __construct(private Chair $model) {}
 
+    public function getModel(): Chair
+    {
+        return $this->model;
+    }
+    
     public function getAll(array $filters = [])
     {
         return $this->queryGet($filters)->get();

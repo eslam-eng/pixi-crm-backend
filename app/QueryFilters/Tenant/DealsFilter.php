@@ -170,7 +170,7 @@ class DealsFilter extends QueryFilter
         });
     }
 
-    public function get_Top_Performing_Sales_Reps($term)
+    public function dashboard_view($term)
     {
         $user = $term;
 
@@ -184,6 +184,10 @@ class DealsFilter extends QueryFilter
                 ->whereHas('assigned_to', function ($query) use ($teamId) {
                     $query->where('team_id', $teamId);
                 });
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_AGENT_DASHBOARD->value)) {
+            return $this->builder->where('assigned_to_id', $user->id);
         }
     }
 }

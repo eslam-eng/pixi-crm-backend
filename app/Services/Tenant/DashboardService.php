@@ -185,7 +185,20 @@ class DashboardService
 
     private function getTarget(array $filters)
     {
-        return $this->chairService->getQuery($filters);
+        $filters['user_id'] = $filters['user_id'] ?? user_id();
+        $requireTarget = $this->getRequiredTarget($filters);
+        $deals_values = $this->dealService->queryGet($filters)->sum('total_amount');
+
+        if ($deals_values == 0 ) {
+            return 0;
+        }
+
+         if (is_null($requireTarget)) {
+            return 'user has no target';
+        }
+
+        $target_progress = $requireTarget / $deals_values * 100 ;
+        return $target_progress;
     }
 
     private function getAvgTimeToAction(array $filters)
@@ -214,19 +227,17 @@ class DashboardService
     {
         $totalLeadsNewRange = $this->leadService->queryGet(filters: $filters)->count();
 
-        $first_date = Carbon::parse($filters['start_date'])->copy();
-        $end_date = Carbon::parse($filters['end_date'])->copy();
-        $days = $first_date->diffInDays($end_date);
+        $oldFilters = $this->getOldRangeDate($filters); //get past range date
 
-        $filters['start_date'] = $first_date->subDay($days)->toDateString();
-        $filters['end_date'] = $end_date->subDay($days)->toDateString();
-
-        $totalLeadsOldRange = $this->leadService->queryGet(filters: $filters)->count();
+        $totalLeadsOldRange = $this->leadService->queryGet(filters: $oldFilters)->count();
         return calcChange($totalLeadsOldRange, $totalLeadsNewRange);
     }
 
     private function getOldRangeDate(array $filters): array
     {
+        if(!isset($filters['start_date']) || !isset($filters['end_date'])) {
+            return $filters;
+        }
         $first_date = Carbon::parse($filters['start_date'])->copy();
         $end_date = Carbon::parse($filters['end_date'])->copy();
         $days = $first_date->diffInDays($end_date);
@@ -235,5 +246,32 @@ class DashboardService
         $filters['end_date'] = $end_date->subDay($days)->toDateString();
 
         return $filters;
+    }
+
+    private function getRequiredTarget(array $filters)
+    {
+        if(isset($filters['start_date']) && isset($filters['end_date'])) {
+            $requierMonth = Carbon::parse($filters['start_date'])->copy()->month;
+            $requierYear = Carbon::parse($filters['start_date'])->copy()->year;
+        }else {
+            $requierMonth = Carbon::now()->copy()->month;
+            $requierYear = Carbon::now()->copy()->year;
+        }
+
+        $newFilters = [
+            'user' => $filters['user_id'],
+            'period_number' => $requierMonth,
+            'year' => $requierYear,
+        ];
+
+        $chair = $this->chairService->queryGet([
+            'chair_rarget' => $newFilters
+        ])->first();
+
+        if(!$chair || !$chair->exists()) {
+            return null;
+        }
+        return $chair->target($requierYear, $requierMonth)->value('amount');
+        
     }
 }

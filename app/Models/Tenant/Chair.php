@@ -3,13 +3,16 @@
 namespace App\Models\Tenant;
 
 use App\Enums\PeriodType;
+use App\Traits\Filterable;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Chair extends Model
 {
-    use HasFactory;
+    use HasFactory,Filterable;
 
     protected $fillable = ['team_id', 'user_id', 'started_at', 'ended_at'];
 
@@ -47,6 +50,14 @@ class Chair extends Model
     public function targets()
     {
         return $this->hasMany(ChairTarget::class);
+    }
+    
+    public function target($year, $period_number): HasOne
+    {
+        return $this->hasOne(ChairTarget::class)->ofMany([],
+         function (Builder $query) use ($year, $period_number) {
+           $query->where('year', $year)->where('period_number', $period_number);
+        });
     }
 
     /**
