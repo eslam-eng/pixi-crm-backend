@@ -39,7 +39,7 @@ class DashboardService
 
         $avgTimeToAction = $this->getAvgTimeToAction($filters);
 
-        $target = $this->getTarget($filters);
+        $target_progress_percentage = $this->getTarget($filters);
 
         return [
             'total_leads' => $totalLeadsWithCompare,
@@ -47,7 +47,7 @@ class DashboardService
             'percentage_won_leads' => $percentageWonLeads,
             'average_of_deals_value' => $average_of_deals_value,
             'due_tasks' => $dueTasks,
-            'target' => $target, // still working on it
+            'target_progress_percentage' => $target_progress_percentage,
             'avg_time_to_action' => $avgTimeToAction, // still working on it
         ];
     }
@@ -197,7 +197,7 @@ class DashboardService
             return 'user has no target';
         }
 
-        $target_progress = $requireTarget / $deals_values * 100;
+        $target_progress = $deals_values /  $requireTarget * 100;
         return $target_progress;
     }
 
@@ -271,6 +271,6 @@ class DashboardService
         if (!$chair || !$chair->exists()) {
             return null;
         }
-        return $chair->target($requierYear, $requierMonth)->value('amount');
+        return $chair->target($requierYear, $requierMonth)->value('target_value');
     }
 }
