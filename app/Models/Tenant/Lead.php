@@ -129,4 +129,40 @@ class Lead extends Model implements Auditable
             ->withPivot('start_date', 'exit_date', 'pipline_id')
             ->withTimestamps();
     }
+        
+    // Boot method to register model events for CRUD activity logging
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($lead) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($lead)
+                ->withProperties(['attributes' => $lead->getAttributes()])
+                ->log('Lead created');
+        });
+
+        static::updated(function ($lead) {
+            $changes = $lead->getDirty();
+            if (!empty($changes)) {
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($lead)
+                    ->withProperties([
+                        'old' => $lead->getOriginal(),
+                        'attributes' => $changes,
+                    ])
+                    ->log('Lead updated');
+            }
+        });
+
+        static::deleted(function ($lead) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($lead)
+                ->withProperties(['attributes' => $lead->getAttributes()])
+                ->log('Lead deleted');
+        });
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Services\Tenant\Users;
 use App\Models\User;
 use App\Models\Team;
 use App\Models\Tenant\Chair;
+use App\QueryFilters\Tenant\ChairFilters;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Services\BaseService;
@@ -12,9 +13,28 @@ use App\Services\BaseService;
 class ChairService extends BaseService
 {
     public function __construct(private Chair $model) {}
-    /**
-     * Assign user as chair of a team
-     */
+
+    public function getModel(): Chair
+    {
+        return $this->model;
+    }
+    
+    public function getAll(array $filters = [])
+    {
+        return $this->queryGet($filters)->get();
+    }
+
+    public function listing(array $filters = [], array $withRelations = [], $perPage = 10): \Illuminate\Contracts\Pagination\CursorPaginator
+    {
+        return $this->queryGet(filters: $filters, withRelations: $withRelations)->cursorPaginate($perPage);
+    }
+
+    public function queryGet(array $filters = [], array $withRelations = []): \Illuminate\Database\Eloquent\Builder
+    {
+        $users = $this->getQuery()->with($withRelations);
+        return $users->filter(new ChairFilters($filters));
+    }
+
     public function assignTeamChair(User $user, Team $team, ?Carbon $startDate = null): Chair
     {
         $startDate = $startDate ?? Carbon::today();

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Tenant\Deal;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -29,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
             'service' => \App\Models\Tenant\Service::class,
             'user'    => \App\Models\Tenant\User::class,
             'admin' => \App\Models\Admin::class,
+            'task' => \App\Models\Tenant\Task::class,
+            'deal' => \App\Models\Tenant\Deal::class,
         ]);
     }
 }

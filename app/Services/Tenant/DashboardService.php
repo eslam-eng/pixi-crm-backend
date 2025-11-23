@@ -9,6 +9,7 @@ use App\Services\Tenant\Deals\DealService;
 use App\Services\Tenant\Tasks\TaskService;
 use App\Services\Tenant\Users\UserService;
 use App\Services\ActivityService;
+use App\Services\Tenant\Users\ChairService;
 use App\Settings\ChartsSettings;
 use Carbon\Carbon;
 
@@ -20,13 +21,14 @@ class DashboardService
         public TaskService $taskService,
         public UserService $userService,
         public ActivityService $activityService,
+        public ChairService $chairService,
     ) {}
 
     public function getWidgets(array $filters)
     {
         $totalLeadsWithCompare = $this->totalLeadsWithCompare($filters);
 
-        $activeLeadsCount = $this->getActiveLeads($filters);
+        $totalDeals = $this->getTotalDealsWithCompare($filters);
 
         $percentageWonLeads = $this->getPercentageWonLeads($filters);
 
@@ -41,7 +43,7 @@ class DashboardService
 
         return [
             'total_leads' => $totalLeadsWithCompare,
-            'active_leads' => $activeLeadsCount,
+            'total_deals' => $totalDeals,
             'percentage_won_leads' => $percentageWonLeads,
             'average_of_deals_value' => $average_of_deals_value,
             'due_tasks' => $dueTasks,
@@ -127,41 +129,53 @@ class DashboardService
         $topThree = $allUser->sortByDesc('total_amount')->take(3);
 
         return $topThree->map(function ($data) {
+            $user = $this->userService->findById($data['user_id']);
+            if (!$user) {
+                return null;
+            }
             return [
-                'user' => $this->userService->findById($data['user_id'])->first_name,
+                'user' => $user->first_name,
+                'user_image' => $user->image,
                 'count' => $data['count'],
                 'total_amount' => $data['total_amount'],
             ];
         })->values();
     }
 
-    private function getActiveLeads(array $filters)
+    private function getTotalDealsWithCompare(array $filters)
     {
-        $filters['status'] = OpportunityStatus::ACTIVE->value;
-        return $this->leadService->getAll($filters)->count();
+        $totalDealsCurrent = $this->dealService->getAll($filters)->count();
+
+        $oldFilters = $this->getOldRangeDate($filters); //get past range date
+
+        $totalDealsOldRange = $this->dealService->getAll($oldFilters)->count();
+
+        return calcChange($totalDealsOldRange, $totalDealsCurrent);
     }
 
     private function getPercentageWonLeads(array $filters)
     {
-        $totalLeads = $this->leadService->getAll($filters)->count();
-
         $filters['status'] = OpportunityStatus::WON->value;
+
         $wonLeads = $this->leadService->getAll($filters)->count();
 
-        $wonPercentage = 0;
+        $oldFilters = $this->getOldRangeDate($filters); //get past range date
 
-        if ($totalLeads > 0) {
-            $wonPercentage = ($wonLeads / $totalLeads) * 100;
-            $wonPercentage = round($wonPercentage, 2);
-        }
+        $wonLeadsOldRange = $this->leadService->getAll($oldFilters)->count();
 
-        return $wonPercentage;
+        return calcChange($wonLeadsOldRange, $wonLeads);
     }
 
     private function getAverageDealsValue(array $filters)
     {
-        return $this->dealService->getAll($filters)->avg('total_amount');
-    }
+        $avgDealsValueCurrent = $this->dealService->getAll($filters)->avg('total_amount');
+
+        $oldFilters = $this->getOldRangeDate($filters); //get past range date
+
+        $avgDealsValueOldRange = $this->dealService->getAll($oldFilters)->avg('total_amount');
+
+        return calcChange($avgDealsValueOldRange, $avgDealsValueCurrent);
+    }       
 
     private function getDueTasks(array $filters)
     {
@@ -171,7 +185,20 @@ class DashboardService
 
     private function getTarget(array $filters)
     {
-        return 'still working on it';
+        $filters['user_id'] = $filters['user_id'] ?? user_id();
+        $requireTarget = $this->getRequiredTarget($filters);
+        $deals_values = $this->dealService->queryGet($filters)->sum('total_amount');
+
+        if ($deals_values == 0 ) {
+            return 0;
+        }
+
+         if (is_null($requireTarget)) {
+            return 'user has no target';
+        }
+
+        $target_progress = $requireTarget / $deals_values * 100 ;
+        return $target_progress;
     }
 
     private function getAvgTimeToAction(array $filters)
@@ -198,12 +225,19 @@ class DashboardService
 
     private function totalLeadsWithCompare(array $filters)
     {
-        if (array_key_exists('user_id', $filters)) {
-            unset($filters['user_id']);
-        }
-
         $totalLeadsNewRange = $this->leadService->queryGet(filters: $filters)->count();
 
+        $oldFilters = $this->getOldRangeDate($filters); //get past range date
+
+        $totalLeadsOldRange = $this->leadService->queryGet(filters: $oldFilters)->count();
+        return calcChange($totalLeadsOldRange, $totalLeadsNewRange);
+    }
+
+    private function getOldRangeDate(array $filters): array
+    {
+        if(!isset($filters['start_date']) || !isset($filters['end_date'])) {
+            return $filters;
+        }
         $first_date = Carbon::parse($filters['start_date'])->copy();
         $end_date = Carbon::parse($filters['end_date'])->copy();
         $days = $first_date->diffInDays($end_date);
@@ -211,7 +245,33 @@ class DashboardService
         $filters['start_date'] = $first_date->subDay($days)->toDateString();
         $filters['end_date'] = $end_date->subDay($days)->toDateString();
 
-        $totalLeadsOldRange = $this->leadService->queryGet(filters: $filters)->count();
-        return calcChange($totalLeadsOldRange, $totalLeadsNewRange);
+        return $filters;
+    }
+
+    private function getRequiredTarget(array $filters)
+    {
+        if(isset($filters['start_date']) && isset($filters['end_date'])) {
+            $requierMonth = Carbon::parse($filters['start_date'])->copy()->month;
+            $requierYear = Carbon::parse($filters['start_date'])->copy()->year;
+        }else {
+            $requierMonth = Carbon::now()->copy()->month;
+            $requierYear = Carbon::now()->copy()->year;
+        }
+
+        $newFilters = [
+            'user' => $filters['user_id'],
+            'period_number' => $requierMonth,
+            'year' => $requierYear,
+        ];
+
+        $chair = $this->chairService->queryGet([
+            'chair_rarget' => $newFilters
+        ])->first();
+
+        if(!$chair || !$chair->exists()) {
+            return null;
+        }
+        return $chair->target($requierYear, $requierMonth)->value('amount');
+        
     }
 }
