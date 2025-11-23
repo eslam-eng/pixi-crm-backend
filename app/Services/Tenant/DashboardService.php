@@ -39,7 +39,7 @@ class DashboardService
 
         $avgTimeToAction = $this->getAvgTimeToAction($filters);
 
-        $target_progress_percentage = $this->getTarget($filters);
+        $target = $this->getTarget($filters);
 
         return [
             'total_leads' => $totalLeadsWithCompare,
@@ -47,7 +47,7 @@ class DashboardService
             'percentage_won_leads' => $percentageWonLeads,
             'average_of_deals_value' => $average_of_deals_value,
             'due_tasks' => $dueTasks,
-            'target_progress_percentage' => $target_progress_percentage,
+            'target' => $target,
             'avg_time_to_action' => $avgTimeToAction, // still working on it
         ];
     }
@@ -198,7 +198,11 @@ class DashboardService
         }
 
         $target_progress = $deals_values /  $requireTarget * 100;
-        return $target_progress;
+        return [
+            'target_progress' => $target_progress,
+            'deals_values' => $deals_values,
+            'require_target' => $requireTarget
+        ];
     }
 
     private function getAvgTimeToAction(array $filters)
