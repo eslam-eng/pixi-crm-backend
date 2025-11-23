@@ -94,10 +94,10 @@ class DashboardService
 
         $wonOpportunities = $thirdPhase->where('status', OpportunityStatus::WON->value);
         $total_opportunty = $opportunities->count();
-        
+
         if ($total_opportunty != 0) {
-            $qualifyingPrecentage = $qualifyingOpportunities->count() ;
-            $thirdPhase = $thirdPhase->count() ;
+            $qualifyingPrecentage = $qualifyingOpportunities->count();
+            $thirdPhase = $thirdPhase->count();
             $wonPrecentage = $wonOpportunities->count();
         }
 
@@ -118,7 +118,7 @@ class DashboardService
     {
 
         $deals = $this->dealService->queryGet(filters: $filters)->get();
-        
+
         $allUser = $deals->groupBy('assigned_to_id')->map(function ($leads, $user_id) {
             return [
                 'user_id' => $user_id,
@@ -168,14 +168,14 @@ class DashboardService
 
     private function getAverageDealsValue(array $filters)
     {
-        $avgDealsValueCurrent = $this->dealService->getAll($filters)->avg('total_amount');
+        $avgDealsValueCurrent = $this->dealService->getAll($filters)->avg('total_amount') ?? 0;
 
         $oldFilters = $this->getOldRangeDate($filters); //get past range date
 
-        $avgDealsValueOldRange = $this->dealService->getAll($oldFilters)->avg('total_amount');
+        $avgDealsValueOldRange = $this->dealService->getAll($oldFilters)->avg('total_amount') ?? 0;
 
         return calcChange($avgDealsValueOldRange, $avgDealsValueCurrent);
-    }       
+    }
 
     private function getDueTasks(array $filters)
     {
@@ -189,15 +189,15 @@ class DashboardService
         $requireTarget = $this->getRequiredTarget($filters);
         $deals_values = $this->dealService->queryGet($filters)->sum('total_amount');
 
-        if ($deals_values == 0 ) {
+        if ($deals_values == 0) {
             return 0;
         }
 
-         if (is_null($requireTarget)) {
+        if (is_null($requireTarget)) {
             return 'user has no target';
         }
 
-        $target_progress = $requireTarget / $deals_values * 100 ;
+        $target_progress = $requireTarget / $deals_values * 100;
         return $target_progress;
     }
 
@@ -235,7 +235,7 @@ class DashboardService
 
     private function getOldRangeDate(array $filters): array
     {
-        if(!isset($filters['start_date']) || !isset($filters['end_date'])) {
+        if (!isset($filters['start_date']) || !isset($filters['end_date'])) {
             return $filters;
         }
         $first_date = Carbon::parse($filters['start_date'])->copy();
@@ -250,10 +250,10 @@ class DashboardService
 
     private function getRequiredTarget(array $filters)
     {
-        if(isset($filters['start_date']) && isset($filters['end_date'])) {
+        if (isset($filters['start_date']) && isset($filters['end_date'])) {
             $requierMonth = Carbon::parse($filters['start_date'])->copy()->month;
             $requierYear = Carbon::parse($filters['start_date'])->copy()->year;
-        }else {
+        } else {
             $requierMonth = Carbon::now()->copy()->month;
             $requierYear = Carbon::now()->copy()->year;
         }
@@ -268,10 +268,9 @@ class DashboardService
             'chair_rarget' => $newFilters
         ])->first();
 
-        if(!$chair || !$chair->exists()) {
+        if (!$chair || !$chair->exists()) {
             return null;
         }
         return $chair->target($requierYear, $requierMonth)->value('amount');
-        
     }
 }
