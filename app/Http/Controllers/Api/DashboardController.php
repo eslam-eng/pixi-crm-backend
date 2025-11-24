@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Dashboard\TopPerformingRequest;
 use App\Http\Requests\Tenant\DashboardRequest;
 use App\Http\Resources\TeamDDLResource;
+use App\Http\Resources\Tenant\Dashboard\ActivityResource;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Services\TeamService;
 use App\Services\Tenant\DashboardService;
@@ -83,6 +84,7 @@ class DashboardController extends Controller
             user_id(),
             5
         );
+        $activities = ActivityResource::collection($activities);
         return apiResponse(data: $activities);
     }
 

@@ -380,4 +380,12 @@ return array(
   'only_one_dashboard_type_allowed' => 'Solo puede seleccionar UN tipo de panel (view-admin-dashboard, view-manager-dashboard o view-agent-dashboard)',
   'manager_must_have_team' => 'El gerente debe estar asignado a un equipo',
 
+  'lead_created' => 'Prospecto creado',
+  'lead_update' => 'Prospecto actualizado',
+  'lead_delete' => 'Prospecto eliminado',
+  'task_created' => 'Tarea creada',
+  'deal_created' => 'Negocio creado',
+  'lead' => 'Prospecto', // Or 'Trato'
+  'deal' => 'Negocio', // Or 'Trato'
+  'task' => 'Tarea',
 );

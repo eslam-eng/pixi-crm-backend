@@ -3,15 +3,16 @@
 namespace App\Models\Tenant;
 
 use App\Models\TaskReminder;
+use App\Observers\TaskObserver;
 use App\Traits\Filterable;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
+#[ObservedBy([TaskObserver::class])]
 class Task extends Model
 {
-    use Filterable, LogsActivity;
+    use Filterable;
     protected $fillable = [
         'title',
         'description',
@@ -129,34 +130,5 @@ class Task extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('created_at', 'desc');
-    }
-
-    protected static $logAttributes = [
-        'title',
-        'description',
-        'task_type_id',
-        'status',
-        'priority_id',
-        'due_date',
-        'due_time',
-        'assigned_to_id',
-        'lead_id',
-        'tags',
-        'additional_notes',
-        'escalation_sent'
-    ];
-
-    protected static $logOnlyDirty = true;
-
-    protected static $submitEmptyLogs = false;
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(self::$logAttributes)
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->useLogName('task')
-            ->setDescriptionForEvent(fn(string $eventName) => "Task has been {$eventName}");
     }
 }
