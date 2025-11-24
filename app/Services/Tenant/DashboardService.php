@@ -185,23 +185,29 @@ class DashboardService
 
     private function getTarget(array $filters)
     {
-        $filters['user_id'] = $filters['user_id'] ?? user_id();
-        $requireTarget = $this->getRequiredTarget($filters);
+        if (isset($filters['user_id'])) {
+            $filters['assigned_to_ids'] = $filters['user_id'] ?? user_id();
+            unset($filters['user_id']);
+        }else {
+            $filters['assigned_to_ids'] = $filters['assigned_to_ids'] ?? user_id();
+        }
+        $target = $this->getRequiredTarget($filters);
+        
         $deals_values = $this->dealService->queryGet($filters)->sum('total_amount');
-
+        
         if ($deals_values == 0) {
             return 0;
         }
-
-        if (is_null($requireTarget)) {
+        if (is_null($target)) {
             return 'user has no target';
         }
 
-        $target_progress = $deals_values /  $requireTarget * 100;
+        $target_progress = $deals_values /  $target->target_value * 100;
         return [
             'target_progress' => $target_progress,
             'deals_values' => $deals_values,
-            'require_target' => $requireTarget
+            'require_target' => $target->target_value,
+            'period_type' => $target->period_type
         ];
     }
 
@@ -263,7 +269,7 @@ class DashboardService
         }
 
         $newFilters = [
-            'user' => $filters['user_id'],
+            'user' => $filters['assigned_to_ids'],
             'period_number' => $requierMonth,
             'year' => $requierYear,
         ];
@@ -275,6 +281,6 @@ class DashboardService
         if (!$chair || !$chair->exists()) {
             return null;
         }
-        return $chair->target($requierYear, $requierMonth)->value('target_value');
+        return $chair->target($requierYear, $requierMonth)->first();
     }
 }

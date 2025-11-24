@@ -15,6 +15,7 @@ use App\Services\Tenant\ItemService;
 use App\Services\Tenant\Users\UserService;
 use Auth;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -113,15 +114,18 @@ class LeadService extends BaseService
 
         $lead = $this->model->create($leadDTO->toArray());
 
-        if (!empty($variantsPayload)) {
+        Model::withoutEvents(function () use ($lead, $variantsPayload, $itemsPayload, $leadDTO) {
+            if (!empty($variantsPayload)) {
             $lead->variants()->sync($variantsPayload, true);
-        }
+            }
 
-        if (!empty($itemsPayload)) {
-            $lead->items()->sync($itemsPayload, true);
-        }
+            if (!empty($itemsPayload)) {
+                $lead->items()->sync($itemsPayload, true);
+            }
+            $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
+        });
+        
 
-        $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
 
         return $lead->load('variants', 'items.product', 'items.service');
     }
