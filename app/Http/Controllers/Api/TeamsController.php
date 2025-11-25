@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\TeamRequest;
 use App\Http\Requests\Tenant\Team\TeamBulkAssignRequest;
 use App\Http\Resources\TeamDDLResource;
+use App\Http\Resources\TeamShowResource;
 use App\Http\Resources\Tenant\Chairs\ChairResource;
 use App\Models\Tenant\Chair;
 use App\Services\TeamService;
@@ -34,7 +35,7 @@ class TeamsController extends Controller
                 return $value !== null && $value !== '';
             });
 
-            $withRelations = ['chairs.targets', 'chairs.user', 'leader.roles', 'members'];
+            $withRelations = ['chairs.targets', 'chairs.user', 'leader.roles', 'members', 'year_total'];
             if ($request->has('ddl')) {
                 $teams = $this->teamService->index(filters: $filters, withRelations: $withRelations);
                 $data = TeamDDLResource::collection($teams);
@@ -66,7 +67,7 @@ class TeamsController extends Controller
     {
         try {
             $team = $this->teamService->findById(id: $id, withRelations: ['chairs.targets', 'chairs.user', 'leader.roles', 'members']);
-            return ApiResponse(new TeamResource($team), 'Team retrieved successfully');
+            return ApiResponse(new TeamShowResource($team), 'Team retrieved successfully');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
