@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contacts\ContactRequest;
 use App\Http\Resources\ContactResource;
+use App\Http\Resources\ContactShowResource;
 use App\Imports\ContactsImport;
 use App\Services\ContactService;
 use Maatwebsite\Excel\Facades\Excel;
@@ -66,7 +67,7 @@ class ContactController extends Controller
             $contactDTO = ContactDTO::fromRequest($request);
             $contact = $this->contactService->store($contactDTO);
             DB::commit();
-            return ApiResponse(new ContactResource($contact), 'Contact created successfully', code: 201);
+            return ApiResponse(new ContactShowResource($contact), 'Contact created successfully', code: 201);
         } catch (GeneralException $e) {
             return ApiResponse(message: $e->getMessage(), code: $e->getCode());
         } catch (Exception $e) {
