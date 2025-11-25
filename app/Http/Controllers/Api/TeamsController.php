@@ -125,4 +125,28 @@ class TeamsController extends Controller
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function showWithTarget($id)
+    {
+        try {
+            $team = $this->teamService->findByIdWithTarget(id: $id);
+            return ApiResponse(new TeamResource($team), 'Team with target retrieved successfully');
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function teamBulkUpdate(TeamBulkAssignRequest $request, int $id): JsonResponse
+    {
+        try {
+            $teamBulkAssignDTO = TeamBulkAssignDTO::fromArray($request->validatedData());
+            DB::beginTransaction();
+            $team = $this->teamService->teamBulkUpdate($teamBulkAssignDTO, $id);
+            DB::commit();
+            return ApiResponse(new TeamResource($team), message: 'Team bulk assign successfully');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

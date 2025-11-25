@@ -363,7 +363,9 @@ Route::middleware([
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
+        Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);
         Route::post('teams/team-bulk-assign', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkAssign']);
+        Route::put('teams/{team}/team-bulk-update', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkUpdate']);
         Route::apiResource('teams', \App\Http\Controllers\Api\TeamsController::class);
 
         // Template routes

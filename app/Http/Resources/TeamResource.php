@@ -14,10 +14,11 @@ class TeamResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'description' => $this->description,
             'leader' => new UserResource($this->whenLoaded('leader')),
             'sales' => UserResource::collection($this->whenLoaded('members')),
-            'members' => ChairResource::collection($this->whenLoaded('chairs')),
             'is_target' => $this->is_target ? 'have team targets' : 'don\'t have team targets',
+            'members' => ChairResource::collection($this->whenLoaded('chairs')),
             'period_type' => $this->period_type,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
