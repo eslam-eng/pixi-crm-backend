@@ -7,9 +7,11 @@ use App\DTO\Tenant\UserDTO;
 use App\Exceptions\GeneralException;
 use App\Http\Requests\Tenant\Users\AssignToTeamRequest;
 use Exception;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\JsonResponse;
 use App\Services\Tenant\Users\UserService;
 use App\Exceptions\NotFoundException;
+use App\Exports\UsersExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Users\UserRequest;
 use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
@@ -210,5 +212,22 @@ class UserController extends Controller
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
+    }
+
+    public function getColumns()
+    {
+        $columns = $this->userService->getDatabaseFields();
+        return ApiResponse($columns, 'Columns retrieved successfully');
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'columns' => 'required|array|min:1', // e.g., ['first_name', 'email']
+            'columns.*' => 'string'
+        ]);
+        $columns = $request->input('columns');
+
+        return Excel::download(new UsersExport($columns), 'users.xlsx');
     }
 }

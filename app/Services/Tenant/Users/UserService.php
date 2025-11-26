@@ -453,4 +453,82 @@ class UserService extends BaseService
             4 => [10, 11, 12],
         };
     }
+
+    public function getDatabaseFields()
+    {
+        return [
+            'first_name' => [
+                'label' => 'First Name',
+                'required' => true,
+                'type' => 'string'
+            ],
+            'last_name' => [
+                'label' => 'Last Name',
+                'required' => true,
+                'type' => 'string'
+            ],
+            'email' => [
+                'label' => 'Email Address',
+                'required' => true,
+                'type' => 'email'
+            ],
+            'job_title' => [
+                'label' => 'Business Phone',
+                'required' => false,
+                'type' => 'string'
+            ],
+            'team_id' => [
+                'label' => 'Mobile Phone',
+                'required' => false,
+                'type' => 'string'
+            ],
+            'lang' => [
+                'label' => 'Job Title',
+                'required' => false,
+                'type' => 'string'
+            ],
+            'last_login_at' => [
+                'label' => 'Department',
+                'required' => false,
+                'type' => 'string'
+            ],
+            'phone' => [
+                'label' => 'Status',
+                'required' => false,
+                'type' => 'select',
+                'options' => ['active', 'inactive', 'pending']
+            ],
+            'department_id' => [
+                'label' => 'Preferred Contact Method',
+                'required' => false,
+                'type' => 'select',
+                'options' => ['email', 'phone', 'whatsapp', 'meeting']
+            ],
+            'is_active' => [
+                'label' => 'Email Permission',
+                'required' => false,
+                'type' => 'boolean'
+            ],
+            'remember_token' => [
+                'label' => 'Phone Permission',
+                'required' => false,
+                'type' => 'boolean'
+            ],
+            'created_at' => [
+                'label' => 'WhatsApp Permission',
+                'required' => false,
+                'type' => 'boolean'
+            ],
+            'updated_at' => [
+                'label' => 'Company Name',
+                'required' => false,
+                'type' => 'string'
+            ],
+            'landlord_id' => [
+                'label' => 'Website',
+                'required' => false,
+                'type' => 'url'
+            ],
+        ];
+    }
 }
