@@ -31,4 +31,9 @@ class ContactFilters extends QueryFilter
     {
         return $this->builder->where('source_id', $term);
     }
+
+    public function user_id($term)
+    {
+        return $this->builder->where('user_id', $term);
+    }
 }
