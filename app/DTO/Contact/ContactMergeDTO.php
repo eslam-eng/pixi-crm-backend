@@ -143,7 +143,7 @@ class ContactMergeDTO extends BaseDTO
             first_name: Arr::get($data, 'first_name'),
             last_name: Arr::get($data, 'last_name'),
             email: Arr::get($data, 'email'),
-            contact_phones: Arr::get($data, 'contact_phones'),
+            contact_phones: Arr::get($data, 'contact_merge_phones'),
             job_title: Arr::get($data, 'job_title'),
             department: Arr::get($data, 'department'),
             status: Arr::get($data, 'status'),
