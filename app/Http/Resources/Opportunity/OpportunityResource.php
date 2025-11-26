@@ -32,7 +32,7 @@ class OpportunityResource extends JsonResource
                     'category_name' => $item->category->name,
                     'sub_category_id' => $item->category->parent->id,
                     'sub_category_name' => $item->category->parent->name,
-                    'service_type' => $item->service->service_type,
+                    'service_type' => $item->service?->service_type,
                     'type' => $item->itemable_type,
                 ];
             })->values()->all()
