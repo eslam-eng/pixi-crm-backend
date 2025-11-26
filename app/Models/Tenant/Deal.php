@@ -2,18 +2,19 @@
 
 namespace App\Models\Tenant;
 
+use App\Observers\DealObserver;
 use App\Traits\Filterable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+#[ObservedBy([DealObserver::class])]
 class Deal extends Model implements HasMedia
 {
-    use Filterable, InteractsWithMedia, LogsActivity;
+    use Filterable, InteractsWithMedia;
     protected $fillable = [
         'deal_name',
         'lead_id',
@@ -106,30 +107,4 @@ class Deal extends Model implements HasMedia
             ->sharpen(10)
             ->nonQueued();
     }
-    
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'deal_name',
-                'lead_id',
-                'chair_id',
-                'sale_date',
-                'discount_type',
-                'discount_value',
-                'tax_rate',
-                'payment_status',
-                'payment_method_id',
-                'notes',
-                'assigned_to_id',
-                'total_amount',
-                'partial_amount_paid',
-                'amount_due',
-                'approval_status',
-            ])
-            ->logOnlyDirty()
-            ->useLogName('deal')
-            ->setDescriptionForEvent(fn(string $eventName) => "Deal has been {$eventName}");
-    }
-
 }

@@ -381,4 +381,12 @@ return array(
   'only_one_dashboard_type_allowed' => 'You can only select ONE dashboard type (view-admin-dashboard, view-manager-dashboard, or view-agent-dashboard)',
   'manager_must_have_team' => 'Manager must be assigned to a team',
 
+  'lead_created' => 'Lead created',
+  'lead_update' => 'Lead updated',
+  'lead_delete' => 'Lead deleted', 
+  'task_created' => 'Task created',
+  'deal_created' => 'Deal created',
+  'lead' => 'Lead',
+  'deal' => 'Deal',
+  'task' => 'Task',
 );

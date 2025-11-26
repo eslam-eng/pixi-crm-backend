@@ -380,4 +380,12 @@ return array(
   'only_one_dashboard_type_allowed' => 'Vous ne pouvez sélectionner qu\'UN seul type de tableau de bord (view-admin-dashboard, view-manager-dashboard ou view-agent-dashboard)',
   'manager_must_have_team' => 'Le gestionnaire doit être assigné à une équipe',
 
+  'task_created' => 'Tâche créée',
+  'deal_created' => 'Affaire créée',
+  'deal' => 'Affaire', // Or 'Transaction'
+  'task' => 'Tâche',
+  'lead' => 'Prospect',
+  'lead_created' => 'Prospect créé',
+  'lead_update' => 'Prospect mis à jour',
+  'lead_delete' => 'Prospect supprimé',
 );
