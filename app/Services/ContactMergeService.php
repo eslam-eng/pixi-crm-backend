@@ -157,4 +157,41 @@ class ContactMergeService extends BaseService
     {
         return (collect($contactPhones)->count() + $totalNumberOfPhones) >= 5;
     }
+
+    public function handleDuplicateById($id)
+    {
+        $contactMerge = $this->model->with('contactMergePhones')
+            ->where(['id' => $id, 'merge_status' => MergeContactType::PENDING->value])
+            ->firstOrFail();
+
+        $contactMergeDTO = contactMergeDTO::fromArray($contactMerge->toArray());
+
+        $newContact = $this->contactService->storeMerge($contactMergeDTO);
+
+        $contactPhones = collect($contactMergeDTO->contact_phones)->map(function ($phone) {
+            return [
+                'phone' => $phone["phone"],
+                'is_primary' => false,
+                'enable_whatsapp' => false,
+            ];
+        })->toArray();
+
+        $this->contactPhoneService->store($contactPhones, $newContact->id);
+
+        $contactMerge->update(['merge_status' => MergeContactType::DUPLICATED->value]);
+
+        return true;
+    }
+
+    function handleDuplicate() {
+        $errors = [];
+        $contactsMerge = $this->model->where('merge_status', MergeContactType::PENDING->value)->pluck('id');
+        foreach ($contactsMerge as $contactMerge) {
+            $error = $this->handleDuplicateById($contactMerge);
+            if (is_string($error)) {
+                $errors[] = $error;
+            }
+        }
+        return $errors;
+    }
 }

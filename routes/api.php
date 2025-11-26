@@ -135,6 +135,8 @@ Route::middleware([
         Route::post('contacts/merge/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'mergeById']);
         Route::post('contacts/merge-ignore', [\App\Http\Controllers\Api\ContactMergeController::class, 'ignore']);
         Route::post('contacts/merge-ignore/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'ignoreById']);
+        Route::post('contacts/duplicate/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'duplicateById']);
+        Route::post('contacts/duplicate', [\App\Http\Controllers\Api\ContactMergeController::class, 'duplicate']);
         Route::apiResource('contacts', \App\Http\Controllers\Api\ContactController::class);
 
         Route::prefix('item-attributes')->group(function () {
@@ -363,7 +365,9 @@ Route::middleware([
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
+        Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);
         Route::post('teams/team-bulk-assign', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkAssign']);
+        Route::put('teams/{team}/team-bulk-update', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkUpdate']);
         Route::apiResource('teams', \App\Http\Controllers\Api\TeamsController::class);
 
         // Template routes

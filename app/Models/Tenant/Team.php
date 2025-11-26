@@ -106,4 +106,11 @@ class Team extends Model
     {
         return $this->hasMany(User::class, 'team_id', 'id');
     }
+
+    public function year_total()
+    {
+        $currentYear = Carbon::now()->year;
+        
+        return $this->hasManyThrough(ChairTarget::class, Chair::class)->where('chair_targets.year', $currentYear);
+    }
 }

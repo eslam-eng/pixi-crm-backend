@@ -113,4 +113,34 @@ class ContactMergeController extends Controller
             return ApiResponse(message: 'Merge contacts not ignored', code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function duplicateById($id)
+    {
+        try {
+            DB::beginTransaction();
+            $this->contactMergeService->handleDuplicateById($id);
+            DB::commit();
+            return ApiResponse(message: 'Duplicate contact created successfully');
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'merge contact not found', code: Response::HTTP_NOT_FOUND);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function duplicate() 
+    {
+        try {
+            DB::beginTransaction();
+            $this->contactMergeService->handleDuplicate();
+            DB::commit();
+            return ApiResponse(message: 'Duplicate contacts created successfully');
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'merge contact not found', code: Response::HTTP_NOT_FOUND);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

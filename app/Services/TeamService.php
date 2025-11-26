@@ -291,4 +291,159 @@ class TeamService extends BaseService
             throw new GeneralException($parts->duplicates()->implode(', ') . " is duplicate " . $type . " values found");
         }
     }
+
+    public function findByIdWithTarget(int $id): Team
+    {
+        return $this->model->with(['chairs.targets', 'chairs.user', 'leader.roles', 'members'])->findOrFail($id);
+    }
+
+    public function teamBulkUpdate(TeamBulkAssignDTO $teamBulkAssignDTO , int $id)
+    {
+        $leader = $this->userService->getModel()
+            ->role(['admin', 'manager'])
+            ->find($teamBulkAssignDTO->team_leader_id);
+
+        if (!$leader) {
+            throw new GeneralException('leader is not admin or manager');
+        }
+
+        $team = $this->findById($id);
+
+        $team->update([
+            'title' => $teamBulkAssignDTO->team_name,
+            'description' => $teamBulkAssignDTO->description,
+            'leader_id' => $teamBulkAssignDTO->team_leader_id,
+            'status' => $teamBulkAssignDTO->status,
+            'is_target' => $teamBulkAssignDTO->is_target,
+            'period_type' => $teamBulkAssignDTO->period_type,
+        ]);
+
+        $team->members()->update(['team_id' => null]);
+        $allSales = array_merge($teamBulkAssignDTO->sales, collect($teamBulkAssignDTO->members)->pluck('user_id')->toArray());
+        $allSales = array_unique($allSales);
+
+
+        $someUsersExistInOtherTeam = $this->userService->getModel()
+            ->whereIn('id', $allSales)
+            ->whereNotNull('team_id')
+            ->exists();
+
+        if ($someUsersExistInOtherTeam) {
+            throw new GeneralException('Some users are already assigned to other team');
+        } else {
+            $this->userService->getModel()->whereIn('id', $allSales)->update(['team_id' => $team->id]);
+        }
+
+        if (! $teamBulkAssignDTO->is_target) {
+            return $team->load('chairs.targets', 'leader.roles', 'chairs.user', 'members');
+        }
+
+        switch ($teamBulkAssignDTO->period_type) {
+            case 'monthly':
+                $this->updateMonthlyTargetsForTeamMembers($team, $teamBulkAssignDTO->members);
+                break;
+
+            case 'quarterly':
+                $this->updateQuarterlyTargetsForTeamMembers($team, $teamBulkAssignDTO->members);
+                break;
+        }
+        return $team->load('chairs.targets', 'leader.roles', 'chairs.user', 'members');
+    }
+
+    private function updateMonthlyTargetsForTeamMembers(Team $team, array $members)
+    {
+        $validator = validator([], []);
+
+
+        foreach ($members as $member) {
+            $memberDTO = TeamMemberDTO::fromArray($member);
+            $user = $this->userService->findById($memberDTO->user_id);
+
+            $chair = $user->chairs()->where('team_id', $team->id)->first();
+            if ($chair) {
+                // Delete existing targets
+                $chair->targets()->delete();
+                // Delete chair record
+                $chair->delete();
+            }
+
+            $chair = $user->chairs()->create([
+                'team_id' => $team->id,
+                'started_at' => now(),
+                'ended_at' => null,
+            ]);
+
+            $this->checkIfPartsValuesAreUnique($memberDTO->targets, 'monthly');
+
+            foreach ($memberDTO->targets as $index => $target) {
+                $target = TargetMemberDTO::fromArray($target);
+                if ($this->IsAllowMonthlyTarget($target->part, $target->year)) {
+                    $chair->targets()->create([
+                        'period_type' => "monthly",
+                        'year' => $target->year,
+                        'period_number' => $target->part,
+                        'effective_from' => now()->copy()->year((int)$target->year)->month((int)$target->part)->startOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_to' => now()->copy()->year((int)$target->year)->month((int)$target->part)->endOfMonth()->format('Y-m-d H:i:s'),
+                        'target_value' => $target->amount,
+                    ]);
+                } else {
+                    $monthName = now()->copy()->year((int)$target->year)->month((int)$target->part);
+                    $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
+                }
+            }
+        }
+
+        if ($validator->errors()->count() > 0) {
+            throw new ValidationException($validator);
+        }
+    }
+
+    private function updateQuarterlyTargetsForTeamMembers(Team $team, array $members)
+    {
+        $validator = validator([], []);
+        foreach ($members as $member) {
+            $memberDTO = TeamMemberDTO::fromArray($member);
+            $user = $this->userService->findById($memberDTO->user_id);
+            
+            $chair = $user->chairs()->where('team_id', $team->id)->first();
+            if ($chair) {
+                // Delete existing targets
+                $chair->targets()->delete();
+                // Delete chair record
+                $chair->delete();
+            }
+            
+            $chair = $user->chairs()->create([
+                'team_id' => $team->id,
+                'started_at' => now(),
+                'ended_at' => null,
+            ]);
+
+            $this->checkIfPartsValuesAreUnique($memberDTO->targets, 'quarterly');
+
+            foreach ($memberDTO->targets as $index => $target) {
+                $target = TargetMemberDTO::fromArray($target);
+                if ($this->IsAllowQuarterlyTarget($target->part, $target->year, $validator)) {
+
+                    [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target->year, $target->part);
+                    $chair->targets()->create([
+                        'period_type' => "quarterly",
+                        'year' => $target->year,
+                        'period_number' => $target->part,
+                        'effective_from' => $startOfQuarter->format('Y-m-d H:i:s'),
+                        'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
+                        'target_value' => $target->amount,
+                    ]);
+                } else {
+                    $quarterName = now()->copy()->year((int)$target->year)->setQuarter((int)$target->part);
+                    $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $quarterName->format('F Y'));
+                }
+            }
+        }
+
+        if ($validator->errors()->count() > 0) {
+            throw new ValidationException($validator);
+        }
+    }
+    
 }
