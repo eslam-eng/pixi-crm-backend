@@ -116,14 +116,14 @@ class LeadService extends BaseService
         if (!empty($variantsPayload)) {
             $lead->variants()->sync($variantsPayload, true);
         }
-
+        
         if (!empty($itemsPayload)) {
             $lead->items()->sync($itemsPayload, true);
         }
-
+        
         $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
 
-        return $lead->load('variants', 'items.product', 'items.service');
+        return $lead->load('variants', 'items.product', 'items.service', 'items.category.parent');
     }
 
     public function show(int $id)
