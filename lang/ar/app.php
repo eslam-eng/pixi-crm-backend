@@ -73,4 +73,5 @@ return array(
   'deal' => 'صفقة',
   'task' => 'مهمة',
   'system' => 'النظام',
+  'log_call' => 'تسجيل مكالمة',
 );

@@ -390,4 +390,5 @@ return array(
   'deal' => 'Deal',
   'task' => 'Task',
   'system' => 'System',
+  'log_call' => 'Log Call',
 );

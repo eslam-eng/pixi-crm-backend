@@ -388,5 +388,6 @@ return array(
   'lead_created' => 'Prospect créé',
   'lead_update' => 'Prospect mis à jour',
   'lead_delete' => 'Prospect supprimé',
-  'system' => 'système'
+  'system' => 'système',
+  'log_call' => 'appel de journalisation',
 );

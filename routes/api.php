@@ -367,6 +367,7 @@ Route::middleware([
         Route::patch('opportunities/{opportunity}/change-stage', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStage']);
         Route::patch('opportunities/{opportunity}/change-status', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStatus']);
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
+        Route::post('opportunities/{opportunity}/log-call', [\App\Http\Controllers\Api\OpportunityController::class, 'logCall']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
         Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);

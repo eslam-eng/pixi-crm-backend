@@ -389,4 +389,5 @@ return array(
   'deal' => 'Negocio', // Or 'Trato'
   'task' => 'Tarea',
   'system' => 'Sistema',
+  'log_call' => 'Registrar llamada',
 );
