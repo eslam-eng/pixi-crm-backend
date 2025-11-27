@@ -12,9 +12,9 @@ class ActivityService
      */
     public function getUserRecentActivities(int $userId, int $limit = 5)
     {
-        return Activity::where('causer_id', $userId)
-            ->where('causer_type', 'user')
-            ->with(['subject'])
+        return Activity::where('causer_id', null)
+            ->orWhere('causer_id', $userId)
+            ->with(['subject','causer'])
             ->latest()
             ->limit($limit)
             ->get()
@@ -28,6 +28,7 @@ class ActivityService
                     'properties' => $activity->properties,
                     'subject_type' => $activity->subject_type ? class_basename($activity->subject_type) : null,
                     'subject_id' => $activity->subject_id,
+                    'user' => $activity->causer ? $activity->causer->first_name . ' ' . $activity->causer->last_name : __('app.system'),
                 ];
             });
     }

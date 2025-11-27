@@ -389,4 +389,5 @@ return array(
   'lead' => 'Lead',
   'deal' => 'Deal',
   'task' => 'Task',
+  'system' => 'System',
 );

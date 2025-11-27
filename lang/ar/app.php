@@ -71,5 +71,6 @@ return array(
   'deal_created' => 'تم انشاء صفقة',
   'lead' => 'عميل متوقع',
   'deal' => 'صفقة',
-  'task' => 'مهمة'
+  'task' => 'مهمة',
+  'system' => 'النظام',
 );

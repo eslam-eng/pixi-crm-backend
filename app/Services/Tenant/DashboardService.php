@@ -109,9 +109,9 @@ class DashboardService
         ];
     }
 
-    public function getUserRecentActivities()
+    public function getUserRecentActivities(int $user_id, int $limit)
     {
-        return $this->activityService->getUserRecentActivities(user_id(), 5);
+        return $this->activityService->getUserRecentActivities($user_id, $limit);
     }
 
     public function getTopPerformingSalesReps(array $filters)
