@@ -402,6 +402,7 @@ Route::middleware([
 
         Route::apiResource('sources', \App\Http\Controllers\Api\ResourceController::class);
 
+        Route::get('activities', \App\Http\Controllers\Api\ActivityController::class);
         // Translatable example routes
         Route::prefix('translatable')->group(function () {
             Route::get('/industries', [TranslatableExampleController::class, 'index']);
