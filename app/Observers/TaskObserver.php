@@ -11,14 +11,16 @@ class TaskObserver
      */
     public function created(Task $task): void
     {
-        activity()
-        ->performedOn($task)
-        ->causedBy(user_id())
-        ->withProperties([
-            'attributes' => $task->getAttributes()
-        ])
-        ->useLog('task')
-        ->log('task_created');
+        if (auth('api_tenant')->check()) {
+            activity()
+                ->performedOn($task)
+                ->causedBy(user_id())
+                ->withProperties([
+                    'attributes' => $task->getAttributes()
+                ])
+                ->useLog('task')
+                ->log('task_created');
+        }
     }
 
     /**

@@ -31,16 +31,16 @@ class TenantSeeder extends Seeder
         if (config('app.env') == 'development') {
 
 
+            // $databaseName = 'barmagiat_crm_tenant';
             $databaseName = 'barmagiat_crm_tenant';
 
             // check if database already exists
-//            $exists = DB::select("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [$databaseName]);
-
+            $exists = DB::select("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [$databaseName]);
             $acmeTenant = Tenant::create([
                 'id' => 'pixicrm',
                 'name' => 'pixicrm',
                 'tenancy_db_name' => $databaseName,
-                'tenancy_create_database' => false, // only create if not exists
+                'tenancy_create_database' => !$exists, // only create if not exists
             ]);
 
             $acmeTenant->createDomain([
@@ -49,7 +49,7 @@ class TenantSeeder extends Seeder
 
             $plan = Plan::trial()->first();
 
-            if (! $plan) {
+            if (!$plan) {
                 logger()->error('No trial plans found. Please create plans with trial_days > 0 first.');
                 throw new \RuntimeException('No trial plans found. Please create plans with trial_days > 0 first.');
             }
@@ -83,7 +83,7 @@ class TenantSeeder extends Seeder
                 foreach ($allFeatures as $feature) {
                     $pivotData = $feature->pivot?->value ?? null;
 
-                    if (! $pivotData) {
+                    if (!$pivotData) {
                         continue;
                     }
 

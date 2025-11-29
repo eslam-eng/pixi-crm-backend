@@ -11,14 +11,16 @@ class DealObserver
      */
     public function created(Deal $deal): void
     {
-        activity()
-            ->performedOn($deal)
-            ->causedBy(user_id())
-            ->withProperties([
-                'attributes' => $deal->getAttributes()
-            ])
-            ->useLog('deal')
-            ->log('deal_created');
+        if (auth('api_tenant')->check()) {
+            activity()
+                ->performedOn($deal)
+                ->causedBy(user_id())
+                ->withProperties([
+                    'attributes' => $deal->getAttributes()
+                ])
+                ->useLog('deal')
+                ->log('deal_created');
+        }
     }
 
     /**
