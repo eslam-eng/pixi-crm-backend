@@ -6,6 +6,7 @@ use App\DTO\Pipeline\PipelineDTO;
 use App\Models\Tenant\Pipeline;
 use App\QueryFilters\PipelineFilters;
 use Illuminate\Database\Eloquent\Builder;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Code;
 
 
 class PipelineService extends BaseService
@@ -83,6 +84,11 @@ class PipelineService extends BaseService
 
     public function updateDefault(int $id)
     {
+        $selected_pipeline = $this->getQuery()->findOrFail($id);
+        if (!$selected_pipeline->firstStage) {
+            throw new \Exception('Pipeline must have at least one stage');
+        }
+
         $this->getQuery()->update(['is_default' => 0]);
         $pipeline = $this->getQuery()->findOrFail($id);
         $pipeline->update([
@@ -90,5 +96,9 @@ class PipelineService extends BaseService
         ]);
         return $pipeline;
     }
+
+    public function getDefaultPipeline()
+    {
+        return $this->getQuery()->where('is_default', true)->first();
+    }
 }
-e

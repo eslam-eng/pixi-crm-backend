@@ -29,6 +29,8 @@ class TaskAutomationObserver
         }
 
         $this->triggerService->fireTrigger('task_created', [
+            'triggerable_type' => get_class($relatedEntity ?? $task),
+            'triggerable_id' => $entityId ?? $task->id,
             'task' => $task,
             'entity' => $relatedEntity ?? $task,
             'entity_type' => $entityType ?? 'task',
@@ -60,6 +62,8 @@ class TaskAutomationObserver
             }
 
             $this->triggerService->fireTrigger('task_completed', [
+                'triggerable_type' => get_class($relatedEntity ?? $task),
+                'triggerable_id' => $entityId ?? $task->id,
                 'task' => $task,
                 'entity' => $relatedEntity ?? $task,
                 'entity_type' => $entityType ?? 'task',

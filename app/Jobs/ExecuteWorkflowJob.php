@@ -31,7 +31,8 @@ class ExecuteWorkflowJob implements ShouldQueue
     public function __construct(
         public int $workflowId,
         public array $context
-    ) {}
+    ) {
+    }
 
     /**
      * Execute the job.
@@ -47,8 +48,11 @@ class ExecuteWorkflowJob implements ShouldQueue
                 'workflow_name' => $workflow->name,
             ]);
 
+            // Generate triggerable from context
+            $triggerable = $this->getTriggerable();
+
             // Execute the workflow
-            $result = $executionService->executeWorkflow($workflow, $this->context);
+            $result = $executionService->executeWorkflow($workflow, $triggerable, $this->context);
 
             if (!$result['success']) {
                 Log::warning("Workflow execution unsuccessful", [
@@ -66,6 +70,36 @@ class ExecuteWorkflowJob implements ShouldQueue
 
             throw $e;
         }
+    }
+
+    /**
+     * Get the triggerable model based on the context
+     */
+    private function getTriggerable()
+    {
+        if (!isset($this->context['triggerable_type']) || !isset($this->context['triggerable_id'])) {
+            throw new \InvalidArgumentException('Context must contain triggerable_type and triggerable_id');
+        }
+
+        $triggerableType = $this->context['triggerable_type'];
+        $triggerableId = $this->context['triggerable_id'];
+
+        // Resolve the model class
+        $modelClass = $triggerableType;
+
+        // Check if the class exists
+        if (!class_exists($modelClass)) {
+            throw new \InvalidArgumentException("Model class {$modelClass} does not exist");
+        }
+
+        // Find the model instance
+        $triggerable = $modelClass::find($triggerableId);
+
+        if (!$triggerable) {
+            throw new \InvalidArgumentException("Triggerable {$modelClass}#{$triggerableId} not found");
+        }
+
+        return $triggerable;
     }
 
     /**

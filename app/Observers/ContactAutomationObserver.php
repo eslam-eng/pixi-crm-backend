@@ -23,6 +23,8 @@ class ContactAutomationObserver
         
         try {
             $this->triggerService->fireTrigger('contact_created', [
+                'triggerable_type' => get_class($contact),
+                'triggerable_id' => $contact->id,
                 'contact_id' => $contact->id,
                 'entity_type' => 'contact',
                 'entity_id' => $contact->id,
@@ -51,6 +53,8 @@ class ContactAutomationObserver
 
         // Fire generic contact updated trigger
         $this->triggerService->fireTrigger('contact_updated', [
+            'triggerable_type' => get_class($contact),
+            'triggerable_id' => $contact->id,
             'contact' => $contact,
             'entity' => $contact,
             'entity_type' => 'contact',
@@ -67,6 +71,8 @@ class ContactAutomationObserver
 
             if (!empty($addedTags)) {
                 $this->triggerService->fireTrigger('contact_tag_added', [
+                    'triggerable_type' => get_class($contact),
+                    'triggerable_id' => $contact->id,
                     'contact' => $contact,
                     'entity' => $contact,
                     'entity_type' => 'contact',
@@ -80,6 +86,8 @@ class ContactAutomationObserver
         // Fire field-specific triggers
         foreach ($changes as $field => $newValue) {
             $this->triggerService->fireTrigger('field_value_changed', [
+                'triggerable_type' => get_class($contact),
+                'triggerable_id' => $contact->id,
                 'contact' => $contact,
                 'entity' => $contact,
                 'entity_type' => 'contact',

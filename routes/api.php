@@ -256,6 +256,7 @@ Route::middleware([
 
         // Automation Workflows routes
         Route::apiResource('automation-workflows', AutomationWorkflowController::class);
+        Route::get('automation-workflows/get/assigned-strategies', [AutomationWorkflowController::class, 'getAssignedStrategies']);
         Route::patch('automation-workflows/{id}/toggle-active', [AutomationWorkflowController::class, 'toggleActive']);
         
         // Integration routes

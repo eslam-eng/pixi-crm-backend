@@ -34,6 +34,8 @@ class FormSubmissionAutomationObserver
         // If there are missing or unmapped fields, fire error trigger
         if (!empty($missingFields)) {
             $this->triggerService->fireTrigger('form_field_mapping_error', [
+                'triggerable_type' => get_class($formSubmission),
+                'triggerable_id' => $formSubmission->id,
                 'form' => $form,
                 'form_submission' => $formSubmission,
                 'entity' => $formSubmission,
@@ -47,6 +49,8 @@ class FormSubmissionAutomationObserver
 
         // Fire form submitted trigger
         $this->triggerService->fireTrigger('form_submitted', [
+            'triggerable_type' => get_class($formSubmission),
+            'triggerable_id' => $formSubmission->id,
             'form' => $form,
             'form_submission' => $formSubmission,
             'entity' => $formSubmission,

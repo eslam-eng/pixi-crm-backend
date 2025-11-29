@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Automation;
 
 use App\DTO\Automation\AutomationWorkflowDTO;
+use App\Enums\AutomationAssignStrategiesEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AutomationWorkflowRequest;
 use App\Http\Resources\Tenant\Automation\{
@@ -12,7 +13,6 @@ use App\Http\Resources\Tenant\Automation\{
 use App\Services\Tenant\Automation\AutomationWorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class AutomationWorkflowController extends Controller
 {
@@ -29,10 +29,10 @@ class AutomationWorkflowController extends Controller
     public function index(Request $request): JsonResponse
     {
         $workflows = $this->automationWorkflowService->getAll();
-
+        $data = AutomationWorkflowResource::collection($workflows)->response()->getData(true);
         return response()->json([
             'success' => true,
-            'data' => AutomationWorkflowResource::collection($workflows),
+            'data' => $data,
         ]);
     }
 
@@ -149,5 +149,12 @@ class AutomationWorkflowController extends Controller
             'success' => true,
             'message' => 'Automation workflow status updated successfully',
         ]);
+    }
+
+    public function getAssignedStrategies()
+    {
+        $data = AutomationAssignStrategiesEnum::values();
+        return apiResponse(data: $data, message: 'Data retrieved successfully', code: 200);
+
     }
 }

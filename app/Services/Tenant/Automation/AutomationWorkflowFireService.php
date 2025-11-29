@@ -56,8 +56,19 @@ class AutomationWorkflowFireService
 
     public function fireTrigger(string $triggerKey, array $context): void
     {
+        // Validate that context contains required fields
+        if (!isset($context['triggerable_type']) || !isset($context['triggerable_id'])) {
+            Log::error("Context must contain triggerable_type and triggerable_id", [
+                'trigger_key' => $triggerKey,
+                'context_keys' => array_keys($context),
+            ]);
+            throw new \InvalidArgumentException('Context must contain triggerable_type and triggerable_id');
+        }
+
         Log::info("Trigger fired: {$triggerKey}", [
             'context_keys' => array_keys($context),
+            'triggerable_type' => $context['triggerable_type'],
+            'triggerable_id' => $context['triggerable_id'],
         ]);
 
         // Find all active workflows for this trigger

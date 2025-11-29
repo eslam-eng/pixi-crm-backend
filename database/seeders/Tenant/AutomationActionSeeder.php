@@ -3,7 +3,6 @@
 namespace Database\Seeders\Tenant;
 
 use App\Models\Tenant\AutomationAction;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class AutomationActionSeeder extends Seeder
@@ -15,6 +14,7 @@ class AutomationActionSeeder extends Seeder
     {
         $actions = [
             [
+                'id' => 1,
                 'key' => 'assign_contact',
                 'icon' => 'user',
                 'name' => [
@@ -26,6 +26,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Assign to sales rep/team based on criteria'
             ],
             [
+                'id' => 2,
                 'key' => 'notify_owner',
                 'icon' => 'bell',
                 'name' => [
@@ -37,6 +38,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Send internal notification to owner'
             ],
             [
+                'id' => 3,
                 'key' => 'send_welcome_email',
                 'icon' => 'mail',
                 'name' => [
@@ -48,6 +50,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Send onboarding/intro email automatically'
             ],
             [
+                'id' => 4,
                 'key' => 'assign_to_team',
                 'icon' => 'users',
                 'name' => [
@@ -59,6 +62,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Route contact to Key Accounts/Partners team'
             ],
             [
+                'id' => 5,
                 'key' => 'assign_opportunity',
                 'icon' => 'target',
                 'name' => [
@@ -70,6 +74,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Distribute to sales automatically'
             ],
             [
+                'id' => 6,
                 'key' => 'send_email',
                 'icon' => 'mail',
                 'name' => [
@@ -81,6 +86,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Follow-up/proposal email'
             ],
             [
+                'id' => 7,
                 'key' => 'escalate',
                 'icon' => 'arrow-up',
                 'name' => [
@@ -92,6 +98,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Notify manager or reassign'
             ],
             [
+                'id' => 8,
                 'key' => 'notify_manager',
                 'icon' => 'alert-triangle',
                 'name' => [
@@ -103,6 +110,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'High-priority internal alert'
             ],
             [
+                'id' => 9,
                 'key' => 'create_onboarding_task',
                 'icon' => 'check-square',
                 'name' => [
@@ -114,6 +122,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Kick off handover to Success/Implementation team'
             ],
             [
+                'id' => 10,
                 'key' => 'tag_and_reopen_later',
                 'icon' => 'tag',
                 'name' => [
@@ -125,6 +134,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Tag Dormant and schedule reopen'
             ],
             [
+                'id' => 11,
                 'key' => 'send_invoice_email',
                 'icon' => 'file-text',
                 'name' => [
@@ -136,6 +146,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Email invoice or payment link to client'
             ],
             [
+                'id' => 12,
                 'key' => 'notify_finance',
                 'icon' => 'dollar-sign',
                 'name' => [
@@ -147,6 +158,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Alert finance to review changes'
             ],
             [
+                'id' => 13,
                 'key' => 'send_reminder_and_task',
                 'icon' => 'clock',
                 'name' => [
@@ -158,6 +170,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Send reminder and create collection task'
             ],
             [
+                'id' => 14,
                 'key' => 'send_reminder',
                 'icon' => 'bell',
                 'name' => [
@@ -169,6 +182,8 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Remind assignee before due date'
             ],
             [
+
+                'id' => 15,
                 'key' => 'trigger_next_step',
                 'icon' => 'arrow-right',
                 'name' => [
@@ -180,6 +195,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Create next task or move stage'
             ],
             [
+                'id'=> 16,
                 'key' => 'escalate_task',
                 'icon' => 'arrow-up',
                 'name' => [
@@ -191,6 +207,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Notify team lead or reassign'
             ],
             [
+                'id'=> 17,
                 'key' => 'move_stage',
                 'icon' => 'arrow-right',
                 'name' => [
@@ -202,6 +219,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Move opportunity to Qualification stage'
             ],
             [
+                'id'=> 18,
                 'key' => 'notify_owner_and_reschedule',
                 'icon' => 'calendar',
                 'name' => [
@@ -213,6 +231,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Alert rep and send reschedule link'
             ],
             [
+                'id'=> 19,
                 'key' => 'send_reminder_reschedule',
                 'icon' => 'calendar',
                 'name' => [
@@ -224,6 +243,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Reminder if accepted; reschedule if declined'
             ],
             [
+                'id'=> 20,
                 'key' => 'create_contact',
                 'icon' => 'user-plus',
                 'name' => [
@@ -235,6 +255,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Create contact'
             ],
             [
+                'id'=> 21,
                 'key' => 'notify_admin',
                 'icon' => 'alert-circle',
                 'name' => [
@@ -246,6 +267,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Alert ops to fix mapping issues'
             ],
             [
+                'id'=> 22,
                 'key' => 'assign_to_sales',
                 'icon' => 'alert-circle',
                 'name' => [
@@ -353,6 +375,7 @@ class AutomationActionSeeder extends Seeder
                 ]
             ],
             [
+                'id'=> 23,
                 'key' => 'create_opportunity',
                 'icon' => 'user-plus',
                 'name' => [
@@ -361,19 +384,13 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Créer opportunité',
                     'es' => 'Crear oportunidad'
                 ],
-                'description' => 'Create opportunity',
-                'configs' => [
-                    'stage_id' => [
-                        'type' => 'select',
-                        'rules' => 'required|exists:stages,id',
-                    ]
-                ]
+                'description' => 'Create opportunity'
             ],
         ];
 
         foreach ($actions as $action) {
             AutomationAction::firstOrCreate(
-                ['key' => $action['key']],
+                ['id' => $action['id']],
                 $action
             );
         }

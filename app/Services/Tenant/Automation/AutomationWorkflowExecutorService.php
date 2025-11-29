@@ -2,7 +2,11 @@
 
 namespace App\Services\Tenant\Automation;
 
+use App\DTO\Contact\ContactDTO;
 use App\DTO\Tenant\LeadDTO;
+use App\Enums\AutomationAssignStrategiesEnum;
+use App\Enums\OpportunityStatus;
+use App\Enums\TaskStatusEnum;
 use App\Jobs\ContinueWorkflowExecutionJob;
 use App\Models\Tenant\AutomationStepsImplement;
 use App\Models\Tenant\AutomationDelay;
@@ -10,20 +14,34 @@ use App\Models\Tenant\AutomationAction;
 use App\Models\Tenant\AutomationLog;
 use App\Models\Tenant\AutomationWorkflow;
 use App\Models\Tenant\Contact;
+use App\Models\Tenant\Deal;
 use App\Models\Tenant\Lead;
+use App\Models\Tenant\Task;
+use App\Models\Tenant\User;
+use App\Services\ContactService;
 use App\Services\LeadService;
+use App\Services\PipelineService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Mail;
 
 class AutomationWorkflowExecutorService
 {
     public LeadService $opportunityService;
     public ConditionService $conditionService;
-    public function __construct(LeadService $opportunityService, ConditionService $conditionService)
-    {
+    public PipelineService $pipelineService;
+    public ContactService $contactService;
+    public function __construct(
+        LeadService $opportunityService,
+        ConditionService $conditionService,
+        PipelineService $pipelineService,
+        ContactService $contactService
+    ) {
         $this->opportunityService = $opportunityService;
         $this->conditionService = $conditionService;
+        $this->pipelineService = $pipelineService;
+        $this->contactService = $contactService;
     }
 
     // /**
@@ -75,129 +93,36 @@ class AutomationWorkflowExecutorService
     /**
      * Execute a single workflow step
      */
-    public function executeStep($step, array $context): array
-    {
-        try {
-            // Check conditions first
-            if ($step->condition()->exists()) {
-                $conditionsPassed = $this->evaluateStepConditions($step, $context);
-                
-                if (!$conditionsPassed) {
-                    return [
-                        'success' => true,
-                        'message' => 'Conditions not met, skipping step',
-                        'skipped' => true,
-                    ];
-                }
-            }
-
-            // Execute the step
-            return $step->execute($context);
-
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-            ];
-        }
-    }
 
     /**
-     * Evaluate step conditions (single condition per step)
-     */
-    private function evaluateStepConditions($step, array $context): bool
-    {
-        // Get the single condition for this step
-        $condition = $step->condition;
-        
-        if (!$condition) {
-            // No condition means it always passes
-            return true;
-        }
-
-        // Evaluate the single condition
-        return $this->conditionService->evaluateCondition(
-            $condition->field,
-            $condition->operation,
-            $condition->value,
-            $context
-        );
-    }
-      /**
      * Execute a workflow
      */
-    public function executeWorkflow(AutomationWorkflow $workflow, array $context): array
+    public function executeWorkflow(AutomationWorkflow $workflow, Model $triggerable, array $context = []): array
     {
         Log::info("Executing workflow: {$workflow->name}", [
             'workflow_id' => $workflow->id,
             'trigger' => $workflow->automationTrigger->key,
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id,
         ]);
-
-        // Check if workflow should execute
-        // if (!$workflow->shouldExecute($context)) {
-        //     return [
-        //         'success' => false,
-        //         'message' => 'Workflow conditions not met',
-        //     ];
-        // }
 
         // Start transaction
         DB::beginTransaction();
 
         try {
-            $results = [];
-            $executionLog = $this->startExecutionLog($workflow, $context);
+            // 1. Prepare steps implementation (save to DB)
+            $this->prepareStepsImplementation($workflow, $triggerable, $context);
 
-            // Execute each step in order
-            foreach ($workflow->steps as $step) {
-                Log::info("Executing step: {$step->name}", [
-                    'step_id' => $step->id,
-                    'type' => $step->step_type,
-                ]);
-
-                $stepResult = $this->executeStep($step, $context);
-                $results[] = $stepResult;
-
-                // Log step execution
-                $this->logStepExecution($executionLog, $step, $stepResult);
-
-                // Handle step failure
-                if (!$stepResult['success']) {
-                    Log::warning("Step failed: {$step->name}", $stepResult);
-                    
-                    // Continue or stop based on configuration
-                    if ($step->configuration['stop_on_error'] ?? false) {
-                        throw new \Exception("Step failed: " . ($stepResult['message'] ?? 'Unknown error'));
-                    }
-                }
-
-                // Handle delay
-                if ( $step->delay()->exists() ) {
-                    // Queue the rest of the workflow for later
-                    $this->scheduleDelayedExecution($workflow, $step, $context, $step->delay->calculateDelayUntil());
-                    DB::commit();
-                    return [
-                        'success' => true,
-                        'message' => 'Workflow paused for delay',
-                        'delayed_until' => $step->delay->calculateDelayUntil(),
-                    ];
-                }
-
-                // Update context with step results
-                $context = array_merge($context, $stepResult['data'] ?? []);
-            }
-
-            // Mark workflow as completed
-            $workflow->incrementExecutions();
-            $this->completeExecutionLog($executionLog, true);
+            // 2. Execute pending steps
+            $results = $this->executePendingSteps($workflow, $triggerable);
 
             DB::commit();
 
-            Log::info("Workflow completed successfully: {$workflow->name}");
+            Log::info("Workflow execution initiated/completed: {$workflow->name}");
 
             return [
                 'success' => true,
-                'message' => 'Workflow executed successfully',
+                'message' => 'Workflow execution processed',
                 'results' => $results,
             ];
 
@@ -209,10 +134,6 @@ class AutomationWorkflowExecutorService
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            if (isset($executionLog)) {
-                $this->completeExecutionLog($executionLog, false, $e->getMessage());
-            }
-
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -220,7 +141,137 @@ class AutomationWorkflowExecutorService
         }
     }
 
-       /**
+    /**
+     * Prepare steps implementation by saving them to database
+     */
+    public function prepareStepsImplementation(AutomationWorkflow $workflow, Model $triggerable, array $context = []): void
+    {
+        $steps = $workflow->steps()->orderBy('order')->get();
+
+        foreach ($steps as $step) {
+            // Prepare step data based on type
+            $stepData = [];
+            if ($step->type === 'condition' && $step->condition) {
+                $stepData = [
+                    'field' => $step->condition->field,
+                    'operation' => $step->condition->operation,
+                    'value' => $step->condition->value,
+                ];
+            } elseif ($step->type === 'action' && $step->action) {
+                $stepData = [
+                    'automation_action_id' => $step->action->automation_action_id,
+                    'configs' => $step->action->configs,
+                ];
+                // Merge configs into stepData for easier access
+                if (is_array($step->action->configs)) {
+                    $stepData = array_merge($stepData, $step->action->configs);
+                }
+            } elseif ($step->type === 'delay' && $step->delay) {
+                $stepData = [
+                    'duration' => $step->delay->duration,
+                    'unit' => $step->delay->unit,
+                ];
+            }
+
+            AutomationStepsImplement::create([
+                'automation_workflow_id' => $workflow->id,
+                'automation_workflow_step_id' => $step->id,
+                'triggerable_type' => get_class($triggerable),
+                'triggerable_id' => $triggerable->id,
+                'type' => $step->type,
+                'step_order' => $step->order,
+                'implemented' => false,
+                'step_data' => $stepData,
+                'context_data' => $context,
+            ]);
+        }
+    }
+
+    /**
+     * Execute pending steps for a workflow and triggerable
+     */
+    public function executePendingSteps(AutomationWorkflow $workflow, Model $triggerable): array
+    {
+        $pendingSteps = AutomationStepsImplement::where('automation_workflow_id', $workflow->id)
+            ->where('triggerable_type', get_class($triggerable))
+            ->where('triggerable_id', $triggerable->id)
+            ->where('implemented', false)
+            ->orderBy('step_order')
+            ->get();
+
+        $results = [];
+
+        foreach ($pendingSteps as $stepImplement) {
+            $result = $this->executeStep($stepImplement);
+            $results[] = $result;
+
+            if (!$result['success']) {
+                // Stop execution if step failed (and maybe configured to stop)
+                // For now, we'll just log it and maybe stop?
+                // Let's assume we stop on failure for now or if it's a delay step that paused execution
+                if (isset($result['delayed']) && $result['delayed']) {
+                    break;
+                }
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Execute a single workflow step implementation
+     */
+    public function executeStep(AutomationStepsImplement $stepImplement): array
+    {
+        try {
+            $result = false;
+            switch ($stepImplement->type) {
+                case 'condition':
+                    $result = $this->executeConditionStep($stepImplement);
+                    break;
+                case 'action':
+                    $result = $this->executeActionStep($stepImplement);
+                    break;
+                case 'delay':
+                    $result = $this->executeDelayStep($stepImplement);
+                    break;
+            }
+
+            if ($result) {
+                // If result is true (success) or if it's a delay step that was handled
+                // For delay steps, executeDelayStep returns true if it successfully scheduled/processed the delay
+                // But if it's a new delay, we might want to return a specific status to stop the loop
+
+                if ($stepImplement->type === 'delay' && !$stepImplement->implemented) {
+                    // It was a new delay step, so we stop here
+                    return [
+                        'success' => true,
+                        'message' => 'Workflow paused for delay',
+                        'delayed' => true,
+                    ];
+                }
+
+                $stepImplement->markAsImplemented();
+                return [
+                    'success' => true,
+                    'message' => 'Step executed successfully',
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Step execution failed',
+                ];
+            }
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Start execution log
      */
     private function startExecutionLog(AutomationWorkflow $workflow, array $context)
@@ -234,11 +285,11 @@ class AutomationWorkflowExecutorService
             'metadata' => $context,
             'error_message' => null,
             'triggered_by_id' => null,
-  
+
         ]);
     }
 
-      /**
+    /**
      * Log step execution
      */
     private function logStepExecution($executionLog, $step, array $result): void
@@ -255,7 +306,7 @@ class AutomationWorkflowExecutorService
         $executionLog->update(['steps' => $steps]);
     }
 
-       /**
+    /**
      * Complete execution log
      */
     private function completeExecutionLog($executionLog, bool $success, ?string $error = null): void
@@ -267,7 +318,7 @@ class AutomationWorkflowExecutorService
         ]);
     }
 
-    
+
     /**
      * Schedule delayed execution
      */
@@ -359,6 +410,8 @@ class AutomationWorkflowExecutorService
             'triggerable_id' => $stepImplement->triggerable_id,
         ]);
 
+        $this->createDelayRecord($stepImplement);
+
         return true;
     }
 
@@ -378,7 +431,7 @@ class AutomationWorkflowExecutorService
         }
 
         // If triggerable is Task, get contact_id through lead
-        if ($triggerable instanceof \App\Models\Tenant\Task) {
+        if ($triggerable instanceof Task) {
             if ($triggerable->lead_id) {
                 $lead = Lead::find($triggerable->lead_id);
                 return $lead?->contact_id;
@@ -386,22 +439,58 @@ class AutomationWorkflowExecutorService
         }
 
         // If triggerable is Deal, get contact_id through lead
-        if ($triggerable instanceof \App\Models\Tenant\Deal) {
+        if ($triggerable instanceof Deal) {
             if ($triggerable->lead_id) {
                 $lead = $this->opportunityService->findById($triggerable->lead_id);
                 return $lead?->contact_id;
             }
         }
 
-        // If triggerable has contact_id property directly
-        if (isset($triggerable->contact_id)) {
-            return $triggerable->contact_id;
+        // If triggerable is FormSubmission, check if contact_id is in data
+        if ($triggerable instanceof \App\Models\Tenant\FormSubmission) {
+            $data = $triggerable->data ?? [];
+            if (isset($data['contact_id'])) {
+                return $data['contact_id'];
+            }
         }
 
-        // If triggerable has lead_id, try to get contact_id through lead
-        if (isset($triggerable->lead_id)) {
-            $lead = Lead::find($triggerable->lead_id);
-            return $lead?->contact_id;
+        Log::warning("Could not extract contact_id from triggerable", [
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null
+        ]);
+
+        return null;
+    }
+
+    /**
+     * Get contact_id from triggerable based on its type
+     */
+    private function getContactUserIdFromTriggerable(Model $triggerable): ?int
+    {
+        // If triggerable is Contact, use its id
+        if ($triggerable instanceof Contact) {
+            return $triggerable->user_id;
+        }
+
+        // If triggerable is Lead/Opportunity, use contact_id
+        if ($triggerable instanceof Lead) {
+            return $triggerable->contact->user_id;
+        }
+
+        // If triggerable is Task, get contact_id through lead
+        if ($triggerable instanceof Task) {
+            if ($triggerable->lead_id) {
+                $lead = Lead::find($triggerable->lead_id);
+                return $lead?->contact->user_id;
+            }
+        }
+
+        // If triggerable is Deal, get contact_id through lead
+        if ($triggerable instanceof Deal) {
+            if ($triggerable->lead_id) {
+                $lead = $this->opportunityService->findById($triggerable->lead_id);
+                return $lead?->contact->user_id;
+            }
         }
 
         // If triggerable is FormSubmission, check if contact_id is in data
@@ -429,7 +518,7 @@ class AutomationWorkflowExecutorService
         if (str_contains($field, '.')) {
             $parts = explode('.', $field);
             $value = $triggerable;
-            
+
             foreach ($parts as $part) {
                 if ($value && is_object($value)) {
                     $value = $value->{$part} ?? null;
@@ -437,7 +526,7 @@ class AutomationWorkflowExecutorService
                     return null;
                 }
             }
-            
+
             return $value;
         }
 
@@ -450,7 +539,7 @@ class AutomationWorkflowExecutorService
      */
     private function evaluateCondition(mixed $actualValue, string $operation, mixed $expectedValue): bool
     {
-                    switch($operation) {
+        switch ($operation) {
             case 'equals':
                 return $actualValue == $expectedValue;
             case 'not_equals':
@@ -469,7 +558,7 @@ class AutomationWorkflowExecutorService
                 return is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue <= $expectedValue;
             case 'is_empty':
                 return empty($actualValue);
-            case 'is_not_empty':              
+            case 'is_not_empty':
                 return !empty($actualValue);
             case 'is_null':
                 return is_null($actualValue);
@@ -485,29 +574,19 @@ class AutomationWorkflowExecutorService
      */
     private function executeActionByKey(string $actionKey, Model $triggerable, array $contextData, ?AutomationStepsImplement $stepImplement = null, ?array $stepData = null): bool
     {
-        switch($actionKey) {
-            // Contact Actions
-            case 'assign_contact':
-                return $this->executeAssignContactAction($triggerable, $contextData);
-            case 'notify_owner':
-                return $this->executeNotifyOwnerAction($triggerable, $contextData);
+        switch ($actionKey) {
+            // Email Actions
             case 'send_welcome_email':
                 return $this->executeSendWelcomeEmailAction($triggerable, $contextData);
-            case 'assign_to_team':
-                return $this->executeAssignToTeamAction($triggerable, $contextData);
-            
-            // Opportunity Actions
-            case 'assign_opportunity':
-                return $this->executeAssignOpportunityAction($triggerable, $contextData);
             case 'move_stage':
                 return $this->executeMoveStageAction($triggerable, $contextData);
-            
+
             // Email Actions
             case 'send_email':
                 return $this->executeSendEmailAction($triggerable, $contextData);
             case 'send_invoice_email':
                 return $this->executeSendInvoiceEmailAction($triggerable, $contextData);
-            
+
             // Escalation Actions
             case 'escalate':
                 return $this->executeEscalateAction($triggerable, $contextData);
@@ -515,37 +594,31 @@ class AutomationWorkflowExecutorService
                 return $this->executeNotifyManagerAction($triggerable, $contextData);
             case 'escalate_task':
                 return $this->executeEscalateTaskAction($triggerable, $contextData);
-            
+
             // Task Actions
             case 'create_onboarding_task':
                 return $this->executeCreateOnboardingTaskAction($triggerable, $contextData);
-            case 'trigger_next_step':
-                return $this->executeTriggerNextStepAction($triggerable, $contextData);
-            
+
             // Tagging Actions
             case 'tag_and_reopen_later':
                 return $this->executeTagAndReopenLaterAction($triggerable, $contextData);
-            
+
             // Notification Actions
-            case 'notify_finance':
-                return $this->executeNotifyFinanceAction($triggerable, $contextData);
             case 'notify_admin':
                 return $this->executeNotifyAdminAction($triggerable, $contextData);
-            
+            case 'notify_owner':
+                return $this->executeNotifyOwnerAction($triggerable, $contextData);
+
             // Reminder Actions
             case 'send_reminder_and_task':
                 return $this->executeSendReminderAndTaskAction($triggerable, $contextData);
             case 'send_reminder':
                 return $this->executeSendReminderAction($triggerable, $contextData);
-            case 'notify_owner_and_reschedule':
-                return $this->executeNotifyOwnerAndRescheduleAction($triggerable, $contextData);
-            case 'send_reminder_reschedule':
-                return $this->executeSendReminderRescheduleAction($triggerable, $contextData);
-            
+
             // Complex Actions
-            case 'create_contact':
-                return $this->executeCreateContactAction($triggerable, $contextData);
-            
+            // case 'create_contact':
+            //     return $this->executeCreateContactAction($triggerable, $contextData);
+
             case 'create_opportunity':
                 return $this->executeCreateOpportunityAction($triggerable, $contextData);
 
@@ -561,9 +634,45 @@ class AutomationWorkflowExecutorService
      */
     private function executeSendEmailAction(Model $triggerable, array $contextData): bool
     {
-        // Implementation for sending email
-        Log::info("Send email action executed", ['triggerable' => get_class($triggerable)]);
-        return true;
+        try {
+            $contactId = $this->getContactIdFromTriggerable($triggerable);
+
+            if (!$contactId) {
+                Log::warning("Could not extract contact for send email action");
+                return false;
+            }
+
+            $contact = Contact::find($contactId);
+
+            if (!$contact || !$contact->email) {
+                Log::warning("Contact not found or has no email", ['contact_id' => $contactId]);
+                return false;
+            }
+
+            // Get email details from context
+            $subject = $contextData['subject'] ?? 'Important Update';
+            $message = $contextData['message'] ?? '';
+            $template = $contextData['template'] ?? null;
+
+            // TODO: Integrate with your email service/queue
+            // if ($template) {
+            //     Mail::to($contact->email)->send(new Templa($contact, $template, $contextData));
+            // } else {
+            //     Mail::to($contact->email)->send(new GenericEmail($contact, $subject, $message));
+            // }
+
+            Log::info("Send email action executed", [
+                'contact_id' => $contact->id,
+                'email' => $contact->email,
+                'subject' => $subject,
+                'template' => $template
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error executing send email action: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -628,31 +737,7 @@ class AutomationWorkflowExecutorService
 
     // ==================== NEW ACTION HANDLERS ====================
 
-    /**
-     * Execute assign contact action
-     */
-    private function executeAssignContactAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            if ($triggerable instanceof Contact) {
-                // Get assignment criteria from context or step data
-                $assignmentCriteria = $contextData['assignment_criteria'] ?? null;
-                
-                if ($assignmentCriteria) {
-                    // Implement contact assignment logic based on criteria
-                    // This could involve assigning to specific users, teams, or based on round-robin
-                    Log::info("Assign contact action executed", [
-                        'contact_id' => $triggerable->id,
-                        'criteria' => $assignmentCriteria
-                    ]);
-                }
-            }
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing assign contact action: " . $e->getMessage());
-            return false;
-        }
-    }
+
 
     /**
      * Execute notify owner action
@@ -680,13 +765,33 @@ class AutomationWorkflowExecutorService
     private function executeSendWelcomeEmailAction(Model $triggerable, array $contextData): bool
     {
         try {
-            if ($triggerable instanceof Contact && $triggerable->email) {
-                // Send welcome/onboarding email
-                Log::info("Send welcome email action executed", [
-                    'contact_id' => $triggerable->id,
-                    'email' => $triggerable->email
-                ]);
+            $contactId = $this->getContactIdFromTriggerable($triggerable);
+
+            if (!$contactId) {
+                Log::warning("Could not extract contact for send welcome email action");
+                return false;
             }
+
+            $contact = Contact::find($contactId);
+
+            if (!$contact || !$contact->email) {
+                Log::warning("Contact not found or has no email", ['contact_id' => $contactId]);
+                return false;
+            }
+
+            // Get email template from context or use default
+            $subject = $contextData['subject'] ?? 'Welcome!';
+            $message = $contextData['message'] ?? 'Welcome to our platform!';
+
+            // TODO: Integrate with your email service/queue
+            // Mail::to($contact->email)->send(new WelcomeEmail($contact, $subject, $message));
+
+            Log::info("Send welcome email action executed", [
+                'contact_id' => $contact->id,
+                'email' => $contact->email,
+                'subject' => $subject
+            ]);
+
             return true;
         } catch (\Exception $e) {
             Log::error("Error executing send welcome email action: " . $e->getMessage());
@@ -694,29 +799,7 @@ class AutomationWorkflowExecutorService
         }
     }
 
-    /**
-     * Execute assign to team action
-     */
-    private function executeAssignToTeamAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            if ($triggerable instanceof Contact) {
-                // Assign contact to specific team (Key Accounts/Partners)
-                $teamId = $contextData['team_id'] ?? null;
-                
-                if ($teamId) {
-                    Log::info("Assign to team action executed", [
-                        'contact_id' => $triggerable->id,
-                        'team_id' => $teamId
-                    ]);
-                }
-            }
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing assign to team action: " . $e->getMessage());
-            return false;
-        }
-    }
+
 
     /**
      * Execute assign to sales action
@@ -726,7 +809,7 @@ class AutomationWorkflowExecutorService
         try {
             // Get contact_id based on triggerable type
             $contactId = $this->getContactIdFromTriggerable($triggerable);
-            
+
             if (!$contactId) {
                 Log::warning("Could not extract contact_id for assign to sales action", [
                     'triggerable_type' => get_class($triggerable),
@@ -736,8 +819,8 @@ class AutomationWorkflowExecutorService
             }
 
             // Get assignment type from stepData, contextData, or default
-            $assignmentType = $stepData['assignment_type'] ?? $contextData['assignment_type'] ?? 'specific_user';
-            
+            $assignmentType = $stepData['assign_strategy'] ?? $contextData['assign_strategy'] ?? 'specific_user';
+
             // Get trigger key from workflow
             $triggerKey = null;
             if ($stepImplement && $stepImplement->automationWorkflow) {
@@ -748,32 +831,50 @@ class AutomationWorkflowExecutorService
             }
 
             // If trigger is contact_created and assignment type is specific_user, update contact user_id
-            if ($triggerKey === 'contact_created' && $assignmentType === 'specific_user') {
-                if ($triggerable instanceof Contact) {
-                    // Get user_id from stepData or contextData (should be set when configuring the workflow)
-                    $userId = $stepData['user_id'] ?? $contextData['user_id'] ?? null;
-                    
-                    if ($userId) {
-                        $triggerable->update(['user_id' => $userId]);
-                        Log::info("Contact user_id updated via assign to sales action", [
-                            'contact_id' => $contactId,
-                            'user_id' => $userId,
-                            'assignment_type' => $assignmentType,
-                            'trigger_key' => $triggerKey
-                        ]);
-                        return true;
-                    } else {
-                        Log::warning("user_id not provided for specific_user assignment", [
-                            'contact_id' => $contactId,
-                            'assignment_type' => $assignmentType,
-                            'trigger_key' => $triggerKey,
-                            'step_data' => $stepData,
-                            'context_data' => $contextData
-                        ]);
-                    }
-                }
+            if ($assignmentType === AutomationAssignStrategiesEnum::SPASIFIC_USER->value) {
+                // Get user_id from stepData or contextData (should be set when configuring the workflow)
+                $userId = $stepData['assign_user_id'] ?? $contextData['assign_user_id'] ?? null;
+            } else if ($assignmentType === AutomationAssignStrategiesEnum::OWNER_CONTACT_USER->value) {
+                $userId = $this->getContactUserIdFromTriggerable($triggerable);
+            } else if ($assignmentType === AutomationAssignStrategiesEnum::ROUND_ROBIN_RANDOM_ACTIVE_OPPORTUNITY->value) {
+                // Assign to user with least active opportunities
+                $userId = $this->getUserWithLeastActiveOpportunities();
+            } else if ($assignmentType === AutomationAssignStrategiesEnum::ROUND_ROBIN_RANDOM_ACTIVE_TASKS->value) {
+                // Assign to user with least active tasks
+                $userId = $this->getUserWithLeastActiveTasks();
+            } else if ($assignmentType === AutomationAssignStrategiesEnum::ROUND_ROBIN_RANDOM_PERFORMANCE->value) {
+                // Assign to user with least working time/performance
+                $userId = $this->getUserWithLeastPerformance();
+            } else if ($assignmentType === AutomationAssignStrategiesEnum::ROUND_ROBIN_RANDOM_BEST_SELLER->value) {
+                // Assign to user with least sales in last 3 months
+                $userId = $this->getUserWithLeastSales();
             }
-            
+
+            if ($userId) {
+                if ($triggerable instanceof Contact) {
+                    $triggerable->update(['user_id' => $userId]);
+                    return true;
+
+                } else if ($triggerable instanceof Lead) {
+                    $triggerable->update(['assigned_to_id' => $userId]);
+                    return true;
+                } else if ($triggerable instanceof Task) {
+                    $triggerable->update(['assigned_to_id' => $userId]);
+                    return true;
+                } else if ($triggerable instanceof Deal) {
+                    $triggerable->update(['assigned_to_id' => $userId]);
+                    return true;
+                }
+            } else {
+                Log::warning("user_id not provided for specific_user assignment", [
+                    'contact_id' => $contactId,
+                    'assignment_type' => $assignmentType,
+                    'trigger_key' => $triggerKey,
+                    'step_data' => $stepData,
+                    'context_data' => $contextData
+                ]);
+            }
+
             // Implementation for other assignment types will be added later
             Log::info("Assign to sales action executed", [
                 'contact_id' => $contactId,
@@ -782,7 +883,7 @@ class AutomationWorkflowExecutorService
                 'triggerable_type' => get_class($triggerable),
                 'triggerable_id' => $triggerable->id ?? null
             ]);
-            
+
             return true;
         } catch (\Exception $e) {
             Log::error("Error executing assign to sales action: " . $e->getMessage());
@@ -790,25 +891,7 @@ class AutomationWorkflowExecutorService
         }
     }
 
-    /**
-     * Execute assign opportunity action
-     */
-    private function executeAssignOpportunityAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            if ($triggerable instanceof Lead) {
-                // Distribute opportunity to sales automatically
-                Log::info("Assign opportunity action executed", [
-                    'opportunity_id' => $triggerable->id,
-                    'opportunity_name' => $triggerable->name
-                ]);
-            }
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing assign opportunity action: " . $e->getMessage());
-            return false;
-        }
-    }
+
 
     /**
      * Execute move stage action
@@ -818,7 +901,7 @@ class AutomationWorkflowExecutorService
         try {
             if ($triggerable instanceof Lead) {
                 $targetStageId = $contextData['target_stage_id'] ?? null;
-                
+
                 if ($targetStageId) {
                     $triggerable->update(['stage_id' => $targetStageId]);
                     Log::info("Move stage action executed", [
@@ -840,11 +923,38 @@ class AutomationWorkflowExecutorService
     private function executeSendInvoiceEmailAction(Model $triggerable, array $contextData): bool
     {
         try {
-            // Send invoice or payment link email to client
+            $contactId = $this->getContactIdFromTriggerable($triggerable);
+
+            if (!$contactId) {
+                Log::warning("Could not extract contact for send invoice email action");
+                return false;
+            }
+
+            $contact = Contact::find($contactId);
+
+            if (!$contact || !$contact->email) {
+                Log::warning("Contact not found or has no email", ['contact_id' => $contactId]);
+                return false;
+            }
+
+            // Get invoice details from context
+            $invoiceId = $contextData['invoice_id'] ?? null;
+            $paymentLink = $contextData['payment_link'] ?? null;
+            $subject = $contextData['subject'] ?? 'Invoice from ' . config('app.name');
+
+            // TODO: Integrate with your email service/queue and invoice system
+            // if ($invoiceId) {
+            //     $invoice = Invoice::find($invoiceId);
+            //     Mail::to($contact->email)->send(new InvoiceEmail($contact, $invoice, $paymentLink));
+            // }
+
             Log::info("Send invoice email action executed", [
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
+                'contact_id' => $contact->id,
+                'email' => $contact->email,
+                'invoice_id' => $invoiceId,
+                'payment_link' => $paymentLink
             ]);
+
             return true;
         } catch (\Exception $e) {
             Log::error("Error executing send invoice email action: " . $e->getMessage());
@@ -924,23 +1034,7 @@ class AutomationWorkflowExecutorService
         }
     }
 
-    /**
-     * Execute trigger next step action
-     */
-    private function executeTriggerNextStepAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            // Create next task or move stage
-            Log::info("Trigger next step action executed", [
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing trigger next step action: " . $e->getMessage());
-            return false;
-        }
-    }
+
 
     /**
      * Execute tag and reopen later action
@@ -1034,41 +1128,7 @@ class AutomationWorkflowExecutorService
         }
     }
 
-    /**
-     * Execute notify owner and reschedule action
-     */
-    private function executeNotifyOwnerAndRescheduleAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            // Alert rep and send reschedule link
-            Log::info("Notify owner and reschedule action executed", [
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing notify owner and reschedule action: " . $e->getMessage());
-            return false;
-        }
-    }
 
-    /**
-     * Execute send reminder reschedule action
-     */
-    private function executeSendReminderRescheduleAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            // Reminder if accepted; reschedule if declined
-            Log::info("Send reminder reschedule action executed", [
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing send reminder reschedule action: " . $e->getMessage());
-            return false;
-        }
-    }
 
     /**
      * Execute create contact and opportunity action
@@ -1077,7 +1137,20 @@ class AutomationWorkflowExecutorService
     {
         try {
             // Create records and trigger assignment
-            Log::info("Create contact and opportunity action executed", [
+            $contactDTO = ContactDTO::fromArray([
+                'name' => $triggerable->name,
+                'email' => $triggerable->email,
+                'phone' => $triggerable->phone,
+                'address' => $triggerable->address,
+                'city' => $triggerable->city,
+                'state' => $triggerable->state,
+                'zip' => $triggerable->zip,
+                'country' => $triggerable->country,
+                'contactable_id' => $triggerable->id,
+                'contactable_type' => get_class($triggerable),
+            ]);
+            $this->contactService->store($contactDTO);
+            Log::info("Create contact  action executed", [
                 'triggerable_type' => get_class($triggerable),
                 'triggerable_id' => $triggerable->id
             ]);
@@ -1096,7 +1169,7 @@ class AutomationWorkflowExecutorService
         try {
             // Get contact_id based on triggerable type
             $contactId = $this->getContactIdFromTriggerable($triggerable);
-            
+
             if (!$contactId) {
                 Log::error("Could not extract contact_id for create opportunity action", [
                     'triggerable_type' => get_class($triggerable),
@@ -1105,14 +1178,20 @@ class AutomationWorkflowExecutorService
                 return false;
             }
 
+            $default_pipeline = $this->pipelineService->getDefaultPipeline();
+            if ($default_pipeline->firstStage) {
+                $stage_id = $default_pipeline->firstStage->id;
+            }
+
             // Create opportunity
             $leadDTO = LeadDTO::fromArray([
                 'contact_id' => $contactId,
-                'status' => 'open',
-                'stage_id' => $contextData['stage_id'] ?? null,
+                'status' => OpportunityStatus::ACTIVE->value,
+                'stage_id' => $stage_id,
+                'win_probability' => 0,
                 'assigned_to_id' => null,
             ]);
-            $this->opportunityService->store($leadDTO);   
+            $this->opportunityService->store($leadDTO);
             return true;
         } catch (\Exception $e) {
             Log::error("Error executing create opportunity action: " . $e->getMessage());
@@ -1123,31 +1202,31 @@ class AutomationWorkflowExecutorService
     /**
      * Process delayed steps that are ready to execute
      */
-    // public function processDelayedSteps(): int
-    // {
-    //     $delays = AutomationDelay::getReadyToExecute();
-    //     $processedCount = 0;
+    public function processDelayedSteps(): int
+    {
+        $delays = AutomationDelay::getReadyToExecute();
+        $processedCount = 0;
 
-    //     foreach ($delays as $delay) {
-    //         try {
-    //             $stepImplement = $delay->automationStepsImplement;
-                
-    //             if ($stepImplement && !$stepImplement->implemented) {
-    //                 // Execute the delayed step
-    //                 $this->executeStep($stepImplement);
-    //                 $delay->markAsProcessed();
-    //                 $processedCount++;
-                    
-    //                 // Continue with next steps after delay
-    //                 $this->continueWorkflowAfterDelay($stepImplement);
-    //             }
-    //         } catch (\Exception $e) {
-    //             Log::error("Error processing delayed step {$delay->id}: " . $e->getMessage());
-    //         }
-    //     }
+        foreach ($delays as $delay) {
+            try {
+                $stepImplement = $delay->automationStepsImplement;
 
-    //     return $processedCount;
-    // }
+                if ($stepImplement && !$stepImplement->implemented) {
+                    // Execute the delayed step
+                    $stepImplement->markAsImplemented();
+                    $delay->markAsProcessed();
+                    $processedCount++;
+
+                    // Continue with next steps after delay
+                    $this->continueWorkflowAfterDelay($stepImplement);
+                }
+            } catch (\Exception $e) {
+                Log::error("Error processing delayed step {$delay->id}: " . $e->getMessage());
+            }
+        }
+
+        return $processedCount;
+    }
 
     /**
      * Continue workflow execution after a delay step is completed
@@ -1174,17 +1253,10 @@ class AutomationWorkflowExecutorService
             // Execute the next steps in order
             foreach ($nextSteps as $nextStep) {
                 try {
-                    // Check if this step is also a delay that needs to be scheduled
-                    if ($nextStep->type === 'delay') {
-                        // Create delay record for this step
-                        $this->createDelayRecord($nextStep);
-                        Log::info("Scheduled next delay step {$nextStep->id} for later execution");
-                        break; // Stop execution chain at delay steps
-                    } else {
-                        // Execute non-delay steps immediately
-                        $this->executeStep($nextStep, $completedDelayStep->context_data);
-                        Log::info("Executed next step {$nextStep->id} after delay");
-                    }
+                    // Execute non-delay steps immediately
+                    $this->executeStep($nextStep);
+                    Log::info("Executed next step {$nextStep->id} after delay");
+
                 } catch (\Exception $e) {
                     Log::error("Error executing next step {$nextStep->id} after delay: " . $e->getMessage());
                     // Continue with other steps even if one fails
@@ -1203,7 +1275,7 @@ class AutomationWorkflowExecutorService
     {
         try {
             $stepData = $stepImplement->step_data;
-            
+
             if (isset($stepData['duration']) && isset($stepData['unit'])) {
                 $executeAt = AutomationDelay::calculateExecuteAt(
                     $stepData['duration'],
@@ -1235,11 +1307,110 @@ class AutomationWorkflowExecutorService
         $executedCount = 0;
 
         foreach ($pendingSteps as $step) {
-            if ($this->executeStep($step, $step->context_data ?? [])) {
+            $result = $this->executeStep($step);
+            if ($result['success']) {
                 $executedCount++;
             }
         }
 
         return $executedCount;
+    }
+
+    /**
+     * Get user with least active opportunities assigned
+     */
+    private function getUserWithLeastActiveOpportunities(): ?int
+    {
+        try {
+            $user = User::where('is_active', true)
+                ->withCount([
+                    'leads as active_opportunities_count' => function ($query) {
+                        $query->whereIn('status', [
+                            OpportunityStatus::ACTIVE->value,
+                            OpportunityStatus::ABANDONED->value
+                        ]);
+                    }
+                ])
+                ->orderBy('active_opportunities_count', 'asc')
+                ->first();
+
+            return $user?->id;
+        } catch (\Exception $e) {
+            Log::error("Error getting user with least active opportunities: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get user with least active tasks assigned
+     */
+    private function getUserWithLeastActiveTasks(): ?int
+    {
+        try {
+            $user = User::where('is_active', true)
+                ->withCount([
+                    'tasks as active_tasks_count' => function ($query) {
+                        $query->whereNotIn('status', [
+                            TaskStatusEnum::COMPLETED->value,
+                            TaskStatusEnum::CANCELLED->value,
+                        ]);
+                    }
+                ])
+                ->orderBy('active_tasks_count', 'asc')
+                ->first();
+
+            return $user?->id;
+        } catch (\Exception $e) {
+            Log::error("Error getting user with least active tasks: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get user with least performance (least working time in system)
+     * This checks for users with least activity based on their last_login_at
+     */
+    private function getUserWithLeastPerformance(): ?int
+    {
+        try {
+            // Get user with oldest last_login_at (least recently active)
+            $user = User::where('is_active', true)
+                ->orderBy('last_login_at', 'asc')
+                ->orderBy('id', 'asc') // Secondary sort for users who never logged in
+                ->first();
+
+            return $user?->id;
+        } catch (\Exception $e) {
+            Log::error("Error getting user with least performance: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get user with least sales in last 3 months
+     * Calculates based on won deals (opportunities with status won) and their deal_value
+     */
+    private function getUserWithLeastSales(): ?int
+    {
+        try {
+            $threeMonthsAgo = now()->subMonths(3);
+
+            $user = User::where('is_active', true)
+                ->withSum([
+                    'assignedDeals as total_sales' => function ($query) use ($threeMonthsAgo) {
+                        $query->whereHas('lead', function ($leadQuery) {
+                            $leadQuery->where('status', OpportunityStatus::WON->value);
+                        })
+                            ->where('created_at', '>=', $threeMonthsAgo);
+                    }
+                ], 'total_amount')
+                ->orderBy('total_sales', 'asc')
+                ->first();
+
+            return $user?->id;
+        } catch (\Exception $e) {
+            Log::error("Error getting user with least sales: " . $e->getMessage());
+            return null;
+        }
     }
 }

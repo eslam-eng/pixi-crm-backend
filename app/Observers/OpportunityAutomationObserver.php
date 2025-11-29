@@ -19,6 +19,8 @@ class OpportunityAutomationObserver
     {
         // Fire generic opportunity created trigger
         $this->triggerService->fireTrigger('opportunity_created', [
+            'triggerable_type' => get_class($opportunity),
+            'triggerable_id' => $opportunity->id,
             'opportunity' => $opportunity,
             'entity' => $opportunity,
             'entity_type' => 'opportunity',
@@ -30,6 +32,8 @@ class OpportunityAutomationObserver
         // This will be checked against workflow configurations with thresholds
         if ($opportunity->deal_value && $opportunity->deal_value > 0) {
             $this->triggerService->fireTrigger('opportunity_high_value', [
+                'triggerable_type' => get_class($opportunity),
+                'triggerable_id' => $opportunity->id,
                 'opportunity' => $opportunity,
                 'entity' => $opportunity,
                 'entity_type' => 'opportunity',
@@ -51,6 +55,8 @@ class OpportunityAutomationObserver
         // Check if stage changed
         if ($opportunity->wasChanged('stage_id')) {
             $this->triggerService->fireTrigger('opportunity_stage_changed', [
+                'triggerable_type' => get_class($opportunity),
+                'triggerable_id' => $opportunity->id,
                 'opportunity' => $opportunity,
                 'entity' => $opportunity,
                 'entity_type' => 'opportunity',
@@ -64,6 +70,8 @@ class OpportunityAutomationObserver
         // Check if opportunity became qualified (is_qualifying changed from false to true)
         if (isset($changes['is_qualifying']) && $changes['is_qualifying'] === true && !($original['is_qualifying'] ?? false)) {
             $this->triggerService->fireTrigger('opportunity_qualified', [
+                'triggerable_type' => get_class($opportunity),
+                'triggerable_id' => $opportunity->id,
                 'opportunity' => $opportunity,
                 'entity' => $opportunity,
                 'entity_type' => 'opportunity',
@@ -82,6 +90,8 @@ class OpportunityAutomationObserver
             // The actual threshold check will be done in workflow configuration
             if ($newValue > $oldValue) {
                 $this->triggerService->fireTrigger('opportunity_high_value', [
+                    'triggerable_type' => get_class($opportunity),
+                    'triggerable_id' => $opportunity->id,
                     'opportunity' => $opportunity,
                     'entity' => $opportunity,
                     'entity_type' => 'opportunity',
@@ -95,6 +105,8 @@ class OpportunityAutomationObserver
 
         // Generic update trigger
         $this->triggerService->fireTrigger('opportunity_updated', [
+            'triggerable_type' => get_class($opportunity),
+            'triggerable_id' => $opportunity->id,
             'opportunity' => $opportunity,
             'entity' => $opportunity,
             'entity_type' => 'opportunity',

@@ -294,6 +294,27 @@ class User extends Authenticatable
         return $this->hasManyThrough(Deal::class, Chair::class);
     }
 
+    public function assignedDeals()
+    {
+        return $this->hasMany(Deal::class, 'assigned_to_id');
+    }
+
+    /**
+     * Get all leads/opportunities assigned to this user
+     */
+    public function leads()
+    {
+        return $this->hasMany(Lead::class, 'assigned_to_id');
+    }
+
+    /**
+     * Get all tasks assigned to this user
+     */
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'assigned_to_id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

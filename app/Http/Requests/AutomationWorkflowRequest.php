@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AutomationAssignStrategiesEnum;
 use App\Enums\ConditionOperation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,15 +31,17 @@ class AutomationWorkflowRequest extends FormRequest
             'steps' => 'required|array|min:1|max:50',
             'steps.*.type' => 'required|in:condition,action,delay',
             'steps.*.order' => 'required|integer|min:1|max:100',
-            
+
             // Condition step validation
             'steps.*.field' => 'required_if:steps.*.type,condition|string|max:255|min:2',
             'steps.*.operation' => ['required_if:steps.*.type,condition', 'string', Rule::in(ConditionOperation::values())],
             'steps.*.value' => 'required_if:steps.*.type,condition|string|max:1000',
-            
+
             // Action step validation
             'steps.*.automation_action_id' => 'required_if:steps.*.type,action|integer|exists:automation_actions,id',
-            
+            'steps.*.assign_strategy' => ['required_if:steps.*.automation_action_id,22', Rule::in(AutomationAssignStrategiesEnum::values())],
+            'steps.*.assign_user_id' => 'required_if:steps.*.assign_strategy,spasific_user|integer|exists:users,id',
+
             // Delay step validation
             'steps.*.duration' => 'required_if:steps.*.type,delay|integer|min:1|max:999999',
             'steps.*.unit' => 'required_if:steps.*.type,delay|string|in:minutes,hours,days',
@@ -72,7 +75,7 @@ class AutomationWorkflowRequest extends FormRequest
             'steps.*.order.integer' => 'Step order must be a number',
             'steps.*.order.min' => 'Step order must be at least 1',
             'steps.*.order.max' => 'Step order cannot exceed 100',
-            
+
             // Condition step messages
             'steps.*.field.required_if' => 'Field is required for condition steps',
             'steps.*.field.string' => 'Field must be a string',
@@ -84,12 +87,12 @@ class AutomationWorkflowRequest extends FormRequest
             'steps.*.value.required_if' => 'Value is required for condition steps',
             'steps.*.value.string' => 'Value must be a string',
             'steps.*.value.max' => 'Value cannot exceed 1000 characters',
-            
+
             // Action step messages
             'steps.*.automation_action_id.required_if' => 'Automation action is required for action steps',
             'steps.*.automation_action_id.integer' => 'Automation action must be a valid ID',
             'steps.*.automation_action_id.exists' => 'Selected automation action does not exist',
-            
+
             // Delay step messages
             'steps.*.duration.required_if' => 'Duration is required for delay steps',
             'steps.*.duration.integer' => 'Duration must be a number',
@@ -134,30 +137,30 @@ class AutomationWorkflowRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $steps = $this->input('steps', []);
-            
+
             if (empty($steps)) {
                 return;
             }
-            
+
             // Extract orders
             $orders = array_column($steps, 'order');
-            
+
             // Debug: Log the orders to see what we're getting
             \Log::info('Step orders received:', $orders);
-            
+
             // Remove any null/empty values
-            $orders = array_filter($orders, function($order) {
+            $orders = array_filter($orders, function ($order) {
                 return $order !== null && $order !== '';
             });
-            
+
             \Log::info('Filtered orders:', $orders);
-            
+
             // Check if we have any orders
             if (empty($orders)) {
                 $validator->errors()->add('steps', 'All steps must have an order number');
                 return;
             }
-            
+
             // Check for duplicate orders
             $uniqueOrders = array_unique($orders);
             \Log::info('Unique orders:', $uniqueOrders);
@@ -165,25 +168,25 @@ class AutomationWorkflowRequest extends FormRequest
                 'original' => count($orders),
                 'unique' => count($uniqueOrders)
             ]);
-            
+
             if (count($orders) !== count($uniqueOrders)) {
                 $validator->errors()->add('steps', 'Step orders must be unique within the workflow');
                 return;
             }
-            
+
             // Sort orders to check sequence
             $sortedOrders = array_values($uniqueOrders);
             sort($sortedOrders);
-            
+
             \Log::info('Sorted orders:', $sortedOrders);
-            
+
             // Check if orders start from 1
-          
+
             if ($sortedOrders[0] != 1) {
                 $validator->errors()->add('steps', 'Step orders must start from 1');
                 return;
             }
-            
+
             // Check if orders are sequential (1, 2, 3, 4, ...)
             $expectedSequence = range(1, count($sortedOrders));
             \Log::info('Expected sequence:', $expectedSequence);

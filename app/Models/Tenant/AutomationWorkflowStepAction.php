@@ -9,8 +9,12 @@ class AutomationWorkflowStepAction extends Model
     protected $fillable = [
         'automation_workflow_step_id',
         'automation_action_id',
+        'configs'
     ];
 
+    protected $casts = [
+        'configs' => 'array',
+    ];
     /**
      * Get the workflow step that owns this action
      */

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('automation_workflow_step_id')->constrained('automation_workflow_steps', 'id', 'fk_awsa_step_id')->onDelete('cascade');
             $table->foreignId('automation_action_id')->constrained('automation_actions', 'id', 'fk_awsa_action_id')->onDelete('cascade');
+            $table->json('configs')->nullable();
             $table->timestamps();
             
             // Add indexes for better performance

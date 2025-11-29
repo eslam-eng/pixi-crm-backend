@@ -33,7 +33,7 @@
                                 <div class="main-content-label mg-b-5">@lang('app.governorate') *</div>
                                 <select id="searchable-select" class="form-control" style="width: 100%;"
                                     name="parent_id">
-                                    @forelse (app()->make(App\Services\LocationService::class)->getAll(filters:
+                                    @forelse (app()->make(App\Services\Tenant\LocationService::class)->getAll(filters:
                                     ['depth' =>1]) as $item)
                                     <option value="{{ $item->id }}" @selected($item->id == $location->parent_id)>{{
                                         $item->title }}</option>

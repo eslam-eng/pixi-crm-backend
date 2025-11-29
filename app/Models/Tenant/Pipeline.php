@@ -7,6 +7,7 @@ use App\Models\Stage;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pipeline extends Model
 {
@@ -16,6 +17,11 @@ class Pipeline extends Model
     public function stages(): HasMany
     {
         return $this->hasMany(Stage::class);
+    }
+
+    public function firstStage(): HasOne
+    {
+        return $this->hasOne(Stage::class)->orderBy('id', 'asc');
     }
 
     public function lossReasons(): HasMany

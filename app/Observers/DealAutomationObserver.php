@@ -22,6 +22,8 @@ class DealAutomationObserver
         $contact = $opportunity?->contact ?? null;
 
         $this->triggerService->fireTrigger('deal_created', [
+            'triggerable_type' => get_class($deal),
+            'triggerable_id' => $deal->id,
             'deal' => $deal,
             'opportunity' => $opportunity,
             'contact' => $contact,
@@ -44,6 +46,8 @@ class DealAutomationObserver
         $contact = $opportunity?->contact ?? null;
 
         $this->triggerService->fireTrigger('deal_updated', [
+            'triggerable_type' => get_class($deal),
+            'triggerable_id' => $deal->id,
             'deal' => $deal,
             'opportunity' => $opportunity,
             'contact' => $contact,
