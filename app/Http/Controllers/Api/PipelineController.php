@@ -93,4 +93,16 @@ class PipelineController extends Controller
             return ApiResponse(message: $e->getMessage(), code: 500);
         }
     }
+
+    public function updateDefault(int $id)
+    {
+        try {
+            $this->pipelineService->updateDefault($id);
+            return ApiResponse(message: 'Pipeline updated successfully', code: 200);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Pipeline not found', code: 404);
+        } catch (\Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
 }

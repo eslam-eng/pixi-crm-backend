@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Pipeline extends Model
 {
     use Filterable;
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'is_default'];
 
     public function stages(): HasMany
     {

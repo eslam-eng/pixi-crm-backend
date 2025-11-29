@@ -41,6 +41,9 @@ use App\Http\Controllers\Api\ItemAttributeController;
 use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
 use App\Http\Controllers\Api\TranslatableExampleController;
+use App\Http\Controllers\Central\Api\AuthController as centralAuthController;
+use App\Http\Controllers\Central\Api\PaymentController;
+use App\Http\Controllers\Central\Api\SettingController;
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
 use App\Http\Controllers\Central\Api\ActivationCodeController;
 use App\Http\Controllers\Central\Api\AdminController;
@@ -391,6 +394,7 @@ Route::middleware([
 
         // pipeline and stage routes
         Route::apiResource('pipelines', \App\Http\Controllers\Api\PipelineController::class);
+        Route::patch('pipelines/{pipeline}/update-default', [\App\Http\Controllers\Api\PipelineController::class, 'updateDefault']);
         Route::get('pipelines/{pipelineId}/stages', [\App\Http\Controllers\Api\StageController::class, 'index']);
         Route::post('pipelines/{pipelineId}/stages', [\App\Http\Controllers\Api\StageController::class, 'store']);
         Route::get('stages/{stageId}', [\App\Http\Controllers\Api\StageController::class, 'show']);

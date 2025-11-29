@@ -11,15 +11,16 @@ use Illuminate\Database\Eloquent\Builder;
 class PipelineService extends BaseService
 {
     public function __construct(
-        public Pipeline  $model,
-    ) {}
+        public Pipeline $model,
+    ) {
+    }
 
     public function getModel(): Pipeline
     {
         return $this->model;
     }
 
-    public function getTableName(): String
+    public function getTableName(): string
     {
         return $this->getModel()->getTable();
     }
@@ -78,6 +79,16 @@ class PipelineService extends BaseService
     {
         $pipeline = $this->getQuery()->findOrFail($id);
         return $pipeline->delete();
+    }
+
+    public function updateDefault(int $id)
+    {
+        $this->getQuery()->update(['is_default' => 0]);
+        $pipeline = $this->getQuery()->findOrFail($id);
+        $pipeline->update([
+            'is_default' => true,
+        ]);
+        return $pipeline;
     }
 }
 e
