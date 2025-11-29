@@ -388,4 +388,6 @@ return array(
   'lead' => 'Prospecto', // Or 'Trato'
   'deal' => 'Negocio', // Or 'Trato'
   'task' => 'Tarea',
+  'system' => 'Sistema',
+  'log_call' => 'Registrar llamada',
 );

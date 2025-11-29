@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTO\Tenant\LeadDTO;
+use App\DTO\Tenant\LogCallDTO;
 use App\Enums\OpportunityStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Lead\LogCallRequest;
 use App\Http\Requests\Tenant\Opportunity\OpportunityRequest;
 use App\Http\Requests\Tenant\Opportunity\StatusRequest;
 use App\Http\Resources\AuditOpportunityResource;
@@ -163,6 +165,19 @@ class OpportunityController extends Controller
             $opportunity = Lead::findOrFail($id);
             $audits = $opportunity->audits()->with('user')->latest()->get();
             return ApiResponse(message: 'Opportunity activity list retrieved successfully', code: 200, data: AuditOpportunityResource::collection($audits));
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function logCall(LogCallRequest $request, $opportunity)
+    {
+        try {
+            $data = LogCallDTO::fromArray($request->validated());
+            $this->leadService->logCall($opportunity, $data);
+            return ApiResponse(message: 'Call logged successfully', code: 200);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
