@@ -11,6 +11,7 @@ class PipelineSeeder extends Seeder
     {
         $pipeline = Pipeline::updateOrCreate([
             'name' => 'Default',
+            'is_default' => true,
         ]);
 
         $pipeline->stages()->updateOrCreate([
