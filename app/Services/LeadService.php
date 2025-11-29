@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTO\Tenant\LeadDTO;
 use App\DTO\Tenant\LeadItemDTO;
+use App\DTO\Tenant\LogCallDTO;
 use App\Enums\OpportunityStatus;
 use App\QueryFilters\LeadFilters;
 use Illuminate\Database\Eloquent\Builder;
@@ -328,5 +329,19 @@ class LeadService extends BaseService
         $this->updateActionTimes($lead);
         
         return $lead;
+    }
+
+    public function logCall(int $id ,LogCallDTO $data ): void
+    {
+        $lead = $this->findById($id);
+        activity()
+            ->causedBy(Auth::user()) // optional
+            ->performedOn($lead)     // optional model
+            ->withProperties([
+                'call_notes' => $data->call_notes,
+                'call_direction' => $data->call_direction,
+                ])
+            ->useLog('lead') // optional log name
+            ->log('log_call');
     }
 }

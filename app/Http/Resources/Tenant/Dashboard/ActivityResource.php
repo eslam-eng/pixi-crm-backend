@@ -13,6 +13,7 @@ class ActivityResource extends JsonResource
             'description' => __('app.' . $this['description']),
             'type' => __('app.' . $this['subject_type']),
             'time' => $this['time'],
+            'user' => $this['user'] ? $this['user'] : __('app.system'),
         ];
     }
 }
