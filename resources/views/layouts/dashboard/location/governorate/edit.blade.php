@@ -34,7 +34,7 @@
                                 <select id="searchable-select" class="form-control" style="width: 100%;"
                                     name="parent_id">
                                     @forelse (app()->make(App\Services\LocationService::class)->getAll(filters:
-                                    ['depth' =>0]); as $item)
+                                    ['depth' =>0]) as $item)
                                     <option value="{{ $item->id }}" @selected($item->id == $location->parent_id)>{{
                                         $item->title }}</option>
                                     @empty

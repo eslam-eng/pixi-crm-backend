@@ -80,3 +80,4 @@ class PipelineService extends BaseService
         return $pipeline->delete();
     }
 }
+e

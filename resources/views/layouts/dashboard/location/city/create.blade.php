@@ -47,7 +47,7 @@
                                     name="parent_id">
                                     @forelse (app()->make(App\Services\LocationService::class)->getAll(filters:
                                     ['depth'
-                                    =>1]); as $item)
+                                    =>1]) as $item)
                                     <option value="{{ $item->id }}">{{ $item->title }}</option>
                                     @empty
                                     <option value="">No Option</option>
