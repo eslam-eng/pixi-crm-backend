@@ -14,14 +14,14 @@ return new class extends Migration
     {
         Schema::create('automation_actions', function (Blueprint $table) {
             $table->id();
-            $table->json('name'); // Multilingual names (ar, en, fr, es)
-            $table->string('key')->unique(); // Unique identifier for the action
+            $table->json('name');
+            $table->string('key')->unique();
             $table->string('icon')->nullable();
-            $table->text('description')->nullable(); // Optional description
+            $table->text('description')->nullable();
+            $table->json('configs')->nullable(); 
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
-            // Add indexes for better performance
+          
             $table->index(['is_active']);
             $table->index(['key']);
         });
