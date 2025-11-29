@@ -48,6 +48,11 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users_tenant',
         ],
+
+        'landlord' => [
+            'driver' => 'sanctum',
+            'provider' => 'admins',
+        ],
     ],
 
     /*
@@ -76,6 +81,11 @@ return [
         'users_tenant' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL_TENANT', App\Models\Tenant\User::class),
+        ],
+
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
         ],
 
         // 'users' => [
@@ -107,15 +117,15 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
-            'throttle' => 60,
+            'expire' => 6000000,
+            'throttle' => 6000000,
         ],
 
         'users_tenant' => [
             'provider' => 'users_tenant',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
-            'throttle' => 60,
+            'expire' => 6000000,
+            'throttle' => 6000000,
         ],
     ],
 

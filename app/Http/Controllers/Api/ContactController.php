@@ -12,15 +12,18 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contacts\ContactRequest;
 use App\Http\Resources\ContactResource;
+use App\Http\Resources\ContactShowResource;
 use App\Imports\ContactsImport;
 use App\Services\ContactService;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\HeadingRowImport;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class ContactController extends Controller
 {
-    public function __construct(public ContactService $contactService) {
+    public function __construct(public ContactService $contactService)
+    {
         $this->middleware('permission:view-contacts')->only(['index', 'show']);
         $this->middleware('permission:create-contacts')->only(['store']);
         $this->middleware('permission:edit-contacts')->only(['update']);
@@ -64,7 +67,7 @@ class ContactController extends Controller
             $contactDTO = ContactDTO::fromRequest($request);
             $contact = $this->contactService->store($contactDTO);
             DB::commit();
-            return ApiResponse(new ContactResource($contact), 'Contact created successfully', code: 201);
+            return ApiResponse(new ContactShowResource($contact), 'Contact created successfully', code: 201);
         } catch (GeneralException $e) {
             return ApiResponse(message: $e->getMessage(), code: $e->getCode());
         } catch (Exception $e) {
@@ -125,7 +128,7 @@ class ContactController extends Controller
             $importSettings = $request->input('import_settings', []);
 
             // Validate mapping
-            $requiredFields = ['first_name', 'last_name'];
+            $requiredFields = ['first_name', 'email'];
             foreach ($requiredFields as $field) {
                 if (empty($columnMapping[$field])) {
                     return ApiResponse(message: "The field '{$field}' is required and must be mapped.", code: 422);
@@ -200,6 +203,8 @@ class ContactController extends Controller
             $contact = $this->contactService->update($contact_id, $contactDTO);
             DB::commit();
             return ApiResponse(new ContactResource($contact), 'Contact updated successfully');
+        } catch (ValidationException $e) {
+            return ApiResponse(message: $e->validator->errors(), code: 422);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: 500);

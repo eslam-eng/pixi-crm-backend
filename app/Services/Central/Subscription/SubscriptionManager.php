@@ -1,0 +1,49 @@
+<?php
+
+namespace App\Services\Central\Subscription;
+
+use App\Enums\Landlord\SubscriptionTypeEnum;
+use App\Models\Central\Invoice;
+use App\Models\Central\Plan;
+use App\Models\Tenant\User;
+use App\Services\Central\Subscription\Factory\SubscriptionFactory;
+
+class SubscriptionManager
+{
+    public function __construct(private SubscriptionFactory $subscriptionFactory) {}
+
+    public function handleSubscription(string $type, array $params, User $user)
+    {
+        $strategy = $this->subscriptionFactory->make($type);
+
+        return $strategy->handle($params, $user);
+    }
+
+    public function createPaidSubscription(array $params, User $user)
+    {
+        return $this->handleSubscription(SubscriptionTypeEnum::PAID->value, $params, $user);
+    }
+
+    public function createActivationCodeSubscription(string $activationCode, User $user)
+    {
+        return $this->handleSubscription(SubscriptionTypeEnum::ACTIVATION_CODE->value, [
+            'activation_code' => $activationCode,
+        ], $user);
+    }
+
+    public function renewSubscription(array $params, User $user): ?Invoice
+    {
+        return $this->handleSubscription(SubscriptionTypeEnum::RENEW->value, $params, $user);
+    }
+
+    public function createFreeTrialSubscription(User $user, int $trialDays = 14)
+    {
+        $freePlan = Plan::query()->trial()->first();
+        $trialDays = $freePlan->trial_days ?? $trialDays;
+
+        return $this->handleSubscription(SubscriptionTypeEnum::FREE_TRIAL->value, [
+            'plan' => $freePlan,
+            'trial_days' => $trialDays,
+        ], $user);
+    }
+}

@@ -9,7 +9,6 @@ return new class extends SettingsMigration
         // General Deal Settings
         $this->migrator->add('deals_settings.default_currency', 'USD');
         $this->migrator->add('deals_settings.default_tax_rate', 14);
-        $this->migrator->add('deals_settings.default_payment_terms_days', 30);
         $this->migrator->add('deals_settings.attachment_size_limit_mb', 10);
         
         // Feature Toggles

@@ -45,7 +45,6 @@ class ProductVariantService
 
     private function generateVariantSku(Product $product, array $attributes)
     {
-        // dd($attributes);
         $suffix = collect($attributes)
             ->map(fn($attribute) => strtoupper(substr($attribute['value_id'], 0, 2)))
             ->join('-');

@@ -19,9 +19,49 @@ class OpportunityResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Merge items and variants into a single items_details array
+        $items = $this->relationLoaded('items')
+            ? $this->items->filter()->map(function ($item) {
+                return [
+                    'item_id' => $item['id'],
+                    'variant_id' => null,
+                    'name' => $item->name,
+                    'price' => $item->price,
+                    'quantity' => $item->pivot->quantity,
+                    'category_id' => $item->category->id,
+                    'category_name' => $item->category->name,
+                    'sub_category_id' => $item->category->parent->id,
+                    'sub_category_name' => $item->category->parent->name,
+                    'service_type' => $item->service?->service_type,
+                    'type' => $item->itemable_type,
+                ];
+            })->values()->all()
+            : [];
+
+        $variants = $this->relationLoaded('variants')
+            ? $this->variants->filter()->map(function ($variant) {
+                return [
+                    'item_id' => $variant->product->item->id ?? null,
+                    'variant_id' => $variant->id,
+                    'name' => $variant->product->item->name ?? 'Unknown Variant',
+                    'price' => $variant->pivot->price ?? 0,
+                    'quantity' => $variant->pivot->quantity ?? 0,
+                    'category_id' => $variant->product->item->category->parent->id,
+                    'category_name' => $variant->product->item->category->parent->name,
+                    'sub_category_id' => $variant->product->item->category->id,
+                    'sub_category_name' => $variant->product->item->category->name,
+                    'service_type' => null,
+                    'type' => $variant->product->item->itemable_type,
+                ];
+            })->values()->all()
+            : [];
+
+        $mergedItemsDetails = array_merge($items, $variants);
+
         return [
             'id' => $this->id,
             'status' => $this->status,
+            'is_qualifying' => $this->is_qualifying,
             'deal_value' => $this->deal_value,
             'win_probability' => $this->win_probability,
             'expected_close_date' => $this->expected_close_date,
@@ -30,18 +70,8 @@ class OpportunityResource extends JsonResource
             'description' => $this->description,
             'contact' => $this->whenLoaded('contact', fn() => new ContactResource($this->contact)),
             'stage' => $this->whenLoaded('stage', fn() => new StageResource($this->stage)),
-            'items' => $this->whenLoaded('items', fn() => ItemResource::collection($this->items)),
-            'items_details' => $this->whenLoaded('items', fn() => ItemInOpportunity::collection($this->items)),
-            'variants' => $this->whenLoaded('variants', function () {
-                return $this->variants->filter()->map(function ($variant) {
-                    return [
-                        'id' => $variant->id,
-                        'name' => $variant->product->item->name ?? 'Unknown Variant',
-                        'price' => $variant->pivot->price ?? 0,
-                        'quantity' => $variant->pivot->quantity ?? 0,
-                    ];
-                });
-            }),
+            // 'items' => $this->whenLoaded('items', fn() => ItemResource::collection($this->items)),
+            'items_details' => $mergedItemsDetails,
         ];
     }
 }

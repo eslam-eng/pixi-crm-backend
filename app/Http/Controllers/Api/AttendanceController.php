@@ -54,4 +54,16 @@ class AttendanceController extends Controller
         );
         return apiResponse(message: 'Clicks retrieved successfully', data: $clicks);
     }
+
+    public function userStatus(Request $req)
+    {
+        try {
+            $userStatus = $this->attendanceService->getUserStatus(
+                userId: $req->user_id ?? auth()->id(),
+            );
+            return apiResponse(message: 'User status retrieved successfully', data: $userStatus);
+        } catch (\Exception $e) {
+            return apiResponse(message: 'server error', data: [], code: 500);
+        }
+    }
 }

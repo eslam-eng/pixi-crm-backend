@@ -137,7 +137,6 @@ class UsersController extends Controller
             ];
             return to_route('users.index')->with('toast', $toast);
         } catch (Exception $e) {
-            dd($e);
             $toast = [
                 'type' => 'error',
                 'title' => 'error',

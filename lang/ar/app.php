@@ -61,5 +61,15 @@ return array(
   'task_escalation_message' => 'المهمة ":title" متأخرة :hours ساعة وتتطلب اهتماماً فورياً.',
   'task_escalation_not_specified' => 'غير محدد',
   'task_escalation_not_assigned' => 'غير مكلف',
+  'only_one_dashboard_type_allowed' => 'يمكنك اختيار نوع لوحة تحكم واحد فقط (view-admin-dashboard أو view-manager-dashboard أو view-agent-dashboard)',
+  'manager_must_have_team' => 'يجب تعيين المدير إلى فريق',
 
+  'lead_created' => 'تم إنشاء عميل متوقع',
+  'lead_update' => 'تم تحديث عميل متوقع',
+  'lead_delete' => 'تم حذف عميل متوقع', 
+  'task_created' => 'تم إنشاء مهمة',
+  'deal_created' => 'تم انشاء صفقة',
+  'lead' => 'عميل متوقع',
+  'deal' => 'صفقة',
+  'task' => 'مهمة'
 );

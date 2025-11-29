@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTO\Team\TeamDTO;
+use App\DTO\Tenant\Team\TeamBulkAssignDTO;
 use App\Http\Resources\TeamResource;
 use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\TeamRequest;
+use App\Http\Requests\Tenant\Team\TeamBulkAssignRequest;
 use App\Http\Resources\TeamDDLResource;
+use App\Http\Resources\TeamShowResource;
+use App\Http\Resources\Tenant\Chairs\ChairResource;
+use App\Models\Tenant\Chair;
 use App\Services\TeamService;
 use Illuminate\Http\JsonResponse;
 use Exception;
@@ -26,8 +31,11 @@ class TeamsController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $filters = array_filter(request()->query());
-            $withRelations = ['leader.roles', 'sales.roles'];
+            $filters = array_filter(request()->all(), function ($value) {
+                return $value !== null && $value !== '';
+            });
+
+            $withRelations = ['chairs.targets', 'chairs.user', 'leader.roles', 'members', 'year_total'];
             if ($request->has('ddl')) {
                 $teams = $this->teamService->index(filters: $filters, withRelations: $withRelations);
                 $data = TeamDDLResource::collection($teams);
@@ -58,8 +66,8 @@ class TeamsController extends Controller
     public function show($id)
     {
         try {
-            $team = $this->teamService->findById(id: $id, withRelations: ['leader.roles', 'sales']);
-            return ApiResponse(new TeamResource($team), 'Team retrieved successfully');
+            $team = $this->teamService->findById(id: $id, withRelations: ['chairs.targets', 'chairs.user', 'leader.roles', 'members']);
+            return ApiResponse(new TeamShowResource($team), 'Team retrieved successfully');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -87,6 +95,58 @@ class TeamsController extends Controller
         } catch (NotFoundException $e) {
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getChairs($id)
+    {
+        try {
+            // $chairs = Chair::where('team_id',$id)->with('user', 'monthlyTargets', 'quarterlyTargets')->get();
+            $allChairs = Chair::active()
+                ->with(['user', 'team', 'targets', 'deals'])
+                ->get();
+            // dd($allChairs);
+            return ApiResponse(ChairResource::collection($allChairs), 'Team chairs retrieved successfully');
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function teamBulkAssign(TeamBulkAssignRequest $request): JsonResponse
+    {
+        try {
+            $teamBulkAssignDTO = TeamBulkAssignDTO::fromArray($request->validatedData());
+            DB::beginTransaction();
+            $team = $this->teamService->teamBulkAssign($teamBulkAssignDTO);
+            DB::commit();
+            return ApiResponse(new TeamResource($team), message: 'Team bulk assign successfully');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function showWithTarget($id)
+    {
+        try {
+            $team = $this->teamService->findByIdWithTarget(id: $id);
+            return ApiResponse(new TeamResource($team), 'Team with target retrieved successfully');
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function teamBulkUpdate(TeamBulkAssignRequest $request, int $id): JsonResponse
+    {
+        try {
+            $teamBulkAssignDTO = TeamBulkAssignDTO::fromArray($request->validatedData());
+            DB::beginTransaction();
+            $team = $this->teamService->teamBulkUpdate($teamBulkAssignDTO, $id);
+            DB::commit();
+            return ApiResponse(new TeamResource($team), message: 'Team bulk assign successfully');
+        } catch (Exception $e) {
+            DB::rollBack();
             return ApiResponse(message: $e->getMessage(), code: Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

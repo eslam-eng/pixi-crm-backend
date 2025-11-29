@@ -3,13 +3,16 @@
 namespace App\Models\Tenant;
 
 use App\Models\TaskReminder;
+use App\Observers\TaskObserver;
 use App\Traits\Filterable;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 
+#[ObservedBy([TaskObserver::class])]
 class Task extends Model
 {
-    use Filterable ;
+    use Filterable;
     protected $fillable = [
         'title',
         'description',
@@ -40,6 +43,11 @@ class Task extends Model
     {
         return $this->belongsToMany(User::class, 'tasks_followers', 'task_id', 'follower_id')
             ->withTimestamps();
+    }
+
+    public function taskType()
+    {
+        return $this->belongsTo(TaskType::class, 'task_type_id', 'id');
     }
 
     /**
@@ -82,7 +90,7 @@ class Task extends Model
     public function addReminder(Reminder $reminder, $reminderAt = null)
     {
         $reminderAt = $reminderAt ?? $this->calculateReminderTime($reminder);
-        
+
         $this->reminders()->attach($reminder->id, [
             'reminder_at' => $reminderAt,
             'is_sent' => false,
@@ -105,7 +113,6 @@ class Task extends Model
             ? $this->due_date->copy()
             : Carbon::parse($this->due_date);
         $dueDateTime = (clone $date)->setTimeFromTimeString((string) $this->due_time);
-        
         switch ($reminder->time_unit) {
             case 'minutes':
                 return $dueDateTime->subMinutes($reminder->time_value);

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('contact_id')->constrained('contacts')->onDelete('cascade');
             // Opportunity Details
             $table->enum('status', OpportunityStatus::values())->default(OpportunityStatus::ACTIVE->value);
+            $table->boolean('is_qualifying')->default(false);
             $table->foreignId('stage_id')->constrained('stages')->onDelete('cascade');
             $table->decimal('deal_value', 10, 2);
             $table->decimal('win_probability', 10, 2);

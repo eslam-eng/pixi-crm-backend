@@ -10,6 +10,7 @@ use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 
 class Contact extends Model
@@ -17,6 +18,7 @@ class Contact extends Model
     use Filterable, Notifiable;
     protected $fillable =
     [
+        'external_lead_id',
         'first_name',
         'last_name',
         'email',
@@ -111,5 +113,18 @@ class Contact extends Model
             $query->orWhereJsonContains('tags', $tag);
         }
         return $query;
+    }
+
+    public function phone(): HasOne
+    {
+        $table = (new ContactPhone())->getTable();
+        return $this->hasOne(ContactPhone::class)
+            ->latestOfMany('updated_at')
+            ->select(["{$table}.contact_id", "{$table}.phone"]); // MUST include foreign key with table prefix
+    }
+
+    public function getPhoneAttribute()
+    {
+        return $this->phone()->value('phone'); // returns string, not object
     }
 }

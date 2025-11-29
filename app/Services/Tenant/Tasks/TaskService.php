@@ -30,6 +30,7 @@ class TaskService extends BaseService
 
     public function getQuery(?array $filters = []): ?Builder
     {
+        // dd($filters);
         return parent::getQuery($filters)
             ->when(! empty($filters), fn(Builder $builder) => $builder->filter(new TaskFilters($filters)));
     }

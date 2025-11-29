@@ -3,11 +3,9 @@
 namespace App\QueryFilters\Tenant;
 
 use App\Abstracts\QueryFilter;
-use Illuminate\Database\Eloquent\Builder;
 
 class UsersFilters extends QueryFilter
 {
-
     public function __construct($params = array())
     {
         parent::__construct($params);
@@ -17,18 +15,25 @@ class UsersFilters extends QueryFilter
     {
         return $this->builder->where('email', $term);
     }
+
     public function phone($term)
     {
         return $this->builder->where('phone', $term);
     }
+
     public function is_active($term)
     {
         return $this->builder->where('is_active', $term);
     }
 
-
     public function role($term)
     {
+        if (gettype($term) == 'array') {
+            return $this->builder->whereHas('roles', function ($query) use ($term) {
+                $query->whereIn('name', $term);
+            });
+        }
+
         return $this->builder->role($term);
     }
 
@@ -47,4 +52,13 @@ class UsersFilters extends QueryFilter
         });
     }
 
+    public function no_team()
+    {
+        return $this->builder->whereNull('team_id');
+    }
+
+    public function team_id($term)
+    {
+        return $this->builder->where('team_id', $term);
+    }
 }

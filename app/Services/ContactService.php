@@ -6,11 +6,12 @@ use App\Models\Tenant\Contact;
 use App\QueryFilters\ContactFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\DTO\Contact\ContactDTO;
-
+use App\DTO\Contact\ContactMergeDTO;
 use App\Notifications\Tenant\CreateNewContactNotification;
 use App\Notifications\Tenant\UpdateAssignContactNotification;
 use App\Services\Tenant\Users\UserService;
 use Excel;
+use Illuminate\Validation\ValidationException;
 
 class ContactService extends BaseService
 {
@@ -56,7 +57,18 @@ class ContactService extends BaseService
     {
         // Create the contact
         $contact = $this->model->create($contactDTO->toArray());
-        $this->contactPhoneService->store($contactDTO->contact_phones, $contact->id);
+
+        $validator = validator([], []);
+        if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
+            foreach ($contactDTO->contact_phones as $phoneData) {
+                $existingPhones = $this->contactPhoneService->getModel()->where('phone', $phoneData['phone'])->exists();
+                if ($existingPhones) {
+                    $validator->errors()->add('contact_phones.phone', $phoneData['phone'] . ' is already exists');
+                } else {
+                    $contact->contactPhones()->create($phoneData);
+                }
+            }
+        }
         $admins = $this->userService->getModel()->role('admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new CreateNewContactNotification($contact));
@@ -81,9 +93,25 @@ class ContactService extends BaseService
         // Get changed fields before update
         $originalData = $contact->toArray();
         
+        $validator = validator([], []); // Create empty validator
         if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
-            $this->contactPhoneService->update($contactDTO->contact_phones, $contact);
+            $contact->contactPhones()->delete();
+            foreach ($contactDTO->contact_phones as $phoneData) {
+                $existingPhones = $this->contactPhoneService->getModel()->where('phone', $phoneData['phone'])->exists();
+                if ($existingPhones) {
+                    $validator->errors()->add('contact_phones.phone', $phoneData['phone'] . ' is already exists');
+                } else {
+                    $contact->contactPhones()->create($phoneData);
+                }
+            }
+        } else {
+            $contact->contactPhones()->delete();
         }
+
+        if ($validator->errors()->count() > 0) {
+            throw new ValidationException($validator);
+        }
+
         $contact->update($contactDTO->toArray());
         
         // Get changed fields after update
@@ -125,8 +153,8 @@ class ContactService extends BaseService
     public function updateMerge(int $id, ContactDTO $contactDTO)
     {
         $contact = $this->findById($id);
-        if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
-            $this->contactPhoneService->store($contactDTO->contact_phones, $contact->id);
+        if ($contactDTO->contact_merge_phones && count($contactDTO->contact_merge_phones) > 0) {
+            $this->contactPhoneService->store($contactDTO->contact_merge_phones, $contact->id);
         }
         $contact->update($contactDTO->toArray());
         return $contact->load('contactPhones', 'country', 'city', 'user', 'source');
@@ -159,7 +187,7 @@ class ContactService extends BaseService
             ],
             'last_name' => [
                 'label' => 'Last Name',
-                'required' => true,
+                'required' => false,
                 'type' => 'string'
             ],
             'email' => [
@@ -360,29 +388,8 @@ class ContactService extends BaseService
         ];
     }
 
-    private function syncContactPhones(Contact $contact, array $newNumbers): void
+    public function storeMerge(ContactMergeDTO $contactMergeDTO): Contact
     {
-        // Get existing contact numbers
-        $existingPhones = $contact->contactPhones()->pluck('phone')->toArray();
-
-        // Determine what to add, keep, and remove
-        $numbersToAdd = array_diff($newNumbers, $existingPhones);
-        $numbersToRemove = array_diff($existingPhones, $newNumbers);
-
-        // Remove numbers that are no longer needed
-        if (!empty($numbersToRemove)) {
-            $contact->contactPhones()
-                ->whereIn('phone', $numbersToRemove)
-                ->delete();
-        }
-
-        // Add new numbers
-        if (!empty($numbersToAdd)) {
-            $contactPhonesData = collect($numbersToAdd)->map(function ($number) {
-                return ['phone' => $number];
-            })->toArray();
-
-            $contact->contactPhones()->createMany($contactPhonesData);
-        }
+        return $this->model->create($contactMergeDTO->toArray());
     }
 }

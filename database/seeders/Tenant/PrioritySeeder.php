@@ -12,6 +12,7 @@ class PrioritySeeder extends Seeder
      */
     public function run(): void
     {
+        if (Priority::count() > 0) return;
         // Get color IDs by name
         $greenColor = \App\Models\Tenant\PriorityColor::where('name', 'green')->first();
         $yellowColor = \App\Models\Tenant\PriorityColor::where('name', 'yellow')->first();

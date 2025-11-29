@@ -18,8 +18,7 @@ class ItemUpdateRequest extends BaseRequest
 
     public function rules(): array
     {
-        $itemId = $this->route('id'); // Get the item ID from the route
-
+        $itemId = $this->route('item'); // Get the item ID from the route
         $baseRules = [
             'type' => 'required|in:product,service',
             'name' => 'required|string|max:255',

@@ -80,7 +80,6 @@ class FormSubmissionService extends BaseService
             }
         }
 
-        dd($rules);
         return $rules;
     }
 }

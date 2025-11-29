@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Tenant\Deal;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -20,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
         Relation::enforceMorphMap([
             'lead' => \App\Models\Tenant\Lead::class,
             'contact' => \App\Models\Tenant\Contact::class,
@@ -27,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
             'product'  => \App\Models\Tenant\Product::class,
             'service' => \App\Models\Tenant\Service::class,
             'user'    => \App\Models\Tenant\User::class,
+            'admin' => \App\Models\Admin::class,
+            'task' => \App\Models\Tenant\Task::class,
+            'deal' => \App\Models\Tenant\Deal::class,
         ]);
     }
 }

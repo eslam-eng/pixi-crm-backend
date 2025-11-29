@@ -32,6 +32,12 @@ class ItemCategory extends Model
         return $this->hasMany(ItemCategory::class, 'parent_id');
     }
 
+    // The parent category
+    public function parent()
+    {
+        return $this->belongsTo(ItemCategory::class, 'parent_id');
+    }
+
     public function scopeRoots($q)
     {
         return $q->whereNull($this->qualifyColumn('parent_id'));

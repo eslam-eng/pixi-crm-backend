@@ -1,4 +1,7 @@
 <?php
+
+use App\Http\Controllers\Web\FacebookController;
+
 Route::get('test-route', function () {
     return 'test route';
 });
@@ -15,3 +18,6 @@ Route::get('/mailtrap-test', function () {
 
     return 'Mail sent to ' . $to;
 });
+
+// Facebook routes moved to tenant routes
+

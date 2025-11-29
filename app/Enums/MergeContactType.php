@@ -7,6 +7,7 @@ enum MergeContactType: string
     case PENDING = 'pending';
     case MERGED = 'merged';
     case IGNORED = 'ignored';
+    case DUPLICATED = 'duplicated';
 
     public static function values(): array
     {

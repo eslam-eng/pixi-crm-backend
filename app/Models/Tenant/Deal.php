@@ -2,19 +2,23 @@
 
 namespace App\Models\Tenant;
 
+use App\Observers\DealObserver;
 use App\Traits\Filterable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+#[ObservedBy([DealObserver::class])]
 class Deal extends Model implements HasMedia
 {
     use Filterable, InteractsWithMedia;
     protected $fillable = [
         'deal_name',
         'lead_id',
+        'chair_id',
         'sale_date',
         'discount_type',
         'discount_value',

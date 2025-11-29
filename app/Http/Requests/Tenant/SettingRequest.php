@@ -22,7 +22,7 @@ class SettingRequest extends FormRequest
     public function rules(): array
     {
         $setting = $this->input('setting');
-        
+
         return [
             'setting' => 'required|string',
             'value' => $this->getValueValidationRules($setting),
@@ -36,7 +36,7 @@ class SettingRequest extends FormRequest
     private function getValueValidationRules(string $setting): array
     {
         $rules = [];
-        
+
         switch ($setting) {
             // Tasks Settings
             case 'enable_escalation':
@@ -48,14 +48,20 @@ class SettingRequest extends FormRequest
                 $rules[] = 'required';
                 $rules[] = 'boolean';
                 break;
-                
+
             case 'escalation_time_hours':
                 $rules[] = 'required';
                 $rules[] = 'integer';
                 $rules[] = 'min:1';
-                $rules[] = 'max:8760'; // 1 year in hours
+                $rules[] = 'max:8760';
                 break;
-                
+
+            case 'third_phase_type':
+                $rules[] = 'required';
+                $rules[] = 'integer';
+                $rules[] = 'exists:task_types,id';
+                break;
+
             case 'default_followers_users':
                 $rules[] = 'nullable';
                 $rules[] = 'array';
@@ -64,13 +70,13 @@ class SettingRequest extends FormRequest
                     if (is_null($value)) {
                         return; // Null is valid
                     }
-                    
+
                     if (is_array($value)) {
                         // Allow empty array
                         if (empty($value)) {
                             return; // Empty array is valid
                         }
-                        
+
                         // Check if all items are integers
                         foreach ($value as $item) {
                             if (!is_numeric($item) || (int)$item != $item) {
@@ -78,23 +84,23 @@ class SettingRequest extends FormRequest
                                 return;
                             }
                         }
-                        
+
                         // Convert to integers and check if user IDs exist
                         $userIds = array_map('intval', $value);
-                        
+
                         // Filter out 0 values (which can occur from empty strings or null values)
-                        $userIds = array_filter($userIds, function($id) {
+                        $userIds = array_filter($userIds, function ($id) {
                             return $id > 0;
                         });
-                        
+
                         // If no valid user IDs after filtering, skip database check
                         if (empty($userIds)) {
                             return;
                         }
-                        
+
                         $existingUserIds = User::whereIn('id', $userIds)->pluck('id')->toArray();
                         $missingUserIds = array_diff($userIds, $existingUserIds);
-                        
+
                         if (!empty($missingUserIds)) {
                             $missingIdsString = implode(', ', $missingUserIds);
                             $fail("The following user IDs do not exist: {$missingIdsString}");
@@ -102,13 +108,13 @@ class SettingRequest extends FormRequest
                     }
                 };
                 break;
-                
+
             // Deals Settings
             case 'default_currency':
                 $rules[] = 'required';
                 $rules[] = Rule::in(['USD', 'EUR', 'GBP', 'AED', 'SAR']);
                 break;
-                
+
             case 'default_tax_rate':
             case 'maximum_discount_percentage':
                 $rules[] = 'required';
@@ -116,46 +122,40 @@ class SettingRequest extends FormRequest
                 $rules[] = 'min:0';
                 $rules[] = 'max:100';
                 break;
-                
-            case 'default_payment_terms_days':
-                $rules[] = 'required';
-                $rules[] = 'integer';
-                $rules[] = 'min:1';
-                $rules[] = 'max:365';
-                break;
-                
+
+
             case 'attachment_size_limit_mb':
                 $rules[] = 'required';
                 $rules[] = 'integer';
                 $rules[] = 'min:1';
                 $rules[] = 'max:100';
                 break;
-                
+
             case 'approval_threshold_amount':
                 $rules[] = 'required';
                 $rules[] = 'integer';
                 $rules[] = 'min:0';
                 break;
-                
+
             case 'min_payed_percentage':
                 $rules[] = 'required';
                 $rules[] = 'integer';
                 $rules[] = 'min:0';
                 $rules[] = 'max:100';
                 break;
-                
+
             case 'payment_terms_text':
                 $rules[] = 'required';
                 $rules[] = 'string';
                 $rules[] = 'max:1000';
                 break;
-                
+
             default:
                 $rules[] = 'required';
                 $rules[] = 'string';
                 break;
         }
-        
+
         return $rules;
     }
 
@@ -209,14 +209,14 @@ class SettingRequest extends FormRequest
                     $convertedValue = [];
                 } else {
                     // Convert to integers and filter out 0, negative, and invalid values
-                    $convertedValue = array_filter(array_map('intval', $value), function($id) {
+                    $convertedValue = array_filter(array_map('intval', $value), function ($id) {
                         return $id > 0;
                     });
                 }
             } else {
                 $convertedValue = $value; // Keep as is for other types
             }
-            
+
             $this->merge([
                 'value' => $convertedValue
             ]);

@@ -3,6 +3,7 @@
 namespace App\QueryFilters\Tenant;
 
 use App\Abstracts\QueryFilter;
+use App\Enums\PermissionsEnum;
 
 class DealsFilter extends QueryFilter
 {
@@ -121,15 +122,20 @@ class DealsFilter extends QueryFilter
     }
 
     /**
+     * Filter by approval status
+     */
+    public function approval_status($term)
+    {
+        return $this->builder->where('approval_status', $term);
+    }
+
+    /**
      * Filter by deal type
      */
     public function deal_type($term)
     {
         return $this->builder->where('deal_type', $term);
     }
-
-  
-
     /**
      * Filter by multiple assigned users
      */
@@ -142,4 +148,46 @@ class DealsFilter extends QueryFilter
         return $this->builder->where('assigned_to_id', $term);
     }
 
+    public function start_date($term)
+    {
+        return $this->builder->where('created_at', '>=', $term);
+    }
+
+    public function end_date($term)
+    {
+        return $this->builder->where('created_at', '<=', $term);
+    }
+
+    public function user_id($term)
+    {
+        return $this->builder->where('created_by_id', $term);
+    }
+
+    public function team_id($term)
+    {
+        return $this->builder->whereHas('assigned_to', function ($query) use ($term) {
+            $query->where('team_id', $term);
+        });
+    }
+
+    public function dashboard_view($term)
+    {
+        $user = $term;
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_ADMIN_DASHBOARD->value)) {
+            return $this->builder;
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_MANAGER_DASHBOARD->value)) {
+            $teamId = $user->teamManager()->value('id');
+            return $this->builder
+                ->whereHas('assigned_to', function ($query) use ($teamId) {
+                    $query->where('team_id', $teamId);
+                });
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_AGENT_DASHBOARD->value)) {
+            return $this->builder->where('assigned_to_id', $user->id);
+        }
+    }
 }

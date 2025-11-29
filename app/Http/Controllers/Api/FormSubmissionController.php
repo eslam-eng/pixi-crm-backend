@@ -50,7 +50,7 @@ class FormSubmissionController extends Controller
     public function submissions(int $formId): JsonResponse
     {
         try {
-            $form = $this->formSubmissionService->findById($formId);
+            $form = $this->formSubmissionService->formService->findById($formId);
             $submissions = $form->submissions()
                 ->orderBy('created_at', 'desc')
                 ->paginate(15);

@@ -6,7 +6,7 @@ use Stancl\Tenancy\Database\Models\Domain;
 use Stancl\Tenancy\Database\Models\Tenant;
 
 return [
-    'tenant_model' => \App\Models\Tenant::class,
+    'tenant_model' => \App\Models\Central\Tenant::class,
     'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
 
     'domain_model' => Domain::class,
@@ -21,6 +21,7 @@ return [
         'localhost',
         'barmagiat.test',
         'pixi-crm-backend.test',
+        'pixi.test',
         'crm.test',
         'new-crm.test',
         'barmagiat.com',

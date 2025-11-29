@@ -6,6 +6,7 @@ use App\DTO\Tenant\DealDTO;
 use App\DTO\Tenant\DealPaymentDTO;
 use App\Enums\ApprovalStatusEnum;
 use App\Enums\DealType;
+use App\Enums\OpportunityStatus;
 use App\Enums\PaymentStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Tenant\Deal;
@@ -16,15 +17,18 @@ use App\Models\Tenant\Item;
 use App\Models\Tenant\ItemVariant;
 use App\QueryFilters\Tenant\DealsFilter;
 use App\Services\BaseService;
+use App\Services\LeadService;
 use App\Services\Tenant\Deals\DealPaymentService;
 use App\Settings\DealsSettings;
 use App\Notifications\DealPaymentTermsNotification;
+use App\Services\Tenant\Users\UserService;
 use Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\Builder;
 
 class DealService extends BaseService
 {
@@ -33,11 +37,24 @@ class DealService extends BaseService
         public Item $itemModel,
         public ItemVariant $itemVariantModel,
         public DealPaymentService $dealPaymentService,
+        public UserService $userService,
+        public LeadService $leadService,
     ) {}
 
     public function getModel(): Deal
     {
         return $this->model;
+    }
+
+    public function queryGet(array $filters = [], array $withRelations = []): builder
+    {
+        $deals = $this->getQuery()->with($withRelations);
+        return $deals->filter(new DealsFilter($filters));
+    }
+
+    public function getAll(array $filters = [])
+    {
+        return $this->queryGet($filters)->get();
     }
 
     /**
@@ -158,6 +175,12 @@ class DealService extends BaseService
             // Create deal
             $deal = $this->model->create(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
 
+            $user = $this->userService->findById($dealDTO->assigned_to_id);
+            if ($user->activeChair()->exists()) {
+                $deal->chair_id = $user->activeChair()->value('id');
+            }
+            $deal->save();
+
             // Create items individually to handle subscriptions
             $this->createDealItemsWithSubscriptions($deal, $dealDTO->items);
 
@@ -186,6 +209,11 @@ class DealService extends BaseService
 
             // Send payment terms email for unpaid or partial payments
             $this->sendPaymentTermsEmailIfNeeded($deal, $settings);
+
+            // Update opportunity (lead) status to WON when deal is created
+            if ($deal->lead_id) {
+                $this->leadService->markAsWon($deal->lead_id);
+            }
 
             return $deal->load('items', 'lead', 'attachments', 'payments');
         });
@@ -234,6 +262,14 @@ class DealService extends BaseService
             }
 
             $deal->update(Arr::except($dealDTO->toArray(), ['items', 'attachments']));
+
+            $user = $this->userService->findById($dealDTO->assigned_to_id);
+            if ($user->activeChair()->exists()) {
+                $deal->chair_id = $user->activeChair()->value('id');
+            }else{
+                $deal->chair_id = null;
+            }
+            $deal->save();
 
             // Sync items (remove old, add new)
             $deal->items()->sync($itemsData['pivot']);
@@ -292,7 +328,7 @@ class DealService extends BaseService
         }
 
         // Validate approval requirements
-        $this->validateApprovalRequirements($dealDTO, $settings);
+        // $this->validateApprovalRequirements($dealDTO, $settings);
     }
 
     /**
