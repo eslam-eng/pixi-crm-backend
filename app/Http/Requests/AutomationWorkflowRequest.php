@@ -27,7 +27,7 @@ class AutomationWorkflowRequest extends FormRequest
         return [
             'name' => 'required|string|max:255|min:3',
             'description' => 'nullable|string|max:1000',
-            'automation_trigger_id' => 'required|integer|exists:automation_triggers,id',
+            'automation_trigger_id' => 'required|integer|exists:automation_triggers,id|unique:automation_workflows,automation_trigger_id',
             'steps' => 'required|array|min:1|max:50',
             'steps.*.type' => 'required|in:condition,action,delay',
             'steps.*.order' => 'required|integer|min:1|max:100',
@@ -41,6 +41,8 @@ class AutomationWorkflowRequest extends FormRequest
             'steps.*.automation_action_id' => 'required_if:steps.*.type,action|integer|exists:automation_actions,id',
             'steps.*.assign_strategy' => ['required_if:steps.*.automation_action_id,22', Rule::in(AutomationAssignStrategiesEnum::values())],
             'steps.*.assign_user_id' => 'required_if:steps.*.assign_strategy,spasific_user|integer|exists:users,id',
+
+            'steps.*.message' => 'required_if:steps.*.automation_action_id,2,8,21|string|max:1000',
 
             // Delay step validation
             'steps.*.duration' => 'required_if:steps.*.type,delay|integer|min:1|max:999999',

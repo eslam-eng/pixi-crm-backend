@@ -18,6 +18,7 @@ use App\Models\Tenant\Deal;
 use App\Models\Tenant\Lead;
 use App\Models\Tenant\Task;
 use App\Models\Tenant\User;
+use App\Notifications\Tenant\AutomationManagerNotification;
 use App\Services\ContactService;
 use App\Services\LeadService;
 use App\Services\PipelineService;
@@ -205,13 +206,14 @@ class AutomationWorkflowExecutorService
             $result = $this->executeStep($stepImplement);
             $results[] = $result;
 
+            if (isset($result['delayed']) && $result['delayed']) {
+                break;
+            }
+
             if (!$result['success']) {
                 // Stop execution if step failed (and maybe configured to stop)
                 // For now, we'll just log it and maybe stop?
-                // Let's assume we stop on failure for now or if it's a delay step that paused execution
-                if (isset($result['delayed']) && $result['delayed']) {
-                    break;
-                }
+                // Let's assume we stop on failure for now
             }
         }
 
@@ -494,7 +496,7 @@ class AutomationWorkflowExecutorService
         }
 
         // If triggerable is FormSubmission, check if contact_id is in data
-        if ($triggerable instanceof \App\Models\Tenant\FormSubmission) {
+        if ($triggerable instanceof FormSubmission) {
             $data = $triggerable->data ?? [];
             if (isset($data['contact_id'])) {
                 return $data['contact_id'];
@@ -509,6 +511,74 @@ class AutomationWorkflowExecutorService
         return null;
     }
 
+    private function getAssignedUserIdFromTriggerable(Model $triggerable): ?int
+    {
+        $assigned_user_id = null;
+        // If triggerable is Contact, use its id
+        if ($triggerable instanceof Contact) {
+            $assigned_user_id = $triggerable->user_id;
+             Log::warning('Nasserassigned_user_id_inside_Contact', [
+            'assigned_user_id' => $assigned_user_id,
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null
+        ]);
+        }
+
+        // If triggerable is Lead/Opportunity, use contact_id
+        if ($triggerable instanceof Lead) {
+            $assigned_user_id = $triggerable->assigned_to_id;
+             Log::warning('Nasserassigned_user_id_inside_lead', [
+            'assigned_user_id' => $assigned_user_id,
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null
+        ]);
+        }
+
+        // If triggerable is Task, get contact_id through lead
+        if ($triggerable instanceof Task) {
+           
+            $assigned_user_id = $triggerable->assigned_to_id;
+             Log::warning('Nasserassigned_user_id_inside_tasks', [
+            'assigned_user_id' => $assigned_user_id,
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null
+        ]);
+        }
+
+        // If triggerable is Deal, get contact_id through lead
+        if ($triggerable instanceof Deal) {
+            $assigned_user_id = $triggerable->assigned_to_id;
+            Log::warning('Nasserassigned_user_id_inside_Deal', [
+            'assigned_user_id' => $assigned_user_id,
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null
+        ]);
+        }
+        Log::warning('Nasserassigned_user_id', [
+            'assigned_user_id' => $assigned_user_id,
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null
+        ]);
+        if ($assigned_user_id == null) {
+            $assigned_user_id = $this->getContactUserIdFromTriggerable($triggerable);
+        }
+        // If triggerable is FormSubmission, check if contact_id is in data
+        // if ($triggerable instanceof FormSubmission) {
+        //     $data = $triggerable->data ?? [];
+        //     if (isset($data['contact_id'])) {
+        //         $assigned_user_id = $data['contact_id'];
+        //     }
+        // }
+        if ($assigned_user_id == null) {
+            Log::warning("Could not extract contact_id from triggerable", [
+                'triggerable_type' => get_class($triggerable),
+                'triggerable_id' => $triggerable->id ?? null
+            ]);
+        }
+
+
+        return $assigned_user_id;
+    }
     /**
      * Get field value from triggerable entity
      */
@@ -590,8 +660,7 @@ class AutomationWorkflowExecutorService
             // Escalation Actions
             case 'escalate':
                 return $this->executeEscalateAction($triggerable, $contextData);
-            case 'notify_manager':
-                return $this->executeNotifyManagerAction($triggerable, $contextData);
+
             case 'escalate_task':
                 return $this->executeEscalateTaskAction($triggerable, $contextData);
 
@@ -605,13 +674,15 @@ class AutomationWorkflowExecutorService
 
             // Notification Actions
             case 'notify_admin':
-                return $this->executeNotifyAdminAction($triggerable, $contextData);
+                return $this->executeNotifyAdminAction($triggerable, $stepData);
             case 'notify_owner':
-                return $this->executeNotifyOwnerAction($triggerable, $contextData);
+                return $this->executeNotifyOwnerAction($triggerable, $stepData);
+            case 'notify_manager':
+                return $this->executeNotifyManagerAction($triggerable, $stepData);
 
             // Reminder Actions
             case 'send_reminder_and_task':
-                return $this->executeSendReminderAndTaskAction($triggerable, $contextData);
+                return $this->executeSendReminderAndTaskAction($triggerable, $stepData);
             case 'send_reminder':
                 return $this->executeSendReminderAction($triggerable, $contextData);
 
@@ -739,25 +810,7 @@ class AutomationWorkflowExecutorService
 
 
 
-    /**
-     * Execute notify owner action
-     */
-    private function executeNotifyOwnerAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            if ($triggerable instanceof Contact && $triggerable->user_id) {
-                // Send internal notification to the contact owner
-                Log::info("Notify owner action executed", [
-                    'contact_id' => $triggerable->id,
-                    'owner_id' => $triggerable->user_id
-                ]);
-            }
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing notify owner action: " . $e->getMessage());
-            return false;
-        }
-    }
+
 
     /**
      * Execute send welcome email action
@@ -981,16 +1034,115 @@ class AutomationWorkflowExecutorService
     }
 
     /**
-     * Execute notify manager action
+     * Execute notify owner action
      */
-    private function executeNotifyManagerAction(Model $triggerable, array $contextData): bool
+    private function executeNotifyOwnerAction(Model $triggerable, ?array $stepData = null): bool
     {
         try {
-            // Send high-priority internal alert to manager
+            // 1. Identify the owner/assignee
+            $userId = $this->getAssignedUserIdFromTriggerable($triggerable);
+
+            if (!$userId) {
+                Log::warning("Could not identify owner for notify owner action", [
+                    'triggerable_type' => get_class($triggerable),
+                    'triggerable_id' => $triggerable->id
+                ]);
+                return false;
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                Log::warning("Owner user not found", ['user_id' => $userId]);
+                return false;
+            }
+
+            // 2. Prepare Message
+            if (isset($stepData['message']) && $stepData['message']) {
+                $message = $stepData['message'] . ' - Action From Automation';
+            } else {
+                $message = "Action happened for " . (get_class($triggerable) ?? 'item');
+            }
+
+            // 3. Send Notification
+            $user->notify(new AutomationManagerNotification($user, $message, $triggerable));
+
+            Log::info("Notify owner action executed", [
+                'triggerable_type' => get_class($triggerable),
+                'triggerable_id' => $triggerable->id,
+                'owner_id' => $user->id
+            ]);
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error executing notify owner action: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Execute notify manager action
+     */
+    private function executeNotifyManagerAction(Model $triggerable, ?array $stepData = null): bool
+    {
+        try {
+            // 1. Identify the user associated with the triggerable
+            $userId = $this->getAssignedUserIdFromTriggerable($triggerable);
+            Log::warning("executeNotifyManagerActionWarning", [
+                'triggerable_type' => get_class($triggerable),
+                'triggerable_id' => $triggerable->id,
+                'user_id' => $userId,
+            ]);
+            if (!$userId) {
+                Log::warning("Could not identify user for notify manager action", [
+                    'triggerable_type' => get_class($triggerable),
+                    'triggerable_id' => $triggerable->id
+                ]);
+                return false;
+            }
+
+            $user = User::with('team')->find($userId);
+            if (!$user) {
+                Log::warning("User not found for notify manager action", ['user_id' => $userId]);
+                return false;
+            }
+
+            // 2. Find the manager (Team Leader)
+            $managerId = null;
+
+            // Check team leader
+            if ($user->team && $user->team->leader_id) {
+                $managerId = $user->team->leader_id;
+            } else {
+                $managerId = $user->id;
+            }
+
+            if (!$managerId) {
+                Log::info("No manager found for user", ['user_id' => $user->id]);
+                return true; // Action executed but no manager to notify
+            }
+
+            $manager = User::find($managerId);
+            if (!$manager) {
+                Log::warning("Manager user not found", ['manager_id' => $managerId]);
+                return false;
+            }
+
+            // 3. Send Notification
+            if ($stepData['message']) {
+                $message = $stepData['message'] . ' - Action From Automation';
+            } else {
+                $message = "Action happened for Module " . (get_class($triggerable) ?? 'item');
+            }
+
+            $manager->notify(new AutomationManagerNotification($manager, $message, $triggerable));
+
             Log::info("Notify manager action executed", [
                 'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
+                'triggerable_id' => $triggerable->id,
+                'user_id' => $user->id,
+                'manager_id' => $manager->id,
+                'message' => $message
             ]);
+
             return true;
         } catch (\Exception $e) {
             Log::error("Error executing notify manager action: " . $e->getMessage());
@@ -1056,34 +1208,41 @@ class AutomationWorkflowExecutorService
         }
     }
 
-    /**
-     * Execute notify finance action
-     */
-    private function executeNotifyFinanceAction(Model $triggerable, array $contextData): bool
-    {
-        try {
-            // Alert finance to review changes
-            Log::info("Notify finance action executed", [
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
-            ]);
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error executing notify finance action: " . $e->getMessage());
-            return false;
-        }
-    }
+
 
     /**
      * Execute notify admin action
      */
-    private function executeNotifyAdminAction(Model $triggerable, array $contextData): bool
+    private function executeNotifyAdminAction(Model $triggerable, ?array $stepData = null): bool
     {
         try {
-            // Alert ops to fix mapping issues
+            // 1. Find all admins
+            // Assuming 'admin' is the role name for administrators
+            $admins = User::role('admin')->get();
+
+            if ($admins->isEmpty()) {
+                Log::warning("No admins found for notify admin action");
+                return true; // Action executed but no one to notify
+            }
+
+            // 2. Prepare Message
+            if (isset($stepData['message']) && $stepData['message']) {
+                $message = $stepData['message'] . ' - Action From Automation';
+            } else {
+                $message = "Admin Alert: Action happened for " . (get_class($triggerable) ?? 'item');
+            }
+
+            // 3. Send Notification to all admins
+            // Notification::send($admins, new AutomationManagerNotification(null, $message, $triggerable));
+
+            foreach ($admins as $admin) {
+                $admin->notify(new AutomationManagerNotification($admin, $message, $triggerable));
+            }
+
             Log::info("Notify admin action executed", [
                 'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
+                'triggerable_id' => $triggerable->id,
+                'admin_count' => $admins->count()
             ]);
             return true;
         } catch (\Exception $e) {
@@ -1254,7 +1413,13 @@ class AutomationWorkflowExecutorService
             foreach ($nextSteps as $nextStep) {
                 try {
                     // Execute non-delay steps immediately
-                    $this->executeStep($nextStep);
+                    $result = $this->executeStep($nextStep);
+
+                    if (isset($result['delayed']) && $result['delayed']) {
+                        Log::info("Workflow paused for delay at step {$nextStep->id}");
+                        break;
+                    }
+
                     Log::info("Executed next step {$nextStep->id} after delay");
 
                 } catch (\Exception $e) {

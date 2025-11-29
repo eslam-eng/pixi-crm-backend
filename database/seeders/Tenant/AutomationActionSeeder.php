@@ -14,18 +14,6 @@ class AutomationActionSeeder extends Seeder
     {
         $actions = [
             [
-                'id' => 1,
-                'key' => 'assign_contact',
-                'icon' => 'user',
-                'name' => [
-                    'ar' => 'تعيين جهة اتصال',
-                    'en' => 'Assign Contact',
-                    'fr' => 'Assigner un contact',
-                    'es' => 'Asignar contacto'
-                ],
-                'description' => 'Assign to sales rep/team based on criteria'
-            ],
-            [
                 'id' => 2,
                 'key' => 'notify_owner',
                 'icon' => 'bell',
@@ -48,31 +36,7 @@ class AutomationActionSeeder extends Seeder
                     'es' => 'Enviar correo de bienvenida'
                 ],
                 'description' => 'Send onboarding/intro email automatically'
-            ],
-            [
-                'id' => 4,
-                'key' => 'assign_to_team',
-                'icon' => 'users',
-                'name' => [
-                    'ar' => 'تعيين للفريق',
-                    'en' => 'Assign to Team',
-                    'fr' => 'Assigner à l\'équipe',
-                    'es' => 'Asignar al equipo'
-                ],
-                'description' => 'Route contact to Key Accounts/Partners team'
-            ],
-            [
-                'id' => 5,
-                'key' => 'assign_opportunity',
-                'icon' => 'target',
-                'name' => [
-                    'ar' => 'تعيين فرصة',
-                    'en' => 'Assign Opportunity',
-                    'fr' => 'Assigner une opportunité',
-                    'es' => 'Asignar oportunidad'
-                ],
-                'description' => 'Distribute to sales automatically'
-            ],
+],
             [
                 'id' => 6,
                 'key' => 'send_email',
@@ -146,18 +110,6 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Email invoice or payment link to client'
             ],
             [
-                'id' => 12,
-                'key' => 'notify_finance',
-                'icon' => 'dollar-sign',
-                'name' => [
-                    'ar' => 'إشعار المالية',
-                    'en' => 'Notify Finance',
-                    'fr' => 'Notifier les finances',
-                    'es' => 'Notificar a finanzas'
-                ],
-                'description' => 'Alert finance to review changes'
-            ],
-            [
                 'id' => 13,
                 'key' => 'send_reminder_and_task',
                 'icon' => 'clock',
@@ -182,19 +134,6 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Remind assignee before due date'
             ],
             [
-
-                'id' => 15,
-                'key' => 'trigger_next_step',
-                'icon' => 'arrow-right',
-                'name' => [
-                    'ar' => 'تشغيل الخطوة التالية',
-                    'en' => 'Trigger Next Step',
-                    'fr' => 'Déclencher l\'étape suivante',
-                    'es' => 'Activar siguiente paso'
-                ],
-                'description' => 'Create next task or move stage'
-            ],
-            [
                 'id'=> 16,
                 'key' => 'escalate_task',
                 'icon' => 'arrow-up',
@@ -217,30 +156,6 @@ class AutomationActionSeeder extends Seeder
                     'es' => 'Mover etapa'
                 ],
                 'description' => 'Move opportunity to Qualification stage'
-            ],
-            [
-                'id'=> 18,
-                'key' => 'notify_owner_and_reschedule',
-                'icon' => 'calendar',
-                'name' => [
-                    'ar' => 'إشعار المالك وإعادة الجدولة',
-                    'en' => 'Notify Owner + Reschedule',
-                    'fr' => 'Notifier le propriétaire + reprogrammer',
-                    'es' => 'Notificar propietario + reprogramar'
-                ],
-                'description' => 'Alert rep and send reschedule link'
-            ],
-            [
-                'id'=> 19,
-                'key' => 'send_reminder_reschedule',
-                'icon' => 'calendar',
-                'name' => [
-                    'ar' => 'إرسال تذكير/إعادة جدولة',
-                    'en' => 'Send Reminder/Reschedule',
-                    'fr' => 'Envoyer rappel/reprogrammer',
-                    'es' => 'Enviar recordatorio/reprogramar'
-                ],
-                'description' => 'Reminder if accepted; reschedule if declined'
             ],
             [
                 'id'=> 20,

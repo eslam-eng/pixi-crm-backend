@@ -11,7 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class ExecuteWorkflowJob implements ShouldQueue
+class ExecuteWorkflowJob
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -83,6 +83,11 @@ class ExecuteWorkflowJob implements ShouldQueue
 
         $triggerableType = $this->context['triggerable_type'];
         $triggerableId = $this->context['triggerable_id'];
+
+        Log::info('triggerable values is : ', [
+            'triggerable_type' => $triggerableType,
+            'triggerable_id' => $triggerableId,
+        ]);
 
         // Resolve the model class
         $modelClass = $triggerableType;

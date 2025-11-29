@@ -17,24 +17,13 @@ class TaskAutomationObserver
      */
     public function created(Task $task): void
     {
-        // Get the related entity (lead, opportunity, etc.)
-        $relatedEntity = null;
-        $entityType = null;
-        $entityId = null;
-
-        if ($task->lead_id) {
-            $relatedEntity = $task->lead;
-            $entityType = 'lead';
-            $entityId = $task->lead_id;
-        }
-
         $this->triggerService->fireTrigger('task_created', [
-            'triggerable_type' => get_class($relatedEntity ?? $task),
-            'triggerable_id' => $entityId ?? $task->id,
+            'triggerable_type' => get_class($task),
+            'triggerable_id' => $task->id,
             'task' => $task,
-            'entity' => $relatedEntity ?? $task,
-            'entity_type' => $entityType ?? 'task',
-            'entity_id' => $entityId ?? $task->id,
+            'entity' => $task,
+            'entity_type' => 'task',
+            'entity_id' => $task->id,
             'assigned_to' => $task->assignedTo,
             'task_type' => $task->taskType,
             'priority' => $task->priority,
@@ -50,24 +39,13 @@ class TaskAutomationObserver
 
         // Check if task was completed (status changed to 'completed')
         if (isset($changes['status']) && $changes['status'] === 'completed') {
-            // Get the related entity
-            $relatedEntity = null;
-            $entityType = null;
-            $entityId = null;
-
-            if ($task->lead_id) {
-                $relatedEntity = $task->lead;
-                $entityType = 'lead';
-                $entityId = $task->lead_id;
-            }
-
             $this->triggerService->fireTrigger('task_completed', [
-                'triggerable_type' => get_class($relatedEntity ?? $task),
-                'triggerable_id' => $entityId ?? $task->id,
+                'triggerable_type' => get_class($task),
+                'triggerable_id' => $task->id,
                 'task' => $task,
-                'entity' => $relatedEntity ?? $task,
-                'entity_type' => $entityType ?? 'task',
-                'entity_id' => $entityId ?? $task->id,
+                'entity' => $task,
+                'entity_type' => 'task',
+                'entity_id' => $task->id,
                 'completed_at' => now(),
                 'assigned_to' => $task->assignedTo,
                 'task_type' => $task->taskType,

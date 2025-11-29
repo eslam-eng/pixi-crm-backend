@@ -79,6 +79,18 @@ class AutomationWorkflowService
                         'assign_strategy' => $stepData['assign_strategy'] ?? null,
                         'assign_user_id' => $stepData['assign_user_id'] ?? null,
                     ];
+                }else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_OWNER->value) {
+                    $configs = [
+                        'message' => $stepData['message'] ?? null,
+                    ];
+                }else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_MANAGER->value) {
+                    $configs = [
+                        'message' => $stepData['message'] ?? null,
+                    ];
+                }else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_ADMIN->value) {
+                    $configs = [
+                        'message' => $stepData['message'] ?? null,
+                    ];
                 }
 
                 AutomationWorkflowStepAction::create([
