@@ -18,6 +18,7 @@ use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
 use App\Http\Requests\Tenant\Users\ChangeLanguageRequest;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
+use App\Http\Resources\Tenant\Users\UserShowResource;
 use App\Http\Resources\Tenant\Users\UserTargetResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,6 +67,20 @@ class UserController extends Controller
     }
 
     public function show($id)
+    {
+        try {
+            $user = $this->userService->getModel()->with(['roles', 'team'])->find($id);
+            if (!$user) {
+                return apiResponse(message: trans('app.data not found'), code: 404);
+            }
+            $data = new UserShowResource($user);
+            return apiResponse($data, trans('app.data displayed successfully'));
+        } catch (Exception $e) {
+            return apiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function details($id)
     {
         try {
             $user = $this->userService->getModel()->with(['roles', 'team'])->find($id);
