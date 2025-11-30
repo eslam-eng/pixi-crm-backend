@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\DTO\Item\ItemDTO;
 use App\DTO\Item\ProductDTO;
 use App\DTO\Item\ServiceDTO;
+use App\Http\Requests\Item\ItemUpdateRequest;
 use App\Models\Filters\ItemFilter;
 use App\Models\Tenant\ItemAttribute;
 use App\Notifications\Tenant\CreateNewItemNotification;
@@ -16,11 +17,15 @@ use App\Models\Tenant\Product;
 use App\Models\Tenant\Service;
 use App\Services\BaseService;
 use App\Services\Tenant\ProductVariantService;
-
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ItemService extends BaseService
 {
+    protected array $uploadedMedia = [];
+
     public function __construct(
         public Item $model,
         public Product $productModel,
@@ -68,22 +73,43 @@ class ItemService extends BaseService
         return $query->get();
     }
 
-    public function store($request)
+    public function store(Request $request, ItemDTO $itemDTO): Item
     {
-        $commonData = ItemDTO::fromRequest($request)->toArray();
-        $type = $request->type;
-        if ($type === 'product') {
-            $item = $this->createProduct($commonData, ProductDTO::fromRequest($request));
-        } elseif ($type === 'service') {
-            $item = $this->createService($commonData, ServiceDTO::fromRequest($request));
-        } else {
-            throw new \Exception('Invalid item type. Must be "product" or "service"');
+        try {
+            DB::beginTransaction();
+            $type = $request->type;
+            if ($type === 'product') {
+                $item = $this->createProduct($itemDTO->toArray(), ProductDTO::fromRequest($request));
+            } elseif ($type === 'service') {
+                $item = $this->createService($itemDTO->toArray(), ServiceDTO::fromRequest($request));
+            } else {
+                throw new \Exception('Invalid item type. Must be "product" or "service"');
+            }
+
+            if ($itemDTO->hasThumbnailImage()) {
+                $this->uploadThumbnailImage($item, $itemDTO->thumbnail_image);
+            }
+            if ($itemDTO->hasImages()) {
+                $this->uploadImages($item, $itemDTO->images);
+            }
+            if ($itemDTO->hasDocuments()) {
+                $this->uploadDocuments($item, $itemDTO->documents);
+            }
+    
+            $admins = $this->userService->getModel()->role('admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new CreateNewItemNotification($item));
+            }
+            DB::commit();
+            // Clear tracked media on success
+            $this->uploadedMedia = [];
+            return $item;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Delete uploaded files if transaction failed
+            $this->rollbackFiles();
+            throw $e;
         }
-        $admins = $this->userService->getModel()->role('admin')->get();
-        foreach ($admins as $admin) {
-            $admin->notify(new CreateNewItemNotification($item));
-        }
-        return $item;
     }
 
     public function show(int $id)
@@ -93,10 +119,9 @@ class ItemService extends BaseService
         return $item;
     }
 
-    public function update(int $id, $request): Item
+    public function update(int $id,ItemUpdateRequest $request,ItemDTO $itemDTO): Item
     {
         $item = $this->findById($id, withRelations: ['itemable']);
-        $commonData = ItemDTO::fromRequest($request)->toArray();
         $requestedType = $request->input('type');
 
         // Check if we need to change the item type
@@ -104,13 +129,26 @@ class ItemService extends BaseService
             $this->changeItemType($item, $requestedType, $request);
         } else {
             // Update without changing type
-            $item->update($commonData);
+            $item->update($itemDTO->toArray());
 
             if ($item->isProduct) {
                 $this->updateProduct($item, $request);
             } elseif ($item->isService) {
                 $this->updateService($item, $request);
             }
+        }
+
+        if ($itemDTO->hasThumbnailImage()) {
+            $item->clearMediaCollection('uploadThumbnailImage');
+            $this->uploadThumbnailImage($item, $itemDTO->thumbnail_image);
+        }
+        if ($itemDTO->hasImages()) {
+            $item->clearMediaCollection('images');
+            $this->uploadImages($item, $itemDTO->images);
+        }
+        if ($itemDTO->hasDocuments()) {
+            $item->clearMediaCollection('documents');
+            $this->uploadDocuments($item, $itemDTO->documents);
         }
         return $item->fresh(['itemable']);
     }
@@ -398,4 +436,70 @@ class ItemService extends BaseService
             ]));
         }
     }
+
+    /**
+    * Rollback uploaded files if transaction fails
+    */
+    protected function rollbackFiles(): void
+    {
+        if (empty($this->uploadedMedia)) {
+            return;
+        }
+
+        foreach ($this->uploadedMedia as $media) {
+            try {
+                if ($media instanceof Media) {
+                    $media->delete();
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to delete media during rollback: ' . $e->getMessage(), [
+                    'media_id' => $media->id ?? 'unknown'
+                ]);
+            }
+        }
+
+        // Clear the array
+        $this->uploadedMedia = [];
+    }
+
+    /**
+    * Upload Thumbnail Image
+    */
+    protected function uploadThumbnailImage(Item $item, $thumbnail_image): void
+    {
+        $media = $item->addMedia($thumbnail_image)
+            ->toMediaCollection('uploadThumbnailImage');
+        
+        // Track uploaded media for potential rollback
+        $this->uploadedMedia[] = $media;
+    }
+
+    /**
+    * Upload multiple images
+    */
+    protected function uploadImages(Item $item, array $images): void
+    {
+        foreach ($images as $image) {
+            $media = $item->addMedia($image)
+                ->toMediaCollection('images');
+
+            // Track uploaded media for potential rollback
+            $this->uploadedMedia[] = $media;
+        }
+    }
+
+    /**
+    * Upload documents
+    */
+    protected function uploadDocuments(Item $item, array $documents): void
+    {
+        foreach ($documents as $document) {
+            $media = $item->addMedia($document)
+                ->toMediaCollection('documents');
+
+            // Track uploaded media for potential rollback
+            $this->uploadedMedia[] = $media;
+        }
+    }
+
 }

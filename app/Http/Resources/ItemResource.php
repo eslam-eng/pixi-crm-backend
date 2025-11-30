@@ -21,6 +21,9 @@ class ItemResource extends JsonResource
             'description' => $this->description,
             'price' => $this->price,
             'category' => $this->whenLoaded('category', fn() => new ItemCategoryDDLResource($this->category)),
+            'thumbnail_image' => $this->getTenantMediaUrl('uploadThumbnailImage','webp'),
+            'images' => $this->getTenantMediaUrls('images','webp'),
+            'documents' => $this->getTenantMediaUrls('documents','documents'),
             'itemable_type' => $this->itemable_type,
             'itemable' => $this->itemable_type === 'product' ?
                 $this->whenLoaded('itemable', fn() => new ProductResource($this->itemable)) :
