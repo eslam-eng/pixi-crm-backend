@@ -15,7 +15,7 @@ class LogCallRequest extends FormRequest
     {
         return [
             'call_notes' => 'required|string',
-            'call_direction'  => 'required|in:incoming,outcoming',
+            'call_direction'  => 'required|in:incoming,outgoing',
         ];
     }
 }
