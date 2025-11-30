@@ -26,18 +26,6 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Send internal notification to owner'
             ],
             [
-                'id' => 3,
-                'key' => 'send_welcome_email',
-                'icon' => 'mail',
-                'name' => [
-                    'ar' => 'إرسال بريد ترحيبي',
-                    'en' => 'Send Welcome Email',
-                    'fr' => 'Envoyer un email de bienvenue',
-                    'es' => 'Enviar correo de bienvenida'
-                ],
-                'description' => 'Send onboarding/intro email automatically'
-],
-            [
                 'id' => 6,
                 'key' => 'send_email',
                 'icon' => 'mail',
@@ -96,18 +84,6 @@ class AutomationActionSeeder extends Seeder
                     'es' => 'Etiquetar y reabrir más tarde'
                 ],
                 'description' => 'Tag Dormant and schedule reopen'
-            ],
-            [
-                'id' => 11,
-                'key' => 'send_invoice_email',
-                'icon' => 'file-text',
-                'name' => [
-                    'ar' => 'إرسال بريد الفاتورة',
-                    'en' => 'Send Invoice Email',
-                    'fr' => 'Envoyer un email de facture',
-                    'es' => 'Enviar correo de factura'
-                ],
-                'description' => 'Email invoice or payment link to client'
             ],
             [
                 'id' => 13,

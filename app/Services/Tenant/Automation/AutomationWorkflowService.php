@@ -9,9 +9,7 @@ use App\Models\Tenant\AutomationWorkflowStep;
 use App\Models\Tenant\AutomationWorkflowStepCondition;
 use App\Models\Tenant\AutomationWorkflowStepAction;
 use App\Models\Tenant\AutomationWorkflowStepDelay;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Yajra\DataTables\Html\Options\Languages\Paginate;
 
 class AutomationWorkflowService
 {
@@ -79,17 +77,24 @@ class AutomationWorkflowService
                         'assign_strategy' => $stepData['assign_strategy'] ?? null,
                         'assign_user_id' => $stepData['assign_user_id'] ?? null,
                     ];
-                }else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_OWNER->value) {
+                } else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_OWNER->value) {
                     $configs = [
                         'message' => $stepData['message'] ?? null,
                     ];
-                }else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_MANAGER->value) {
+                } else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_MANAGER->value) {
                     $configs = [
                         'message' => $stepData['message'] ?? null,
                     ];
-                }else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_ADMIN->value) {
+                } else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_ADMIN->value) {
                     $configs = [
                         'message' => $stepData['message'] ?? null,
+                    ];
+                } else if ($stepData['automation_action_id'] == AutomationActionsEnum::SEND_EMAIL->value) {
+                    $configs = [
+                        'email_subject' => $stepData['email_subject'] ?? null,
+                        'email_message' => $stepData['email_message'] ?? null,
+                        'email_template_id' => $stepData['email_template_id'] ?? null,
+
                     ];
                 }
 

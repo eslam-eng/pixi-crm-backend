@@ -61,8 +61,10 @@ class AutomationWorkflowController extends Controller
      */
     public function store(AutomationWorkflowRequest $request): JsonResponse
     {
+        
         try {
             $dto = AutomationWorkflowDTO::fromArray($request->validated());
+           
             $workflow = $this->automationWorkflowService->create($dto);
 
             return response()->json([

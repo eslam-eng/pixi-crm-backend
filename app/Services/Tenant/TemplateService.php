@@ -15,7 +15,8 @@ class TemplateService extends BaseService
 {
     public function __construct(
         private Template $model
-    ) {}
+    ) {
+    }
 
     public function getModel(): Model
     {
@@ -150,8 +151,11 @@ class TemplateService extends BaseService
                 'industry',
                 'company_size',
                 'notes'
-            )->where('email', $emailOrPhone)->whereHas('phone', function ($query) use ($emailOrPhone) {
-                $query->where('phone', $emailOrPhone);
+            )->where(function ($q) use ($emailOrPhone) {
+                $q->where('email', $emailOrPhone)
+                    ->orWhereHas('phone', function ($query) use ($emailOrPhone) {
+                        $query->where('phone', $emailOrPhone);
+                    });
             })->first();
 
         if ($contact == null) {

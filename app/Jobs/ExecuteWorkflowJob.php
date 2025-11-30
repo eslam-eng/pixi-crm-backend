@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Models\Tenant\AutomationWorkflow;
 use App\Services\Tenant\Automation\AutomationWorkflowExecutorService;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;

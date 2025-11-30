@@ -16,7 +16,8 @@ class TemplateMail extends Mailable
         public string $emailSubject,
         public string $body,
         public ?string $recipientName = null
-    ) {}
+    ) {
+    }
 
     public function envelope(): Envelope
     {
@@ -30,6 +31,7 @@ class TemplateMail extends Mailable
         return new Content(
             view: 'emails.template',
             with: [
+                'subject' => $this->emailSubject,
                 'body' => $this->body,
                 'recipientName' => $this->recipientName,
             ],

@@ -44,6 +44,52 @@ class AutomationWorkflowRequest extends FormRequest
 
             'steps.*.message' => 'required_if:steps.*.automation_action_id,2,8,21|string|max:1000',
 
+            'steps.*.email_subject' => [
+                'nullable',
+                'string',
+                'max:1000',
+                function ($attribute, $value, $fail) {
+                    $index = explode('.', $attribute)[1];
+                    $step = $this->input("steps.{$index}");
+
+                    if (($step['automation_action_id'] ?? null) == 6) {
+                        if (empty($step['email_template_id']) && empty($value)) {
+                            $fail('The email subject is required when no template is selected.');
+                        }
+                    }
+                },
+            ],
+            'steps.*.email_message' => [
+                'nullable',
+                'string',
+                'max:8000',
+                function ($attribute, $value, $fail) {
+                    $index = explode('.', $attribute)[1];
+                    $step = $this->input("steps.{$index}");
+
+                    if (($step['automation_action_id'] ?? null) == 6) {
+                        if (empty($step['email_template_id']) && empty($value)) {
+                            $fail('The email message is required when no template is selected.');
+                        }
+                    }
+                },
+            ],
+            'steps.*.email_template_id' => [
+                'nullable',
+                'integer',
+                'exists:templates,id',
+                function ($attribute, $value, $fail) {
+                    $index = explode('.', $attribute)[1];
+                    $step = $this->input("steps.{$index}");
+
+                    if (($step['automation_action_id'] ?? null) == 6) {
+                        if (empty($value) && (empty($step['email_subject']) || empty($step['email_message']))) {
+                            $fail('The email template is required unless both subject and message are provided.');
+                        }
+                    }
+                },
+            ],
+
             // Delay step validation
             'steps.*.duration' => 'required_if:steps.*.type,delay|integer|min:1|max:999999',
             'steps.*.unit' => 'required_if:steps.*.type,delay|string|in:minutes,hours,days',
