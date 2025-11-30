@@ -23,7 +23,7 @@ class ActivityService
                     'id' => $activity->id,
                     'description' => $this->formatDescription($activity),
                     'type' => $this->getActivityType($activity),
-                    'time' => $activity->created_at->diffForHumans(),
+                    'created_at' => $activity->created_at,
                     'timestamp' => $activity->created_at->toIso8601String(),
                     'properties' => $activity->properties,
                     'subject_type' => $activity->subject_type ? class_basename($activity->subject_type) : null,

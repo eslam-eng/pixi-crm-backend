@@ -12,7 +12,7 @@ class ActivityResource extends JsonResource
             'id' => $this['id'],
             'description' => __('app.' . $this['description']),
             'type' => __('app.' . $this['subject_type']),
-            'time' => $this['time'],
+            'time' => $this['created_at']->diffForHumans(),
             'user' => $this['user'] ? $this['user'] : __('app.system'),
         ];
     }
