@@ -125,10 +125,8 @@ class LeadService extends BaseService
             }
             $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
         });
-        
 
-
-        return $lead->load('variants', 'items.product', 'items.service');
+        return $lead->load('variants', 'items.product', 'items.service', 'items.category.parent');
     }
 
     public function show(int $id)

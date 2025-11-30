@@ -21,19 +21,19 @@ class OpportunityResource extends JsonResource
     {
         // Merge items and variants into a single items_details array
         $items = $this->relationLoaded('items')
-            ? collect(ItemInOpportunity::collection($this->items)->resolve())->map(function ($item) {
+            ? $this->items->filter()->map(function ($item) {
                 return [
                     'item_id' => $item['id'],
                     'variant_id' => null,
-                    'name' => $item['name'],
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'category_id' => $item['category_id'],
-                    'category_name' => $item['category_name'],
-                    'sub_category_id' => $item['sub_category_id'],
-                    'sub_category_name' => $item['sub_category_name'],
-                    'service_type' => $item['service_type'],
-                    'type' => $item['type'],
+                    'name' => $item->name,
+                    'price' => $item->price,
+                    'quantity' => $item->pivot->quantity,
+                    'category_id' => $item->category->id,
+                    'category_name' => $item->category->name,
+                    'sub_category_id' => $item->category->parent->id,
+                    'sub_category_name' => $item->category->parent->name,
+                    'service_type' => $item->service?->service_type,
+                    'type' => $item->itemable_type,
                 ];
             })->values()->all()
             : [];

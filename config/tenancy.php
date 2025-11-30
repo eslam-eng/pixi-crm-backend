@@ -21,6 +21,7 @@ return [
         'localhost',
         'barmagiat.test',
         'pixi-crm-backend.test',
+        'pixi.test',
         'crm.test',
         'new-crm.test',
         'barmagiat.com',
