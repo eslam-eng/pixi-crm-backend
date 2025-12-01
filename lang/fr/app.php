@@ -390,4 +390,5 @@ return array(
   'lead_delete' => 'Prospect supprimé',
   'system' => 'système',
   'log_call' => 'appel de journalisation',
+  'opportunity_activity_added' => 'Activité de possibilité ajoutée',
 );

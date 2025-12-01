@@ -21,7 +21,7 @@ class ActivityService
             ->map(function ($activity) {
                 return [
                     'id' => $activity->id,
-                    'description' => $this->formatDescription($activity),
+                    'description' => $activity->description,
                     'type' => $this->getActivityType($activity),
                     'created_at' => $activity->created_at,
                     'timestamp' => $activity->created_at->toIso8601String(),
@@ -33,32 +33,6 @@ class ActivityService
             });
     }
 
-    /**
-     * Format activity description for display
-     */
-    protected function formatDescription(Activity $activity): string
-    {
-        $properties = $activity->properties->toArray();
-
-        // Return custom description if exists
-        if (isset($properties['description'])) {
-            return $properties['description'];
-        }
-
-        // Format based on event type
-        $subjectName = $activity->subject_type ? class_basename($activity->subject_type) : 'Item';
-
-        switch ($activity->event) {
-            case 'created':
-                return "{$subjectName} created";
-            case 'updated':
-                return "{$subjectName} updated";
-            case 'deleted':
-                return "{$subjectName} deleted";
-            default:
-                return $activity->description;
-        }
-    }
 
     /**
      * Get activity type for badge display

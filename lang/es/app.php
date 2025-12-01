@@ -390,4 +390,5 @@ return array(
   'task' => 'Tarea',
   'system' => 'Sistema',
   'log_call' => 'Registrar llamada',
+  'opportunity_activity_added' => 'Actividad de oportunidad agregada',
 );
