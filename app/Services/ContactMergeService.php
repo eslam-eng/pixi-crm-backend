@@ -77,14 +77,16 @@ class ContactMergeService extends BaseService
         return true;
     }
 
-    public function mergeList()
+    public function mergeList(?int $perPage)
     {
-        $contactsWithMerges = $this->model
-            ->with('contact.contactPhones', 'contactMergePhones')
-            ->where('merge_status', MergeContactType::PENDING->value)
-            ->orderBy('id', 'desc')
-            ->get();
-        return $contactsWithMerges;
+        $contactsWithMergesQuery = 
+            $this->queryGet([], ['contact.contactPhones', 'contactMergePhones'])
+            ->where('merge_status', MergeContactType::PENDING->value);
+            
+        if ($perPage) {
+            return $contactsWithMergesQuery->paginate($perPage);
+        }
+        return $contactsWithMergesQuery->get();
     }
 
 

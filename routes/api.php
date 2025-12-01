@@ -185,6 +185,7 @@ Route::middleware([
             Route::get('/columns', [\App\Http\Controllers\Api\Users\UserController::class, 'getColumns']);
             Route::post('/', [\App\Http\Controllers\Api\Users\UserController::class, 'export']);
         });
+        Route::get('users/{user}/details', [UserController::class,'details']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);
@@ -371,6 +372,7 @@ Route::middleware([
         Route::patch('opportunities/{opportunity}/change-status', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStatus']);
         Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
         Route::post('opportunities/{opportunity}/log-call', [\App\Http\Controllers\Api\OpportunityController::class, 'logCall']);
+        Route::post('opportunities/{opportunity}/add-activity-log', [\App\Http\Controllers\Api\OpportunityController::class, 'AddActivityLog']);
         Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
 
         Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);

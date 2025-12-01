@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTO\Item\ItemDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Item\ItemStoreRequest;
 use App\Http\Requests\Item\ItemUpdateRequest;
@@ -43,9 +44,10 @@ class ItemController extends Controller
     {
         try {
             DB::beginTransaction();
-            $item = $this->itemService->store($request);
+            $itemDTO = ItemDTO::fromRequest($request);
+            $item = $this->itemService->store($request, $itemDTO);
             DB::commit();
-            return ApiResponse(message: 'Item created successfully', data: new ItemResource($item->load('itemable')), code: Response::HTTP_CREATED);
+            return ApiResponse(message: 'Item created successfully', data: new ItemResource($item->load(['itemable', 'media'])), code: Response::HTTP_CREATED);
         } catch (Exception $e) {
             DB::rollBack();
             return ApiResponse(message: 'Failed to create item', code: Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -69,7 +71,8 @@ class ItemController extends Controller
     {
         try {
             DB::beginTransaction();
-            $response = $this->itemService->update($id, $request);
+            $itemDTO = ItemDTO::fromRequest($request);
+            $response = $this->itemService->update($id, $request, $itemDTO);
             DB::commit();
             return ApiResponse(message: 'Item updated successfully', data: new ItemResource($response), code: Response::HTTP_OK);
         } catch (Exception $e) {

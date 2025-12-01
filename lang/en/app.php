@@ -391,4 +391,5 @@ return array(
   'task' => 'Task',
   'system' => 'System',
   'log_call' => 'Log Call',
+  'opportunity_activity_added' => 'Opportunity activity added',
 );

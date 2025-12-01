@@ -4,15 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\DTO\Tenant\LeadDTO;
 use App\DTO\Tenant\LogCallDTO;
+use App\DTO\Tenant\Opportunity\ActivityLogDTO;
 use App\Enums\OpportunityStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Lead\LogCallRequest;
+use App\Http\Requests\Tenant\Opportunity\ActivityLogReuest;
 use App\Http\Requests\Tenant\Opportunity\OpportunityRequest;
 use App\Http\Requests\Tenant\Opportunity\StatusRequest;
 use App\Http\Resources\AuditOpportunityResource;
 use App\Http\Resources\Opportunity\OpportunityResource;
 use App\Http\Resources\Tenant\Opportunity\OpportunityDDLResource;
 use App\Http\Resources\Tenant\Stage\StageWithOpportunityResource;
+use App\Models\Tenant\Activity;
 use App\Models\Tenant\Lead;
 use App\Services\LeadService;
 use DB;
@@ -178,6 +181,19 @@ class OpportunityController extends Controller
             $data = LogCallDTO::fromArray($request->validated());
             $this->leadService->logCall($opportunity, $data);
             return ApiResponse(message: 'Call logged successfully', code: 200);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function AddActivityLog(int $opportunityId, ActivityLogReuest $request)
+    {
+        try {
+            $data = ActivityLogDTO::fromRequest($request);
+            $this->leadService->addActivityLog($opportunityId, $data);
+            return ApiResponse(message: 'Activity log added successfully', code: 200);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {

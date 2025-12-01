@@ -3,11 +3,13 @@
 namespace App\Models\Tenant;
 
 use App\Traits\Filterable;
+use App\Traits\HasTenantMedia;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
 
-class Item extends Model
+class Item extends Model implements HasMedia
 {
-    use Filterable;
+    use Filterable, HasTenantMedia;
     protected $fillable =
     [
         'name',
