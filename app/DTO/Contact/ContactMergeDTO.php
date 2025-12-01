@@ -77,6 +77,7 @@ class ContactMergeDTO extends BaseDTO
         return [
             'contact_id' => $this->contact_id,
             'identical_contact_type' => $this->identical_contact_type,
+            'merge_status' => $this->merge_status,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => $this->email,

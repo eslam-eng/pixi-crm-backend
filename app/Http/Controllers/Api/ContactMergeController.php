@@ -40,7 +40,7 @@ class ContactMergeController extends Controller
 
     public function mergeList(Request $request)
     {
-        $contactMerge = $this->contactMergeService->mergeList();
+        $contactMerge = $this->contactMergeService->mergeList($request->per_page);
         if ($request->has('ddl')) {
             $data = ContactMergeResource::collection($contactMerge);
         } else {
