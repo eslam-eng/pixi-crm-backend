@@ -5,14 +5,15 @@ namespace App\Services\Tenant\Automation;
 use App\DTO\Contact\ContactDTO;
 use App\DTO\Tenant\LeadDTO;
 use App\Enums\AutomationAssignStrategiesEnum;
+use App\Enums\ConditionOperation;
 use App\Enums\OpportunityStatus;
 use App\Enums\TaskStatusEnum;
-use App\Jobs\ContinueWorkflowExecutionJob;
 use App\Mail\TemplateMail;
 use App\Models\Tenant\AutomationStepsImplement;
 use App\Models\Tenant\AutomationDelay;
 use App\Models\Tenant\AutomationAction;
 use App\Models\Tenant\AutomationLog;
+use App\Models\Tenant\AutomationTriggerField;
 use App\Models\Tenant\AutomationWorkflow;
 use App\Models\Tenant\Contact;
 use App\Models\Tenant\Deal;
@@ -160,7 +161,7 @@ class AutomationWorkflowExecutorService
             $stepData = [];
             if ($step->type === 'condition' && $step->condition) {
                 $stepData = [
-                    'field' => $step->condition->field,
+                    'field_id' => $step->condition->field_id,
                     'operation' => $step->condition->operation,
                     'value' => $step->condition->value,
                 ];
@@ -247,7 +248,6 @@ class AutomationWorkflowExecutorService
             switch ($stepImplement->type) {
                 case 'condition':
                     $result = $this->executeConditionStep($stepImplement);
-
                     // If condition failed, mark as implemented but signal to stop workflow
                     if (!$result) {
                         $stepImplement->markAsImplemented();
@@ -270,6 +270,12 @@ class AutomationWorkflowExecutorService
                 case 'delay':
                     $result = $this->executeDelayStep($stepImplement);
                     break;
+                default:
+                    Log::error("Unknown step type: {$stepImplement->type}");
+                    return [
+                        'success' => false,
+                        'message' => "Unknown step type: {$stepImplement->type}",
+                    ];
             }
 
             if ($result) {
@@ -353,31 +359,42 @@ class AutomationWorkflowExecutorService
         ]);
     }
 
-
     /**
      * Execute a condition step
      */
     private function executeConditionStep(AutomationStepsImplement $stepImplement): bool
     {
         $stepData = $stepImplement->step_data;
-        $contextData = $stepImplement->context_data;
-
-        if (!$stepData || !isset($stepData['field'], $stepData['operation'], $stepData['value'])) {
-            Log::warning("Invalid condition step data for step {$stepImplement->id}");
+        if (!$stepData || !isset($stepData['field_id'], $stepData['operation'], $stepData['value'])) {
+            Log::warning("Invalid condition step data for step {$stepImplement->id}", [
+                'step_data' => $stepData,
+                'has_field_id' => isset($stepData['field_id']),
+                'has_operation' => isset($stepData['operation']),
+                'has_value' => isset($stepData['value']),
+            ]);
             return false;
         }
 
-        $field = $stepData['field'];
+        $field_id = $stepData['field_id'];
         $operation = $stepData['operation'];
         $expectedValue = $stepData['value'];
 
-        // Get the actual value from the triggerable entity
-        $actualValue = $this->getFieldValue($stepImplement->triggerable, $field);
+        // Get the field definition to know the field name (which might be a relationship path like 'contact.email')
+        $triggerField = AutomationTriggerField::find($field_id);
+
+        if (!$triggerField) {
+            Log::warning("Automation trigger field {$field_id} not found for step {$stepImplement->id}");
+            return false;
+        }
+
+        // Get the actual value from the triggerable entity using the field name
+        $actualValue = $this->getFieldValue($stepImplement->triggerable, $triggerField->field_name);
 
         $result = $this->evaluateCondition($actualValue, $operation, $expectedValue);
 
         Log::info("Condition step {$stepImplement->id} evaluated", [
-            'field' => $field,
+            'field_id' => $field_id,
+            'field_name' => $triggerField->field_name,
             'operation' => $operation,
             'expected_value' => $expectedValue,
             'actual_value' => $actualValue,
@@ -540,48 +557,22 @@ class AutomationWorkflowExecutorService
         // If triggerable is Contact, use its id
         if ($triggerable instanceof Contact) {
             $assigned_user_id = $triggerable->user_id;
-            Log::warning('Nasserassigned_user_id_inside_Contact', [
-                'assigned_user_id' => $assigned_user_id,
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id ?? null
-            ]);
         }
 
         // If triggerable is Lead/Opportunity, use contact_id
         if ($triggerable instanceof Lead) {
             $assigned_user_id = $triggerable->assigned_to_id;
-            Log::warning('Nasserassigned_user_id_inside_lead', [
-                'assigned_user_id' => $assigned_user_id,
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id ?? null
-            ]);
         }
 
         // If triggerable is Task, get contact_id through lead
         if ($triggerable instanceof Task) {
-
             $assigned_user_id = $triggerable->assigned_to_id;
-            Log::warning('Nasserassigned_user_id_inside_tasks', [
-                'assigned_user_id' => $assigned_user_id,
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id ?? null
-            ]);
         }
 
         // If triggerable is Deal, get contact_id through lead
         if ($triggerable instanceof Deal) {
             $assigned_user_id = $triggerable->assigned_to_id;
-            Log::warning('Nasserassigned_user_id_inside_Deal', [
-                'assigned_user_id' => $assigned_user_id,
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id ?? null
-            ]);
         }
-        Log::warning('Nasserassigned_user_id', [
-            'assigned_user_id' => $assigned_user_id,
-            'triggerable_type' => get_class($triggerable),
-            'triggerable_id' => $triggerable->id ?? null
-        ]);
         if ($assigned_user_id == null) {
             $assigned_user_id = $this->getContactUserIdFromTriggerable($triggerable);
         }
@@ -607,24 +598,81 @@ class AutomationWorkflowExecutorService
      */
     private function getFieldValue(Model $triggerable, string $field): mixed
     {
-        // Handle nested field access (e.g., 'user.name', 'source.title')
+        Log::warning("getFieldValue called", [
+            'field' => $field,
+            'triggerable_type' => get_class($triggerable),
+            'triggerable_id' => $triggerable->id ?? null,
+        ]);
+
+        // Handle nested field access (e.g., 'contact.email', 'source.title')
         if (str_contains($field, '.')) {
             $parts = explode('.', $field);
             $value = $triggerable;
-
+            Log::warning('Nested field access', [
+                'parts' => $parts,
+                'triggerable_type' => get_class($triggerable),
+            ]);
+            
             foreach ($parts as $part) {
                 if ($value && is_object($value)) {
+                    // Try to load the relationship if it's not already loaded
+                    if ($value instanceof Model && !$value->relationLoaded($part)) {
+                        try {
+                            $value->load($part);
+                            Log::warning("Loaded relationship: {$part}");
+                        } catch (\Exception $e) {
+                            Log::warning("Failed to load relationship: {$part}", ['error' => $e->getMessage()]);
+                        }
+                    }
                     $value = $value->{$part} ?? null;
+                    Log::warning("After accessing {$part}", ['value' => $value]);
                 } else {
+                    Log::warning("Value is not an object, returning null", ['part' => $part]);
                     return null;
                 }
             }
 
+            Log::warning("Nested field final value", ['value' => $value]);
             return $value;
         }
 
-        // Direct field access
-        return $triggerable->{$field} ?? null;
+        // Direct field access - get from model attributes or relationships
+        Log::warning("Direct field access for: {$field}");
+        
+        // First check if it's a loaded relationship
+        if ($triggerable->relationLoaded($field)) {
+            Log::warning("Field is a loaded relationship");
+            return $triggerable->{$field};
+        }
+
+        // Try to get as attribute (database column)
+        $attributes = $triggerable->getAttributes();
+        Log::warning("Checking attributes", [
+            'field' => $field,
+            'has_field' => array_key_exists($field, $attributes),
+            'all_attributes' => array_keys($attributes),
+        ]);
+        
+        if (array_key_exists($field, $attributes)) {
+            $value = $triggerable->getAttribute($field);
+            Log::warning("Found in attributes", ['field' => $field, 'value' => $value]);
+            return $value;
+        }
+
+        // Try to load as relationship
+        Log::warning("Trying to load as relationship: {$field}");
+        try {
+            $triggerable->load($field);
+            $value = $triggerable->{$field};
+            Log::warning("Loaded as relationship", ['field' => $field, 'value' => $value]);
+            return $value;
+        } catch (\Exception $e) {
+            Log::warning("Not a relationship, returning null", [
+                'field' => $field,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -632,34 +680,30 @@ class AutomationWorkflowExecutorService
      */
     private function evaluateCondition(mixed $actualValue, string $operation, mixed $expectedValue): bool
     {
-        switch ($operation) {
-            case 'equals':
-                return $actualValue == $expectedValue;
-            case 'not_equals':
-                return $actualValue != $expectedValue;
-            case 'contains':
-                return is_string($actualValue) && str_contains($actualValue, $expectedValue);
-            case 'not_contains':
-                return is_string($actualValue) && !str_contains($actualValue, $expectedValue);
-            case 'greater_than':
-                return is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue > $expectedValue;
-            case 'less_than':
-                return is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue < $expectedValue;
-            case 'greater_than_or_equal':
-                return is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue >= $expectedValue;
-            case 'less_than_or_equal':
-                return is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue <= $expectedValue;
-            case 'is_empty':
-                return empty($actualValue);
-            case 'is_not_empty':
-                return !empty($actualValue);
-            case 'is_null':
-                return is_null($actualValue);
-            case 'is_not_null':
-                return !is_null($actualValue);
-            default:
-                return false;
+        $op = ConditionOperation::tryFrom($operation);
+
+        if (!$op) {
+            // Fallback for operations not in the enum yet (like contains, is_empty etc if they are not added to enum)
+            // Or if the enum doesn't cover all cases used in the code
+            return match ($operation) {
+                'contains' => is_string($actualValue) && str_contains($actualValue, $expectedValue),
+                'not_contains' => is_string($actualValue) && !str_contains($actualValue, $expectedValue),
+                'is_empty' => empty($actualValue),
+                'is_not_empty' => !empty($actualValue),
+                'is_null' => is_null($actualValue),
+                'is_not_null' => !is_null($actualValue),
+                default => false,
+            };
         }
+
+        return match ($op) {
+            ConditionOperation::EQUALS => $actualValue == $expectedValue,
+            ConditionOperation::NOT_EQUALS => $actualValue != $expectedValue,
+            ConditionOperation::GREATER_THAN => is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue > $expectedValue,
+            ConditionOperation::LESS_THAN => is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue < $expectedValue,
+            ConditionOperation::GREATER_THAN_OR_EQUAL_TO => is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue >= $expectedValue,
+            ConditionOperation::LESS_THAN_OR_EQUAL_TO => is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue <= $expectedValue,
+        };
     }
 
     /**
@@ -950,11 +994,6 @@ class AutomationWorkflowExecutorService
         try {
             // 1. Identify the user associated with the triggerable
             $userId = $this->getAssignedUserIdFromTriggerable($triggerable);
-            Log::warning("executeNotifyManagerActionWarning", [
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id,
-                'user_id' => $userId,
-            ]);
             if (!$userId) {
                 Log::warning("Could not identify user for notify manager action", [
                     'triggerable_type' => get_class($triggerable),

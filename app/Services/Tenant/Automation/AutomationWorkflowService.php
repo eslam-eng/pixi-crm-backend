@@ -64,7 +64,7 @@ class AutomationWorkflowService
             case 'condition':
                 AutomationWorkflowStepCondition::create([
                     'automation_workflow_step_id' => $stepId,
-                    'field' => $stepData['field'],
+                    'field_id' => $stepData['field_id'],
                     'operation' => $stepData['operation'],
                     'value' => $stepData['value'],
                 ]);
@@ -77,15 +77,11 @@ class AutomationWorkflowService
                         'assign_strategy' => $stepData['assign_strategy'] ?? null,
                         'assign_user_id' => $stepData['assign_user_id'] ?? null,
                     ];
-                } else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_OWNER->value) {
-                    $configs = [
-                        'message' => $stepData['message'] ?? null,
-                    ];
-                } else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_MANAGER->value) {
-                    $configs = [
-                        'message' => $stepData['message'] ?? null,
-                    ];
-                } else if ($stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_ADMIN->value) {
+                } else if (
+                    $stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_OWNER->value
+                    || $stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_MANAGER->value
+                    || $stepData['automation_action_id'] == AutomationActionsEnum::NOTIFY_ADMIN->value
+                ) {
                     $configs = [
                         'message' => $stepData['message'] ?? null,
                     ];
@@ -94,7 +90,6 @@ class AutomationWorkflowService
                         'email_subject' => $stepData['email_subject'] ?? null,
                         'email_message' => $stepData['email_message'] ?? null,
                         'email_template_id' => $stepData['email_template_id'] ?? null,
-
                     ];
                 }
 

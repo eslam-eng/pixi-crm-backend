@@ -12,4 +12,13 @@ enum ContactStatus: string
     {
         return array_map(fn($case) => $case->value, self::cases());
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            static::ACTIVE => __('app.contact_status.active'),
+            static::INACTIVE => __('app.contact_status.inactive'),
+            static::UNQUALIFIED => __('app.contact_status.unqualified'),
+        };
+    }
 }

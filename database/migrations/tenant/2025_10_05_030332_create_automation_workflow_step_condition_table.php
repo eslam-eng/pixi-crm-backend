@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('automation_workflow_step_conditions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('automation_workflow_step_id')->constrained('automation_workflow_steps', 'id', 'fk_awsc_step_id')->onDelete('cascade');
-            $table->string('field');
+            $table->foreignId('field_id')->constrained('automation_trigger_fields', 'id', 'fk_awsc_field_id')->onDelete('cascade');
             $table->string('operation');
             $table->text('value');
             $table->timestamps();
             
             // Add indexes for better performance
             $table->index(['automation_workflow_step_id'], 'idx_awsc_step_id');
-            $table->index(['field'], 'idx_awsc_field');
+            $table->index(['field_id'], 'idx_awsc_field_id');
             $table->index(['operation'], 'idx_awsc_operation');
         });
     }

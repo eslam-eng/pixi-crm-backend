@@ -24,9 +24,9 @@ class AutomationActionController extends Controller
     {
         $actions = $this->automationActionService->getDropdownOptions();
 
-        return response()->json([
-            'success' => true,
-            'data' => AutomationActionResource::collection($actions),
-        ]);
+        return apiResponse(
+            data: AutomationActionResource::collection($actions),
+            message: 'Actions retrieved successfully'
+        );
     }
 }

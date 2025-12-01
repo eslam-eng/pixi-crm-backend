@@ -28,7 +28,7 @@ class FormSubmissionMail extends Mailable implements ShouldQueue
         return new Envelope(
             to: $this->emailSettings['to'],
             subject: $this->emailSettings['subject'] ?? 'New Form Submission',
-            replyTo: $this->getReplyToEmail(),
+            replyTo: array_filter([$this->getReplyToEmail()]),
         );
     }
 

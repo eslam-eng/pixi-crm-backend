@@ -8,7 +8,7 @@ class AutomationWorkflowStepCondition extends Model
 {
     protected $fillable = [
         'automation_workflow_step_id',
-        'field',
+        'field_id',
         'operation',
         'value',
     ];
@@ -27,5 +27,10 @@ class AutomationWorkflowStepCondition extends Model
     public function workflowSteps()
     {
         return $this->morphMany(AutomationWorkflowStep::class, 'target');
+    }
+
+    public function field()
+    {
+        return $this->belongsTo(AutomationTriggerField::class);
     }
 }

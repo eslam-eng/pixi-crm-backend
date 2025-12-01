@@ -30,10 +30,10 @@ class AutomationWorkflowController extends Controller
     {
         $workflows = $this->automationWorkflowService->getAll();
         $data = AutomationWorkflowResource::collection($workflows)->response()->getData(true);
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-        ]);
+        return apiResponse(
+            data: $data,
+            message: 'Workflows retrieved successfully'
+        );
     }
 
     /**
@@ -44,16 +44,16 @@ class AutomationWorkflowController extends Controller
         $workflow = $this->automationWorkflowService->getById($id);
 
         if (!$workflow) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Automation workflow not found'
-            ], 404);
+            return apiResponse(
+                message: 'Automation workflow not found',
+                code: 404
+            );
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => new AutomationWorkflowShowResource($workflow),
-        ]);
+        return apiResponse(
+            data: new AutomationWorkflowShowResource($workflow),
+            message: 'Workflow retrieved successfully'
+        );
     }
 
     /**
@@ -61,24 +61,20 @@ class AutomationWorkflowController extends Controller
      */
     public function store(AutomationWorkflowRequest $request): JsonResponse
     {
-        
         try {
             $dto = AutomationWorkflowDTO::fromArray($request->validated());
-           
             $workflow = $this->automationWorkflowService->create($dto);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Automation workflow created successfully',
-                'data' => new AutomationWorkflowShowResource($workflow),
-            ], 201);
-
+            return apiResponse(
+                data: new AutomationWorkflowShowResource($workflow),
+                message: 'Automation workflow created successfully',
+                code: 201
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create automation workflow',
-                'error' => $e->getMessage()
-            ], 500);
+            return apiResponse(
+                data: ['error' => $e->getMessage()],
+                message: 'Failed to create automation workflow',
+                code: 500
+            );
         }
     }
 
@@ -92,24 +88,23 @@ class AutomationWorkflowController extends Controller
             $workflow = $this->automationWorkflowService->update($id, $dto);
 
             if (!$workflow) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Automation workflow not found'
-                ], 404);
+                return apiResponse(
+                    message: 'Automation workflow not found',
+                    code: 404
+                );
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Automation workflow updated successfully',
-                'data' => new AutomationWorkflowShowResource($workflow),
-            ]);
+            return apiResponse(
+                data: new AutomationWorkflowShowResource($workflow),
+                message: 'Automation workflow updated successfully'
+            );
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update automation workflow',
-                'error' => $e->getMessage()
-            ], 500);
+            return apiResponse(
+                data: ['error' => $e->getMessage()],
+                message: 'Failed to update automation workflow',
+                code: 500
+            );
         }
     }
 
@@ -121,16 +116,15 @@ class AutomationWorkflowController extends Controller
         $deleted = $this->automationWorkflowService->delete($id);
 
         if (!$deleted) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Automation workflow not found'
-            ], 404);
+            return apiResponse(
+                message: 'Automation workflow not found',
+                code: 404
+            );
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Automation workflow deleted successfully',
-        ]);
+        return apiResponse(
+            message: 'Automation workflow deleted successfully'
+        );
     }
 
     /**
@@ -141,16 +135,15 @@ class AutomationWorkflowController extends Controller
         $updated = $this->automationWorkflowService->toggleActive($id);
 
         if (!$updated) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Automation workflow not found'
-            ], 404);
+            return apiResponse(
+                message: 'Automation workflow not found',
+                code: 404
+            );
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Automation workflow status updated successfully',
-        ]);
+        return apiResponse(
+            message: 'Automation workflow status updated successfully'
+        );
     }
 
     public function getAssignedStrategies()

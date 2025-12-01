@@ -34,6 +34,11 @@ return array(
     'on_hold' => 'معلق',
     'overdue' => 'متأخر',
   ],
+  'contact_status' => [
+    'active' => 'نشط',
+    'inactive' => 'غير نشط',
+    'unqualified' => 'غير مؤهل',
+  ],
   'cannot_delete_priority_used_by_tasks' => 'لا يمكن حذف أولوية مستخدمة في المهام.',
   'data changed successfully' => 'تم تغيير البيانات بنجاح',
   'data created successfully' => 'تم اضافة البيانات بنجاح',
@@ -66,7 +71,7 @@ return array(
 
   'lead_created' => 'تم إنشاء عميل متوقع',
   'lead_update' => 'تم تحديث عميل متوقع',
-  'lead_delete' => 'تم حذف عميل متوقع', 
+  'lead_delete' => 'تم حذف عميل متوقع',
   'task_created' => 'تم إنشاء مهمة',
   'deal_created' => 'تم انشاء صفقة',
   'lead' => 'عميل متوقع',

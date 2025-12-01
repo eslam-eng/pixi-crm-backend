@@ -24,12 +24,49 @@ class AutomationTriggerController extends Controller
     {
         $triggers = $this->automationTriggerService->getDropdownOptions();
 
-        return response()->json([
-            'success' => true,
-            'data' => AutomationTriggerResource::collection($triggers),
-        ]);
+        return apiResponse(
+            data: AutomationTriggerResource::collection($triggers),
+            message: 'Triggers retrieved successfully'
+        );
     }
 
+    /**
+     * Get available fields for a specific trigger
+     */
+    public function getFields(int $triggerId): JsonResponse
+    {
+        $fields = $this->automationTriggerService->getTriggerFields($triggerId);
 
+        if (!$fields) {
+            return apiResponse(
+                message: 'Trigger not found',
+                code: 404
+            );
+        }
 
+        return apiResponse(
+            data: $fields,
+            message: 'Fields retrieved successfully'
+        );
+    }
+
+    /**
+     * Get options for a specific field
+     */
+    public function getFieldOptions(int $fieldId): JsonResponse
+    {
+        $options = $this->automationTriggerService->getFieldOptions($fieldId);
+
+        if (!$options) {
+            return apiResponse(
+                message: 'Field not found',
+                code: 404
+            );
+        }
+
+        return apiResponse(
+            data: $options,
+            message: 'Field options retrieved successfully'
+        );
+    }
 }

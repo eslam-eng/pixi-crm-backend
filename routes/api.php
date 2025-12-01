@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AttendanceController;
 
+use App\Http\Controllers\Api\Automation\AutomationConditionController;
 use App\Http\Controllers\Api\Integrations\{
     FacebookController,
     IntegratedFormController
@@ -258,7 +259,7 @@ Route::middleware([
         Route::apiResource('automation-workflows', AutomationWorkflowController::class);
         Route::get('automation-workflows/get/assigned-strategies', [AutomationWorkflowController::class, 'getAssignedStrategies']);
         Route::patch('automation-workflows/{id}/toggle-active', [AutomationWorkflowController::class, 'toggleActive']);
-        
+
         // Integration routes
         Route::get('/integrations', [IntegrationController::class, 'index']);
         Route::get('/integrations/statistics', [IntegrationController::class, 'statistics']);
@@ -550,6 +551,13 @@ Route::middleware([
     // Automation Triggers routes
     Route::prefix('automation-triggers')->group(function () {
         Route::get('/', [AutomationTriggerController::class, 'index']);
+        Route::get('/{triggerId}/fields', [AutomationTriggerController::class, 'getFields']);
+        Route::get('/fields/{fieldId}/options', [AutomationTriggerController::class, 'getFieldOptions']);
+    });
+
+    // Automation Conditions routes
+    Route::prefix('automation-conditions')->group(function () {
+        Route::get('/operations', [AutomationConditionController::class, 'getOperations']);
     });
 
     // Automation Actions routes

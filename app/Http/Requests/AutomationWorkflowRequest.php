@@ -33,7 +33,7 @@ class AutomationWorkflowRequest extends FormRequest
             'steps.*.order' => 'required|integer|min:1|max:100',
 
             // Condition step validation
-            'steps.*.field' => 'required_if:steps.*.type,condition|string|max:255|min:2',
+            'steps.*.field_id' => 'required_if:steps.*.type,condition|integer|exists:automation_trigger_fields,id',
             'steps.*.operation' => ['required_if:steps.*.type,condition', 'string', Rule::in(ConditionOperation::values())],
             'steps.*.value' => 'required_if:steps.*.type,condition|string|max:1000',
 

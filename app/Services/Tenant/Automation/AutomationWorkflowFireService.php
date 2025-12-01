@@ -73,8 +73,8 @@ class AutomationWorkflowFireService
 
         // Find all active workflows for this trigger
         $workflows = AutomationWorkflow::active()
-            ->whereHas('automationTrigger', function($query) use ($triggerKey) {
-                $query->where('key', $triggerKey) 
+            ->whereHas('automationTrigger', function ($query) use ($triggerKey) {
+                $query->where('key', $triggerKey)
                     ->where('is_active', true);
             })
             ->with(['automationTrigger', 'steps'])
@@ -183,9 +183,23 @@ class AutomationWorkflowFireService
 
             // Execute immediate steps (condition, action)
             try {
-                $success = $this->executorService->executeStep($stepImplement, $stepImplement->context_data ?? []);
-                
-                if ($success) {
+                Log::warning("Nasser Test (*) stepImplement id :" . $stepImplement->id);
+
+                $result = $this->executorService->executeStep($stepImplement);
+
+                // Check if it's a failed condition - stop workflow execution
+                if (isset($result['condition_failed']) && $result['condition_failed']) {
+                    Log::info("Condition failed, stopping workflow execution", [
+                        'step_id' => $stepImplement->id,
+                        'step_type' => $stepImplement->type,
+                        'step_order' => $stepImplement->step_order,
+                        'triggerable_type' => $stepImplement->triggerable_type,
+                        'triggerable_id' => $stepImplement->triggerable_id,
+                    ]);
+                    break; // Stop execution on condition failure
+                }
+
+                if ($result['success']) {
                     Log::info("Step {$stepImplement->id} executed successfully", [
                         'step_type' => $stepImplement->type,
                         'step_order' => $stepImplement->step_order,
@@ -225,7 +239,7 @@ class AutomationWorkflowFireService
             case 'condition':
                 if ($step->condition) {
                     $stepData = [
-                        'field' => $step->condition->field,
+                        'field_id' => $step->condition->field_id,
                         'operation' => $step->condition->operation,
                         'value' => $step->condition->value,
                     ];
@@ -379,7 +393,7 @@ class AutomationWorkflowFireService
     {
         try {
             $stepImplement = $delay->automationStepsImplement;
-            
+
             if (!$stepImplement) {
                 Log::warning("No step implementation found for delay {$delay->id}");
                 return;
@@ -387,7 +401,7 @@ class AutomationWorkflowFireService
 
             // Mark the delay step as implemented
             $stepImplement->markAsImplemented();
-            
+
             // Mark the delay as processed
             $delay->markAsProcessed();
 

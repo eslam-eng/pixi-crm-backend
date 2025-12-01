@@ -56,6 +56,14 @@ class AutomationTrigger extends Model
     }
 
     /**
+     * Get the fields for this trigger
+     */
+    public function fields()
+    {
+        return $this->hasMany(AutomationTriggerField::class)->ordered();
+    }
+
+    /**
      * Get all triggers formatted for dropdown
      */
     public static function getDropdownOptions()
