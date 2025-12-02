@@ -11,12 +11,14 @@ class LeadObserver
      */
     public function created(Lead $lead): void
     {
-        activity()
-            ->causedBy(user_id())
-            ->performedOn($lead)
-            ->withProperties(['attributes' => $lead->getAttributes()])
-            ->useLog('lead')
-            ->log('lead_created');
+        if (auth('api_tenant')->check()) {
+            activity()
+                ->causedBy(user_id())
+                ->performedOn($lead)
+                ->withProperties(['attributes' => $lead->getAttributes()])
+                ->useLog('lead')
+                ->log('lead_created');
+        }
     }
 
     /**
@@ -25,7 +27,8 @@ class LeadObserver
     public function updated(Lead $lead): void
     {
         $changes = $lead->getDirty();
-            if (!empty($changes)) {
+        if (!empty($changes)) {
+            if (auth('api_tenant')->check()) {
                 activity()
                     ->causedBy(user_id())
                     ->performedOn($lead)
@@ -36,6 +39,7 @@ class LeadObserver
                     ->useLog('lead')
                     ->log('lead_updated');
             }
+        }
     }
 
     /**
@@ -43,12 +47,14 @@ class LeadObserver
      */
     public function deleted(Lead $lead): void
     {
-        activity()
-            ->causedBy(user_id())
-            ->performedOn($lead)
-            ->withProperties(['attributes' => $lead->getAttributes()])
-            ->useLog('lead')
-            ->log('lead_deleted');
+        if (auth('api_tenant')->check()) {
+            activity()
+                ->causedBy(user_id())
+                ->performedOn($lead)
+                ->withProperties(['attributes' => $lead->getAttributes()])
+                ->useLog('lead')
+                ->log('lead_deleted');
+        }
     }
 
     /**

@@ -23,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Add global middleware for API locale detection
         $middleware->append(\App\Http\Middleware\SetLocaleFromHeader::class);
+        
+        // Restore POST method if it was converted to GET by server redirects
+        $middleware->append(\App\Http\Middleware\RestorePostMethod::class);
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

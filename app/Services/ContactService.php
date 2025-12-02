@@ -73,6 +73,9 @@ class ContactService extends BaseService
         foreach ($admins as $admin) {
             $admin->notify(new CreateNewContactNotification($contact));
         }
+        
+        \Log::info("Contact created: {$contact->name}");
+        
         $contact->load('country', 'city', 'user', 'source', 'contactPhones');
         return $contact;
     }
@@ -86,6 +89,10 @@ class ContactService extends BaseService
     public function update(int $id, ContactDTO $contactDTO)
     {
         $contact = $this->findById($id);
+        
+        // Get changed fields before update
+        $originalData = $contact->toArray();
+        
         $validator = validator([], []); // Create empty validator
         if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
             $contact->contactPhones()->delete();
@@ -106,6 +113,29 @@ class ContactService extends BaseService
         }
 
         $contact->update($contactDTO->toArray());
+        
+        // Get changed fields after update
+        $changedFields = [];
+        $addedTags = [];
+        
+        foreach ($contactDTO->toArray() as $key => $value) {
+            if (isset($originalData[$key]) && $originalData[$key] != $value) {
+                $changedFields[$key] = [
+                    'old' => $originalData[$key],
+                    'new' => $value
+                ];
+                
+                // Check for tag additions
+                if ($key === 'tags') {
+                    $oldTags = $originalData[$key] ?? [];
+                    $newTags = $value ?? [];
+                    
+                    // Find newly added tags
+                    $addedTags = array_diff($newTags, $oldTags);
+                }
+            }
+        }
+        
         if ($contact->wasChanged('user_id')) {
             $oldUser = $contact->user;
             $admins = $this->userService->getModel()->role('admin')->get();

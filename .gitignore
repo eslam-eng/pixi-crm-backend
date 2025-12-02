@@ -9,7 +9,6 @@
 /storage/*
 /storage/pail
 /vendor
-Console
 .env
 .env.backup
 .env.production

@@ -1,0 +1,42 @@
+<?php
+
+use Database\Seeders\Tenant\AutomationActionSeeder;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('automation_actions', function (Blueprint $table) {
+            $table->id();
+            $table->json('name');
+            $table->string('key')->unique();
+            $table->string('icon')->nullable();
+            $table->text('description')->nullable();
+            $table->json('configs')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->string('module_name')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['is_active']);
+            $table->index(['key']);
+            $table->index(['module_name']);
+        });
+
+        // Seed default automation actions
+        (new AutomationActionSeeder())->run();
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('automation_actions');
+    }
+};

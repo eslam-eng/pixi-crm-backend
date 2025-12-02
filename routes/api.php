@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AttendanceController;
 
+use App\Http\Controllers\Api\Automation\AutomationConditionController;
 use App\Http\Controllers\Api\Integrations\{
     FacebookController,
     IntegratedFormController
@@ -29,6 +30,11 @@ use \App\Http\Controllers\Api\Users\{
     PermissionController,
     RoleController,
     UserController
+};
+use \App\Http\Controllers\Api\Automation\{
+    AutomationActionController,
+    AutomationTriggerController,
+    AutomationWorkflowController
 };
 use App\Http\Controllers\Api\CoreController;
 use App\Http\Controllers\Api\DashboardController;
@@ -249,6 +255,11 @@ Route::middleware([
         // Reminder routes
         Route::apiResource('reminders', ReminderController::class);
         Route::patch('reminders/{reminder}/set-default', [ReminderController::class, 'setDefault']);
+
+        // Automation Workflows routes
+        Route::apiResource('automation-workflows', AutomationWorkflowController::class);
+        Route::get('automation-workflows/get/assigned-strategies', [AutomationWorkflowController::class, 'getAssignedStrategies']);
+        Route::patch('automation-workflows/{id}/toggle-active', [AutomationWorkflowController::class, 'toggleActive']);
 
         // Integration routes
         Route::get('/integrations', [IntegrationController::class, 'index']);
@@ -537,6 +548,23 @@ Route::middleware([
                 Route::get('/conversion-by-deal-size', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionByDealSize']);
             });
         });
+    });
+
+    // Automation Triggers routes
+    Route::prefix('automation-triggers')->group(function () {
+        Route::get('/', [AutomationTriggerController::class, 'index']);
+        Route::get('/{triggerId}/fields', [AutomationTriggerController::class, 'getFields']);
+        Route::get('/fields/{fieldId}/options', [AutomationTriggerController::class, 'getFieldOptions']);
+    });
+
+    // Automation Conditions routes
+    Route::prefix('automation-conditions')->group(function () {
+        Route::get('/operations', [AutomationConditionController::class, 'getOperations']);
+    });
+
+    // Automation Actions routes
+    Route::prefix('automation-actions')->group(function () {
+        Route::get('/', [AutomationActionController::class, 'index']);
     });
 });
 

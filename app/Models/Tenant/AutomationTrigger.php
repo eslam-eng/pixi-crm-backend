@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Models\Tenant;
+
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Translatable\HasTranslations;
+
+class AutomationTrigger extends Model
+{
+    use HasTranslations;
+
+    protected $fillable = [
+        'name',
+        'key',
+        'icon',
+        'description',
+        'is_active',
+        'module_name'
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public $translatable = ['name'];
+
+    /**
+     * Get the localized name for a specific language
+     */
+    public function getName($locale = 'en')
+    {
+        return $this->getTranslation('name', $locale);
+    }
+
+    /**
+     * Scope for active triggers
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope for ordering by key
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('id', 'asc');
+    }
+
+    /**
+     * Get the workflow for this trigger (one-to-one relationship)
+     */
+    public function workflow()
+    {
+        return $this->hasOne(AutomationWorkflow::class);
+    }
+
+    /**
+     * Get the fields for this trigger
+     */
+    public function fields()
+    {
+        return $this->hasMany(AutomationTriggerField::class)->ordered();
+    }
+
+    /**
+     * Get all triggers formatted for dropdown
+     */
+    public static function getDropdownOptions()
+    {
+        return self::active()
+            ->ordered()
+            ->get();
+    }
+}

@@ -13,3 +13,5 @@ Schedule::command('tasks:escalate')->everyMinute()->withoutOverlapping();
 
 // Schedule reminder processing to run every 15 minutes
 Schedule::command('tasks:reminders')->everyMinute()->withoutOverlapping();
+
+Schedule::command('test:delay-continuation')->everyMinute()->withoutOverlapping();

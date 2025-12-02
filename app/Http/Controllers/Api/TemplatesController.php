@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Template\SendTemplateRequest;
 use App\Http\Requests\Tenant\Template\TemplateRequest;
 use App\Http\Resources\Tenant\Template\TemplateResource;
+use App\Mail\TemplateMail;
 use App\Services\Tenant\TemplateService;
 use App\Services\Tenant\WhatsAppService;
 use Exception;
@@ -121,7 +122,7 @@ class TemplatesController extends Controller
                             : 'No Subject';
 
                         Mail::to($recipient['email'])->send(
-                            new \App\Mail\TemplateMail(
+                            new TemplateMail(
                                 emailSubject: $renderedSubject,
                                 body: $renderedBody,
                                 recipientName: $recipient['name'] ?? null

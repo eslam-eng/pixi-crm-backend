@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Lead;
 
 use App\DTO\Lead\LeadDTO;
+use App\Enums\OpportunityStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreLeadRequest extends FormRequest
 {
@@ -24,10 +26,10 @@ class StoreLeadRequest extends FormRequest
     {
         return [
             'contact_id' => 'required|exists:contacts,id',
-            'reason_id'  => 'nullable|exists:reasons,id',
-            'user_id'    => 'required|exists:users,id',
-            'value'      => 'nullable|numeric|min:0',
-            'status'     => 'required|in:open,lost,won,abandoned',
+            'reason_id' => 'nullable|exists:reasons,id',
+            'user_id' => 'required|exists:users,id',
+            'value' => 'nullable|numeric|min:0',
+            'status' => ['required', Rule::in(OpportunityStatus::values())],
             'industries' => 'nullable|array',
             'industries.*' => 'integer|exists:industries,id',
             'services' => 'nullable|array',
