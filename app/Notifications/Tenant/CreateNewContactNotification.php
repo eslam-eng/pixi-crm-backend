@@ -58,7 +58,7 @@ class CreateNewContactNotification extends Notification
             'contact_email' => $this->contact->email,
             'action_url' => '/contacts/' . $this->contact->id,
             'type' => 'contact_created',
-            'created_by' => auth()->id() ?? null, // If you have authentication
+            'created_by' => user_id() ?? null, // If you have authentication
             'icon' => 'fas fa-user-plus', // For UI display
         ];
     }

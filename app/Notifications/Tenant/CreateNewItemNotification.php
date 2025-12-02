@@ -58,7 +58,7 @@ class CreateNewItemNotification extends Notification
             'item_type' => $this->item->type?->value,
             'action_url' => '/items/' . $this->item->id,
             'type' => 'item_created',
-            'created_by' => auth()->id() ?? null, // If you have authentication
+            'created_by' => user_id() ?? null, // If you have authentication
             'icon' => 'fas fa-plus', // For UI display
         ];
     }

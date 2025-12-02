@@ -1,6 +1,7 @@
 <?php
 
 return array(
+  'invalid inputs' => 'خطأ في المدخلات',
   'actions' => 'فعل',
   'all_awbs' => 'كل البوليصات',
   'area' => 'المنطقة',

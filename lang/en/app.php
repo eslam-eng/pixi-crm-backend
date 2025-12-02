@@ -1,6 +1,8 @@
 <?php
 
 return array(
+  'invalid inputs' => 'invalid inputs',
+
   'actions' => 'Actions',
   'back' => 'Back',
 
