@@ -24,7 +24,7 @@ class AutomationTriggerSeeder extends Seeder
                     'fr' => 'Contact créé',
                     'es' => 'Contacto creado'
                 ],
-                'description' => 'New contact added manually or via import'
+                'description' => 'New contact added manually or via import',
             ],
             [
                 'key' => 'contact_updated',

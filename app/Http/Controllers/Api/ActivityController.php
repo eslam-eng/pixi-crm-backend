@@ -11,12 +11,12 @@ class ActivityController extends Controller
     public function __invoke()
     {
         $activities = Activity::visibleFor(user_id())
-        ->with(['causer', 'subject'])
-        ->latest()
-        ->paginate(20);;
+            ->with(['causer', 'subject'])
+            ->latest()
+            ->paginate(per_page());
 
-        $data = ActivityResource::collection($activities)->response()->getData(true);;
-        
+        $data = ActivityResource::collection($activities)->response()->getData(true);
+
         return apiResponse($data, 'Activities fetched successfully', 200);
     }
 }

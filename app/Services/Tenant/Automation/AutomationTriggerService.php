@@ -358,7 +358,7 @@ class AutomationTriggerService
         return Department::active()
             ->get(['id', 'name'])
             ->map(fn($dept) => [
-                'value' => $dept->name,
+                'value' => $dept->id,
                 'label' => $dept->name,
             ])->toArray();
     }

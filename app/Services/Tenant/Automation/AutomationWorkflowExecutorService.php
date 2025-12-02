@@ -22,9 +22,11 @@ use App\Models\Tenant\Contact;
 use App\Models\Tenant\Deal;
 use App\Models\Tenant\Lead;
 use App\Models\Tenant\Task;
+use App\Models\Tenant\Reminder;
 use App\Models\Tenant\Template;
 use App\Models\Tenant\User;
 use App\Notifications\Tenant\AutomationManagerNotification;
+use App\Notifications\Tenant\TaskReminderNotification;
 use App\Services\ContactService;
 use App\Services\LeadService;
 use App\Services\PipelineService;
@@ -743,12 +745,12 @@ class AutomationWorkflowExecutorService
                 return $this->executeNotifyManagerAction($triggerable, $stepData);
 
             // Reminder Actions
-            case AutomationActionsEnum::SEND_REMINDER->value:
-                return $this->executeSendReminderAction($triggerable, $contextData);
+            case AutomationActionsEnum::SEND_REMINDER->value:  //Done
+                return $this->executeSendReminderAction($triggerable, $stepData);
 
             // Complex Actions
-            // case 'create_contact':
-            //     return $this->executeCreateContactAction($triggerable, $contextData);
+            case 'create_contact':
+                return $this->executeCreateContactAction($triggerable, $contextData, $stepData);
 
             case AutomationActionsEnum::CREATE_OPPORTUNITY->value://Done
                 return $this->executeCreateOpportunityAction($triggerable, $contextData);
@@ -1192,9 +1194,29 @@ class AutomationWorkflowExecutorService
     /**
      * Execute send reminder action
      */
-    private function executeSendReminderAction(Model $triggerable, array $contextData): bool
+    private function executeSendReminderAction(Model $triggerable, ?array $stepData = null): bool
     {
         try {
+            if ($triggerable instanceof Task) {
+                $user = $triggerable->assignedTo;
+                if ($user) {
+                    $reminder = Reminder::where('time_unit', 'on_time')->first();
+
+                    if (!$reminder) {
+                        $reminder = new \stdClass();
+                        $reminder->time_unit = 'on_time';
+                        $reminder->time_value = 0;
+                    }
+
+                    $user->notify(new TaskReminderNotification($triggerable, $reminder));
+
+                    Log::info("Automation:Sent task reminder notification", [
+                        'task_id' => $triggerable->id,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
+
             // Remind assignee before due date
             Log::info("Send reminder action executed", [
                 'triggerable_type' => get_class($triggerable),
@@ -1212,24 +1234,52 @@ class AutomationWorkflowExecutorService
     /**
      * Execute create contact and opportunity action
      */
-    private function executeCreateContactAction(Model $triggerable, array $contextData): bool
+    /**
+     * Execute create contact and opportunity action
+     */
+    private function executeCreateContactAction(Model $triggerable, array $contextData, ?array $stepData = null): bool
     {
         try {
+            // Extract data from stepData or triggerable
+            $name = $stepData['name'] ?? $triggerable->name ?? '';
+            $firstName = $stepData['first_name'] ?? $triggerable->first_name ?? '';
+            $lastName = $stepData['last_name'] ?? $triggerable->last_name ?? '';
+            $email = $stepData['email'] ?? $triggerable->email ?? null;
+            $phone = $stepData['phone'] ?? $triggerable->phone ?? null;
+            
+            // Handle name splitting if first/last name not provided
+            if (empty($firstName) && !empty($name)) {
+                $parts = explode(' ', $name, 2);
+                $firstName = $parts[0];
+                $lastName = $parts[1] ?? '';
+            }
+
+            // Prepare contact phones
+            $contactPhones = [];
+            if ($phone) {
+                $contactPhones[] = [
+                    'phone' => $phone,
+                    'is_primary' => true,
+                    'enable_whatsapp' => false
+                ];
+            }
+
             // Create records and trigger assignment
             $contactDTO = ContactDTO::fromArray([
-                'name' => $triggerable->name,
-                'email' => $triggerable->email,
-                'phone' => $triggerable->phone,
-                'address' => $triggerable->address,
-                'city' => $triggerable->city,
-                'state' => $triggerable->state,
-                'zip' => $triggerable->zip,
-                'country' => $triggerable->country,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'contact_phones' => $contactPhones,
+                'address' => $stepData['address'] ?? $triggerable->address ?? null,
+                'city' => $stepData['city'] ?? $triggerable->city ?? null,
+                'state' => $stepData['state'] ?? $triggerable->state ?? null,
+                'zip_code' => $stepData['zip'] ?? $triggerable->zip ?? null,
+                'country' => $stepData['country'] ?? $triggerable->country ?? null,
                 'contactable_id' => $triggerable->id,
                 'contactable_type' => get_class($triggerable),
             ]);
             $this->contactService->store($contactDTO);
-            Log::info("Create contact  action executed", [
+            Log::info("Automation:Create contact  action executed", [
                 'triggerable_type' => get_class($triggerable),
                 'triggerable_id' => $triggerable->id
             ]);

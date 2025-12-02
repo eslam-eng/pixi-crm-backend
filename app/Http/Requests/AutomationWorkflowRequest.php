@@ -193,15 +193,10 @@ class AutomationWorkflowRequest extends FormRequest
             // Extract orders
             $orders = array_column($steps, 'order');
 
-            // Debug: Log the orders to see what we're getting
-            \Log::info('Step orders received:', $orders);
-
             // Remove any null/empty values
             $orders = array_filter($orders, function ($order) {
                 return $order !== null && $order !== '';
             });
-
-            \Log::info('Filtered orders:', $orders);
 
             // Check if we have any orders
             if (empty($orders)) {
@@ -211,33 +206,21 @@ class AutomationWorkflowRequest extends FormRequest
 
             // Check for duplicate orders
             $uniqueOrders = array_unique($orders);
-            \Log::info('Unique orders:', $uniqueOrders);
-            \Log::info('Count comparison:', [
-                'original' => count($orders),
-                'unique' => count($uniqueOrders)
-            ]);
-
             if (count($orders) !== count($uniqueOrders)) {
                 $validator->errors()->add('steps', 'Step orders must be unique within the workflow');
                 return;
             }
-
             // Sort orders to check sequence
             $sortedOrders = array_values($uniqueOrders);
             sort($sortedOrders);
 
-            \Log::info('Sorted orders:', $sortedOrders);
-
             // Check if orders start from 1
-
             if ($sortedOrders[0] != 1) {
                 $validator->errors()->add('steps', 'Step orders must start from 1');
                 return;
             }
 
-            // Check if orders are sequential (1, 2, 3, 4, ...)
             $expectedSequence = range(1, count($sortedOrders));
-            \Log::info('Expected sequence:', $expectedSequence);
             if ($sortedOrders != $expectedSequence) {
                 $validator->errors()->add('steps', 'Step orders must be sequential starting from 1 (1, 2, 3, ...)');
                 return;

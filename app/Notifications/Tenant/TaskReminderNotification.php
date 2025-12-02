@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notification;
 
 class TaskReminderNotification extends Notification
 {
-    use  NotifyFcm,Queueable;
+    use NotifyFcm, Queueable;
 
 
     public $task;
@@ -28,7 +28,7 @@ class TaskReminderNotification extends Notification
     }
 
 
-  /**
+    /**
      * Get the notification's delivery channels.
      *
      * @return array<int, string>
@@ -51,7 +51,7 @@ class TaskReminderNotification extends Notification
      */
     public function toMail($notifiable): MailMessage
     {
-        $subject = $this->reminder->time_unit === 'on_time' 
+        $subject = $this->reminder->time_unit === 'on_time'
             ? "Task Due Now: {$this->task->title}"
             : "Task Reminder: {$this->task->title}";
 
@@ -123,7 +123,7 @@ class TaskReminderNotification extends Notification
 
         $timeValue = $this->reminder->time_value;
         $timeUnit = $this->reminder->time_unit;
-        
+
         return "Your task '{$this->task->title}' is due in {$timeValue} {$timeUnit}.";
     }
 

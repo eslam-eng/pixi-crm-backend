@@ -141,7 +141,8 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Envoyer un rappel',
                     'es' => 'Enviar recordatorio'
                 ],
-                'description' => 'Remind assignee before due date'
+                'description' => 'Remind assignee before due date',
+                'module_name' => 'task'
             ],
             [
                 'id' => 16,
@@ -166,7 +167,7 @@ class AutomationActionSeeder extends Seeder
                     'es' => 'Mover etapa'
                 ],
                 'description' => 'Move opportunity to Qualification stage',
-                'module_name' => 'Opportunity'
+                'module_name' => 'opportunity'
             ],
             [
                 'id' => 20,
