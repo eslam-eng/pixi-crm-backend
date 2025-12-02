@@ -23,7 +23,6 @@ class ContactSeeder extends Seeder
                 'first_name' => 'John',
                 'last_name' => 'Doe',
                 'job_title' => 'Software Engineer',
-                'department' => 'IT',
                 'status' => ContactStatus::ACTIVE,
                 'email' => 'john.doe@example.com',
                 'source_id' => 1,

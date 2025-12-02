@@ -140,6 +140,7 @@ Route::middleware([
         Route::post('contacts/merge-ignore/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'ignoreById']);
         Route::post('contacts/duplicate/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'duplicateById']);
         Route::post('contacts/duplicate', [\App\Http\Controllers\Api\ContactMergeController::class, 'duplicate']);
+        Route::get('contacts/{contact}/details', [\App\Http\Controllers\Api\ContactController::class, 'details']);
         Route::apiResource('contacts', \App\Http\Controllers\Api\ContactController::class);
 
         Route::prefix('item-attributes')->group(function () {

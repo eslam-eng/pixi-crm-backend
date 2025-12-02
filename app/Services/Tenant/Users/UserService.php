@@ -124,7 +124,6 @@ class UserService extends BaseService
             }
         }
 
-        // dd($userDTO);
         if ($userDTO->period_type == "quarterly") {
             foreach ($userDTO->targets as $index => $target) {
                 if ($this->IsAllowQuarterlyTarget($target['part'], $target['year'])) {    

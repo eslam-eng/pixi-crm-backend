@@ -23,7 +23,7 @@ class Contact extends Model
         'last_name',
         'email',
         'job_title',
-        'department',
+        'department_id',
         'status',
         'source_id',
         'contact_method',
@@ -49,6 +49,11 @@ class Contact extends Model
         'tags' => 'array', // Automatically handle JSON encoding/decoding
         'contact_phones' => 'array',
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
 
     public function contactMerges(): HasMany
     {

@@ -4,7 +4,9 @@ namespace App\Http\Resources;
 
 use App\Http\Resources\landloardLocation\CityResource;
 use App\Http\Resources\landloardLocation\CountryResource;
+use App\Http\Resources\Tenant\Users\DepartmentDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
+use App\Models\Tenant\Department;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,7 +26,7 @@ class ContactShowResource extends JsonResource
             'email' => $this->email,
             'contact_phones' => $this->whenLoaded('contactPhones', fn() => ContactPhoneResource::collection($this->contactPhones)),
             'job_title' => $this->job_title,
-            'department' => $this->department,
+            'department' => $this->whenLoaded('department', fn() => new DepartmentDDLResource($this->department)),
             'status' => $this->status,
             'source' => $this->whenLoaded('source', fn() => new SourceResource($this->source)),
             'campaign_name' => $this->campaign_name,
