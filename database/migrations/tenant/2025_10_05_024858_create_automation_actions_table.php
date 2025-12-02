@@ -5,8 +5,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -18,14 +17,17 @@ return new class extends Migration
             $table->string('key')->unique();
             $table->string('icon')->nullable();
             $table->text('description')->nullable();
-            $table->json('configs')->nullable(); 
+            $table->json('configs')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('module_name')->nullable();
+
             $table->timestamps();
-          
+
             $table->index(['is_active']);
             $table->index(['key']);
+            $table->index(['module_name']);
         });
-        
+
         // Seed default automation actions
         (new AutomationActionSeeder())->run();
     }

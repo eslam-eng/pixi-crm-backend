@@ -16,6 +16,7 @@ class AutomationAction extends Model
         'description',
         'configs',
         'is_active',
+        'module_name',
     ];
 
     protected $casts = [
@@ -46,16 +47,24 @@ class AutomationAction extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('id','asc');
+        return $query->orderBy('id', 'asc');
     }
 
     /**
      * Get all actions formatted for dropdown
+     * If module_name is provided, returns actions where module_name is null OR matches the provided module_name
      */
-    public static function getDropdownOptions()
+    public static function getDropdownOptions(?string $moduleName = null)
     {
-        return self::active()
-            ->ordered()
-            ->get();
+        $query = self::active()->ordered();
+
+        if ($moduleName) {
+            $query->where(function ($q) use ($moduleName) {
+                $q->whereNull('module_name')
+                    ->orWhere('module_name', $moduleName);
+            });
+        }
+
+        return $query->get();
     }
 }

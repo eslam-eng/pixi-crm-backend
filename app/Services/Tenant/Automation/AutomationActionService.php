@@ -9,10 +9,11 @@ class AutomationActionService
 {
     /**
      * Get all active automation actions for dropdown
+     * Filters by module_name if provided (returns actions with null module_name OR matching module_name)
      */
-    public function getDropdownOptions(): Collection
+    public function getDropdownOptions(?string $moduleName = null): Collection
     {
-        return AutomationAction::getDropdownOptions();
+        return AutomationAction::getDropdownOptions($moduleName);
     }
 
     /**
@@ -55,7 +56,7 @@ class AutomationActionService
     public function update(int $id, array $data): bool
     {
         $action = AutomationAction::find($id);
-        
+
         if (!$action) {
             return false;
         }
@@ -69,7 +70,7 @@ class AutomationActionService
     public function delete(int $id): bool
     {
         $action = AutomationAction::find($id);
-        
+
         if (!$action) {
             return false;
         }
@@ -83,7 +84,7 @@ class AutomationActionService
     public function toggleActive(int $id): bool
     {
         $action = AutomationAction::find($id);
-        
+
         if (!$action) {
             return false;
         }
@@ -105,7 +106,7 @@ class AutomationActionService
     public function getMultilingualNames(int $id): ?array
     {
         $action = AutomationAction::find($id);
-        
+
         if (!$action) {
             return null;
         }

@@ -16,6 +16,7 @@ class AutomationTriggerSeeder extends Seeder
         $triggers = [
             [
                 'key' => 'contact_created',
+                'module_name' => 'contact',
                 'icon' => 'user-plus',
                 'name' => [
                     'ar' => 'تم إنشاء جهة اتصال',
@@ -27,6 +28,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'contact_updated',
+                'module_name' => 'contact',
                 'icon' => 'user',
                 'name' => [
                     'ar' => 'تم تحديث جهة الاتصال',
@@ -38,6 +40,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'opportunity_created',
+                'module_name' => 'opportunity',
                 'icon' => 'trending-up',
                 'name' => [
                     'ar' => 'تم إنشاء فرصة',
@@ -49,6 +52,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'opportunity_lead_qualified',
+                'module_name' => 'opportunity',
                 'icon' => 'target',
                 'name' => [
                     'ar' => 'تم تأهيل الفرصة',
@@ -60,6 +64,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'opportunity_stage_changed',
+                'module_name' => 'opportunity',
                 'icon' => 'arrow-right',
                 'name' => [
                     'ar' => 'تم تغيير المرحلة',
@@ -71,9 +76,10 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'opportunity_no_action_for_x_time',
+                'module_name' => 'opportunity',
                 'icon' => 'clock',
-                'name' => [
-                    'ar' => 'لا يوجد نشاط لفترة زمنية',
+                'name' => ['لا يوجد نشاط لفترة زمنية'
+                    'ar' => ,
                     'en' => 'No Action for X Time',
                     'fr' => 'Aucune action pendant X temps',
                     'es' => 'Sin acción por X tiempo'
@@ -82,6 +88,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'opportunity_high_value',
+                'module_name' => 'opportunity',
                 'icon' => 'dollar-sign',
                 'name' => [
                     'ar' => 'فرصة عالية القيمة',
@@ -93,6 +100,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'opportunity_won',
+                'module_name' => 'opportunity',
                 'icon' => 'check-circle',
                 'name' => [
                     'ar' => 'تم الفوز بالفرصة',
@@ -104,6 +112,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'opportunity_lost',
+                'module_name' => 'opportunity',
                 'icon' => 'x-circle',
                 'name' => [
                     'ar' => 'تم خسارة الفرصة',
@@ -115,6 +124,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'deal_created',
+                'module_name' => 'deal',
                 'icon' => 'file-text',
                 'name' => [
                     'ar' => 'تم إنشاء صفقة',
@@ -126,6 +136,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'deal_updated',
+                'module_name' => 'deal',
                 'icon' => 'edit',
                 'name' => [
                     'ar' => 'تم تحديث الصفقة',
@@ -137,6 +148,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'deal_overdue_payment',
+                'module_name' => 'deal',
                 'icon' => 'alert-triangle',
                 'name' => [
                     'ar' => 'دفعة متأخرة للصفقة',
@@ -148,6 +160,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'task_created',
+                'module_name' => 'task',
                 'icon' => 'check-square',
                 'name' => [
                     'ar' => 'تم إنشاء مهمة',
@@ -159,6 +172,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'task_completed',
+                'module_name' => 'task',
                 'icon' => 'check',
                 'name' => [
                     'ar' => 'تم إنجاز المهمة',
@@ -170,6 +184,7 @@ class AutomationTriggerSeeder extends Seeder
             ],
             [
                 'key' => 'task_overdue',
+                'module_name' => 'task',
                 'icon' => 'clock',
                 'name' => [
                     'ar' => 'مهمة متأخرة',
@@ -179,61 +194,6 @@ class AutomationTriggerSeeder extends Seeder
                 ],
                 'description' => 'Due date passed without completion'
             ],
-            [
-                'key' => 'calendar_event_created',
-                'icon' => 'calendar',
-                'name' => [
-                    'ar' => 'تم إنشاء حدث',
-                    'en' => 'Event Created',
-                    'fr' => 'Événement créé',
-                    'es' => 'Evento creado'
-                ],
-                'description' => 'Client books a meeting/demo'
-            ],
-            [
-                'key' => 'calendar_event_cancelled',
-                'icon' => 'x',
-                'name' => [
-                    'ar' => 'تم إلغاء الحدث',
-                    'en' => 'Event Cancelled',
-                    'fr' => 'Événement annulé',
-                    'es' => 'Evento cancelado'
-                ],
-                'description' => 'Client cancels meeting'
-            ],
-            [
-                'key' => 'calendar_attendee_rsvp',
-                'icon' => 'users',
-                'name' => [
-                    'ar' => 'رد الحضور',
-                    'en' => 'Attendee RSVP',
-                    'fr' => 'RSVP participant',
-                    'es' => 'RSVP asistente'
-                ],
-                'description' => 'Client accepts/declines meeting'
-            ],
-            [
-                'key' => 'form_submitted',
-                'icon' => 'file-text',
-                'name' => [
-                    'ar' => 'تم إرسال النموذج',
-                    'en' => 'Form Submitted',
-                    'fr' => 'Formulaire soumis',
-                    'es' => 'Formulario enviado'
-                ],
-                'description' => 'New lead from Meta/Website/Typeform'
-            ],
-            [
-                'key' => 'form_field_mapping_error',
-                'icon' => 'alert-circle',
-                'name' => [
-                    'ar' => 'خطأ في ربط الحقول',
-                    'en' => 'Field Mapping Error',
-                    'fr' => 'Erreur de mappage de champ',
-                    'es' => 'Error de mapeo de campo'
-                ],
-                'description' => 'Form data incomplete or unmapped'
-            ]
         ];
 
         foreach ($triggers as $trigger) {

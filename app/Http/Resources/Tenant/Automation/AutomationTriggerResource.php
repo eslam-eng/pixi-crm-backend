@@ -19,6 +19,7 @@ class AutomationTriggerResource extends JsonResource
             'key' => $this->key,
             'name' => $this->name,
             'icon' => $this->icon,
+            'module_name' => $this->module_name,
         ];
     }
 }

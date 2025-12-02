@@ -23,7 +23,19 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Notifier le propriétaire',
                     'es' => 'Notificar al propietario'
                 ],
-                'description' => 'Send internal notification to owner'
+                'description' => 'Send internal notification to owner',
+                'configs' => [
+                    'message' => [
+                        'type' => 'text',
+                        'label' => [
+                            'ar' => 'محتوى الاشعار',
+                            'en' => 'Notification Message',
+                            'fr' => 'Message de notification',
+                            'es' => 'Mensaje de notificación'
+                        ],
+                        'required' => true,
+                    ]
+                ]
             ],
             [
                 'id' => 6,
@@ -35,7 +47,41 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Envoyer un email',
                     'es' => 'Enviar correo electrónico'
                 ],
-                'description' => 'Follow-up/proposal email'
+                'description' => 'Follow-up/proposal email',
+                'configs' => [
+                    'email_subject' => [
+                        'type' => 'text',
+                        'label' => [
+                            'ar' => 'عنوان الايميل',
+                            'en' => 'Email Subject',
+                            'fr' => 'Objet du mail',
+                            'es' => 'Asunto del correo'
+                        ],
+                        'required' => true,
+                    ],
+                    'email_message' => [
+                        'type' => 'textarea',
+                        'label' => [
+                            'ar' => 'محتوى الايميل',
+                            'en' => 'Email Body',
+                            'fr' => 'Corps du mail',
+                            'es' => 'Cuerpo del correo'
+                        ],
+                        'required' => true,
+                    ]
+                    ,
+                    'email_template_id' => [
+                        'type' => 'select',
+                        'label' => [
+                            'ar' => 'قالب الايميل',
+                            'en' => 'Email Template',
+                            'fr' => 'Modèle de mail',
+                            'es' => 'Plantilla de correo'
+                        ],
+                        'required' => true,
+                        'options' => 'tempates api'
+                    ]
+                ]
             ],
             [
                 'id' => 7,
@@ -59,7 +105,19 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Notifier le manager',
                     'es' => 'Notificar al gerente'
                 ],
-                'description' => 'High-priority internal alert'
+                'description' => 'High-priority internal alert',
+                'configs' => [
+                    'message' => [
+                        'type' => 'text',
+                        'label' => [
+                            'ar' => 'محتوى الاشعار',
+                            'en' => 'Notification Message',
+                            'fr' => 'Message de notification',
+                            'es' => 'Mensaje de notificación'
+                        ],
+                        'required' => true,
+                    ]
+                ]
             ],
             [
                 'id' => 9,
@@ -74,30 +132,6 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Kick off handover to Success/Implementation team'
             ],
             [
-                'id' => 10,
-                'key' => 'tag_and_reopen_later',
-                'icon' => 'tag',
-                'name' => [
-                    'ar' => 'وضع علامة وإعادة فتح لاحقاً',
-                    'en' => 'Tag & Reopen Later',
-                    'fr' => 'Étiqueter et rouvrir plus tard',
-                    'es' => 'Etiquetar y reabrir más tarde'
-                ],
-                'description' => 'Tag Dormant and schedule reopen'
-            ],
-            [
-                'id' => 13,
-                'key' => 'send_reminder_and_task',
-                'icon' => 'clock',
-                'name' => [
-                    'ar' => 'إرسال تذكير ومهمة',
-                    'en' => 'Send Reminder + Task',
-                    'fr' => 'Envoyer un rappel + tâche',
-                    'es' => 'Enviar recordatorio + tarea'
-                ],
-                'description' => 'Send reminder and create collection task'
-            ],
-            [
                 'id' => 14,
                 'key' => 'send_reminder',
                 'icon' => 'bell',
@@ -110,7 +144,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Remind assignee before due date'
             ],
             [
-                'id'=> 16,
+                'id' => 16,
                 'key' => 'escalate_task',
                 'icon' => 'arrow-up',
                 'name' => [
@@ -122,7 +156,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Notify team lead or reassign'
             ],
             [
-                'id'=> 17,
+                'id' => 17,
                 'key' => 'move_stage',
                 'icon' => 'arrow-right',
                 'name' => [
@@ -131,10 +165,11 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Déplacer l\'étape',
                     'es' => 'Mover etapa'
                 ],
-                'description' => 'Move opportunity to Qualification stage'
+                'description' => 'Move opportunity to Qualification stage',
+                'module_name' => 'Opportunity'
             ],
             [
-                'id'=> 20,
+                'id' => 20,
                 'key' => 'create_contact',
                 'icon' => 'user-plus',
                 'name' => [
@@ -146,7 +181,7 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Create contact'
             ],
             [
-                'id'=> 21,
+                'id' => 21,
                 'key' => 'notify_admin',
                 'icon' => 'alert-circle',
                 'name' => [
@@ -155,10 +190,22 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Notifier l\'admin',
                     'es' => 'Notificar administrador'
                 ],
-                'description' => 'Alert ops to fix mapping issues'
+                'description' => 'Alert ops to fix mapping issues',
+                'configs' => [
+                    'message' => [
+                        'type' => 'text',
+                        'label' => [
+                            'ar' => 'محتوى الاشعار',
+                            'en' => 'Notification Message',
+                            'fr' => 'Message de notification',
+                            'es' => 'Mensaje de notificación'
+                        ],
+                        'required' => true,
+                    ]
+                ]
             ],
             [
-                'id'=> 22,
+                'id' => 22,
                 'key' => 'assign_to_sales',
                 'icon' => 'alert-circle',
                 'name' => [
@@ -266,7 +313,7 @@ class AutomationActionSeeder extends Seeder
                 ]
             ],
             [
-                'id'=> 23,
+                'id' => 23,
                 'key' => 'create_opportunity',
                 'icon' => 'user-plus',
                 'name' => [

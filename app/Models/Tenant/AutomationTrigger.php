@@ -15,6 +15,7 @@ class AutomationTrigger extends Model
         'icon',
         'description',
         'is_active',
+        'module_name'
     ];
 
     protected $casts = [

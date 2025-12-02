@@ -22,7 +22,8 @@ class AutomationActionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $actions = $this->automationActionService->getDropdownOptions();
+        $moduleName = $request->input('module_name');
+        $actions = $this->automationActionService->getDropdownOptions($moduleName);
 
         return apiResponse(
             data: AutomationActionResource::collection($actions),

@@ -10,8 +10,6 @@ enum AutomationActionsEnum: int
     case ESCALATE = 7;
     case NOTIFY_MANAGER = 8;
     case CREATE_ONBOARDING_TASK = 9;
-    case TAG_AND_REOPEN_LATER = 10;
-    case SEND_REMINDER_AND_TASK = 13;
     case SEND_REMINDER = 14;
     case ESCALATE_TASK = 16;
     case MOVE_STAGE = 17;

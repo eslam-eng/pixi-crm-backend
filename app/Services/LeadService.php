@@ -28,7 +28,8 @@ class LeadService extends BaseService
         public StageService $stageService,
         public UserService $userService,
         public ItemService $itemService,
-    ) {}
+    ) {
+    }
 
     public function getModel(): Lead
     {
@@ -88,7 +89,7 @@ class LeadService extends BaseService
         $itemsCol = $items
             ->filter(fn($r) => !empty($r->item_id));
 
-        $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r->price * (int)($r->quantity ?? 1));
+        $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float) $r->price * (int) ($r->quantity ?? 1));
 
         // divide the items by the presence of variant_id
         [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r->variant_id));
@@ -97,17 +98,17 @@ class LeadService extends BaseService
 
         $variantsPayload = $withVariant
             ->mapWithKeys(fn($r) => [
-                (int)$r->variant_id => [
-                    'price'    => (float)$r->price,
-                    'quantity' => (int)$r->quantity,
+                (int) $r->variant_id => [
+                    'price' => (float) $r->price,
+                    'quantity' => (int) $r->quantity,
                 ],
             ])
             ->all();
 
         $itemsPayload = $withItemOnly
             ->mapWithKeys(fn($r) => [
-                (int)$r->item_id => [
-                    'price'    => (float)$r->price,
+                (int) $r->item_id => [
+                    'price' => (float) $r->price,
                     'quantity' => $r->quantity ?? 1,
                 ],
             ])
@@ -117,7 +118,7 @@ class LeadService extends BaseService
 
         Model::withoutEvents(function () use ($lead, $variantsPayload, $itemsPayload, $leadDTO) {
             if (!empty($variantsPayload)) {
-            $lead->variants()->sync($variantsPayload, true);
+                $lead->variants()->sync($variantsPayload, true);
             }
 
             if (!empty($itemsPayload)) {
@@ -143,7 +144,7 @@ class LeadService extends BaseService
             $itemsCol = collect($leadDTO->items ?? [])->map(fn($r) => LeadItemDTO::fromArray($r))
                 ->filter(fn($r) => !empty($r->item_id));
 
-            $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float)$r->price * (int)($r->quantity ?? 1));
+            $leadDTO->deal_value = $itemsCol->sum(fn($r) => (float) $r->price * (int) ($r->quantity ?? 1));
 
             // divide the items by the presence of variant_id
             [$withVariant, $withItemOnly] = $itemsCol->partition(fn($r) => !empty($r->variant_id));
@@ -152,9 +153,9 @@ class LeadService extends BaseService
 
             $variantsPayload = $withVariant
                 ->mapWithKeys(fn($r) => [
-                    (int)$r->variant_id => [
-                        'price'    => (float)$r->price,
-                        'quantity' => (int)$r->quantity,
+                    (int) $r->variant_id => [
+                        'price' => (float) $r->price,
+                        'quantity' => (int) $r->quantity,
                     ],
                 ])
                 ->all();
@@ -162,9 +163,9 @@ class LeadService extends BaseService
             $itemsPayload = $withItemOnly
                 ->filter(fn($r) => !empty($r->item_id))
                 ->mapWithKeys(fn($r) => [
-                    (int)$r->item_id => [
-                        'price'    => (float)$r->price,
-                        'quantity' => (int)$r->quantity,
+                    (int) $r->item_id => [
+                        'price' => (float) $r->price,
+                        'quantity' => (int) $r->quantity,
                     ],
                 ])
                 ->all();
@@ -209,11 +210,11 @@ class LeadService extends BaseService
         // 1. Status changed to 'active' (from any other status)
         // 2. Stage changed to Stage 2 or higher (assuming Stage 2+ represents qualification)
         // 3. Lead has a deal value > 0 and is active
-        
+
         $statusQualified = $lead->status->value === 'active' && $originalStatus !== 'active';
         $stageQualified = $lead->stage_id !== $originalStageId && $lead->stage && $lead->stage->seq_number >= 2;
         $valueQualified = $lead->deal_value > 0 && $lead->status->value === 'active';
-        
+
         return $statusQualified || $stageQualified || $valueQualified;
     }
 
@@ -324,14 +325,14 @@ class LeadService extends BaseService
     {
         $lead = $this->findById($id);
         $lead->update(['stage_id' => $stageId]);
-        
+
         // Update action times after stage change
         $this->updateActionTimes($lead);
-        
+        //TODO : add Activity Log to save stage change
         return $lead;
     }
 
-    public function logCall(int $id ,LogCallDTO $data ): void
+    public function logCall(int $id, LogCallDTO $data): void
     {
         $lead = $this->findById($id);
         activity()
@@ -340,7 +341,7 @@ class LeadService extends BaseService
             ->withProperties([
                 'call_notes' => $data->call_notes,
                 'call_direction' => $data->call_direction,
-                ])
+            ])
             ->useLog('lead') // optional log name
             ->log('log_call');
     }

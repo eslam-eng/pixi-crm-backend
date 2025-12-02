@@ -4,11 +4,14 @@ namespace App\Services\Tenant\Automation;
 
 use App\DTO\Contact\ContactDTO;
 use App\DTO\Tenant\LeadDTO;
+use App\Enums\AutomationActionsEnum;
 use App\Enums\AutomationAssignStrategiesEnum;
 use App\Enums\ConditionOperation;
+use App\Enums\Landlord\ActivationStatusEnum;
 use App\Enums\OpportunityStatus;
 use App\Enums\TaskStatusEnum;
 use App\Mail\TemplateMail;
+use App\Models\Stage;
 use App\Models\Tenant\AutomationStepsImplement;
 use App\Models\Tenant\AutomationDelay;
 use App\Models\Tenant\AutomationAction;
@@ -426,7 +429,7 @@ class AutomationWorkflowExecutorService
         }
 
         // Execute the action based on its key (pass stepData for actions that need config values)
-        $result = $this->executeActionByKey($action->key, $stepImplement->triggerable, $contextData, $stepImplement, $stepData);
+        $result = $this->executeActionById($actionId, $stepImplement->triggerable, $contextData, $stepImplement, $stepData);
 
         Log::info("Action step {$stepImplement->id} executed", [
             'action_id' => $actionId,
@@ -489,12 +492,12 @@ class AutomationWorkflowExecutorService
         }
 
         // If triggerable is FormSubmission, check if contact_id is in data
-        if ($triggerable instanceof \App\Models\Tenant\FormSubmission) {
-            $data = $triggerable->data ?? [];
-            if (isset($data['contact_id'])) {
-                return $data['contact_id'];
-            }
-        }
+        // if ($triggerable instanceof FormSubmission) {
+        //     $data = $triggerable->data ?? [];
+        //     if (isset($data['contact_id'])) {
+        //         return $data['contact_id'];
+        //     }
+        // }
 
         Log::warning("Could not extract contact_id from triggerable", [
             'triggerable_type' => get_class($triggerable),
@@ -612,7 +615,7 @@ class AutomationWorkflowExecutorService
                 'parts' => $parts,
                 'triggerable_type' => get_class($triggerable),
             ]);
-            
+
             foreach ($parts as $part) {
                 if ($value && is_object($value)) {
                     // Try to load the relationship if it's not already loaded
@@ -638,7 +641,7 @@ class AutomationWorkflowExecutorService
 
         // Direct field access - get from model attributes or relationships
         Log::warning("Direct field access for: {$field}");
-        
+
         // First check if it's a loaded relationship
         if ($triggerable->relationLoaded($field)) {
             Log::warning("Field is a loaded relationship");
@@ -652,7 +655,7 @@ class AutomationWorkflowExecutorService
             'has_field' => array_key_exists($field, $attributes),
             'all_attributes' => array_keys($attributes),
         ]);
-        
+
         if (array_key_exists($field, $attributes)) {
             $value = $triggerable->getAttribute($field);
             Log::warning("Found in attributes", ['field' => $field, 'value' => $value]);
@@ -709,54 +712,48 @@ class AutomationWorkflowExecutorService
     /**
      * Execute action by key
      */
-    private function executeActionByKey(string $actionKey, Model $triggerable, array $contextData, ?AutomationStepsImplement $stepImplement = null, ?array $stepData = null): bool
+    private function executeActionById(int $actionId, Model $triggerable, array $contextData, ?AutomationStepsImplement $stepImplement = null, ?array $stepData = null): bool
     {
-        switch ($actionKey) {
+        switch ($actionId) {
             // Email Actions
-            case 'move_stage':
+            case AutomationActionsEnum::MOVE_STAGE->value:  // Done
                 return $this->executeMoveStageAction($triggerable, $contextData);
 
             // Email Actions
-            case 'send_email':   //Done
+            case AutomationActionsEnum::SEND_EMAIL->value:   //Done
                 return $this->executeSendEmailAction($triggerable, $stepData);
 
             // Escalation Actions
-            case 'escalate':
+            case AutomationActionsEnum::ESCALATE->value:
                 return $this->executeEscalateAction($triggerable, $contextData);
 
-            case 'escalate_task':
+            case AutomationActionsEnum::ESCALATE_TASK->value:
                 return $this->executeEscalateTaskAction($triggerable, $contextData);
 
             // Task Actions
-            case 'create_onboarding_task':
+            case AutomationActionsEnum::CREATE_ONBOARDING_TASK->value: //Inprogress
                 return $this->executeCreateOnboardingTaskAction($triggerable, $contextData);
 
-            // Tagging Actions
-            case 'tag_and_reopen_later':
-                return $this->executeTagAndReopenLaterAction($triggerable, $contextData);
-
             // Notification Actions
-            case 'notify_admin'://Done
+            case AutomationActionsEnum::NOTIFY_ADMIN->value://Done
                 return $this->executeNotifyAdminAction($triggerable, $stepData);
-            case 'notify_owner'://Done
+            case AutomationActionsEnum::NOTIFY_OWNER->value://Done
                 return $this->executeNotifyOwnerAction($triggerable, $stepData);
-            case 'notify_manager'://Done
+            case AutomationActionsEnum::NOTIFY_MANAGER->value://Done
                 return $this->executeNotifyManagerAction($triggerable, $stepData);
 
             // Reminder Actions
-            case 'send_reminder_and_task':
-                return $this->executeSendReminderAndTaskAction($triggerable, $stepData);
-            case 'send_reminder':
+            case AutomationActionsEnum::SEND_REMINDER->value:
                 return $this->executeSendReminderAction($triggerable, $contextData);
 
             // Complex Actions
             // case 'create_contact':
             //     return $this->executeCreateContactAction($triggerable, $contextData);
 
-            case 'create_opportunity'://Done
+            case AutomationActionsEnum::CREATE_OPPORTUNITY->value://Done
                 return $this->executeCreateOpportunityAction($triggerable, $contextData);
 
-            case 'assign_to_sales'://Done
+            case AutomationActionsEnum::ASSIGN_TO_SALES->value://Done
                 return $this->executeAssignToSalesAction($triggerable, $contextData, $stepImplement, $stepData);
             default:
                 return false;
@@ -905,13 +902,33 @@ class AutomationWorkflowExecutorService
     {
         try {
             if ($triggerable instanceof Lead) {
-                $targetStageId = $contextData['target_stage_id'] ?? null;
+                // Get current stage
+                $currentStage = $triggerable->stage;
+                if ($currentStage) {
+                    // Find next stage in the same pipeline with higher sequence number
+                    $nextStage = Stage::where('pipeline_id', $currentStage->pipeline_id)
+                        ->where('seq_number', '>', $currentStage->seq_number)
+                        ->orderBy('seq_number', 'asc')
+                        ->first();
 
-                if ($targetStageId) {
-                    $triggerable->update(['stage_id' => $targetStageId]);
-                    Log::info("Move stage action executed", [
-                        'opportunity_id' => $triggerable->id,
-                        'new_stage_id' => $targetStageId
+                    if ($nextStage) {
+                        $triggerable->update(['stage_id' => $nextStage->id]);
+
+                        //TODO : add Activity Log to save stage change
+                        Log::info("Move stage action executed", [
+                            'lead_id' => $triggerable->id,
+                            'from_stage' => $currentStage->name,
+                            'to_stage' => $nextStage->name
+                        ]);
+                    } else {
+                        Log::info("Move stage action skipped: Lead is already at the last stage", [
+                            'lead_id' => $triggerable->id,
+                            'current_stage' => $currentStage->name
+                        ]);
+                    }
+                } else {
+                    Log::warning("Move stage action skipped: Lead has no current stage", [
+                        'lead_id' => $triggerable->id
                     ]);
                 }
             }
