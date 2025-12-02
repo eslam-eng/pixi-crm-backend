@@ -191,7 +191,7 @@ Route::middleware([
             Route::get('/columns', [\App\Http\Controllers\Api\Users\UserController::class, 'getColumns']);
             Route::post('/', [\App\Http\Controllers\Api\Users\UserController::class, 'export']);
         });
-        Route::get('users/{user}/details', [UserController::class,'details']);
+        Route::get('users/{user}/details', [UserController::class, 'details']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);
@@ -548,24 +548,26 @@ Route::middleware([
                 Route::get('/conversion-by-deal-size', [\App\Http\Controllers\Api\Report\ConversionRateAnalysisController::class, 'conversionByDealSize']);
             });
         });
+
+        // Automation Triggers routes
+        Route::prefix('automation-triggers')->group(function () {
+            Route::get('/', [AutomationTriggerController::class, 'index']);
+            Route::get('/{triggerId}/fields', [AutomationTriggerController::class, 'getFields']);
+            Route::get('/fields/{fieldId}/options', [AutomationTriggerController::class, 'getFieldOptions']);
+        });
+
+        // Automation Conditions routes
+        Route::prefix('automation-conditions')->group(function () {
+            Route::get('/operations', [AutomationConditionController::class, 'getOperations']);
+        });
+
+        // Automation Actions routes
+        Route::prefix('automation-actions')->group(function () {
+            Route::get('/', [AutomationActionController::class, 'index']);
+        });
     });
 
-    // Automation Triggers routes
-    Route::prefix('automation-triggers')->group(function () {
-        Route::get('/', [AutomationTriggerController::class, 'index']);
-        Route::get('/{triggerId}/fields', [AutomationTriggerController::class, 'getFields']);
-        Route::get('/fields/{fieldId}/options', [AutomationTriggerController::class, 'getFieldOptions']);
-    });
 
-    // Automation Conditions routes
-    Route::prefix('automation-conditions')->group(function () {
-        Route::get('/operations', [AutomationConditionController::class, 'getOperations']);
-    });
-
-    // Automation Actions routes
-    Route::prefix('automation-actions')->group(function () {
-        Route::get('/', [AutomationActionController::class, 'index']);
-    });
 });
 
 // Facebook callback routes - outside tenant middleware to handle OAuth callbacks

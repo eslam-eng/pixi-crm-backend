@@ -19,6 +19,7 @@ class AutomationActionResource extends JsonResource
             'key' => $this->key,
             'name' => $this->name,
             'icon' => $this->icon,
+            'configs' => $this->configs,
         ];
     }
 }
