@@ -223,6 +223,10 @@ Route::middleware([
         Route::prefix('core')->group(function () {
             Route::get('/sidebar-counts', [CoreController::class, 'getSidebarCounts']);
             Route::get('/currencies', [CoreController::class, 'getCurrencies']);
+            Route::get('/billing-cycles', [CoreController::class, 'getBillingCycle']);
+            Route::get('/payment-status', [CoreController::class, 'getPaymentStatus']);
+            Route::get('/tasks-status', [CoreController::class, 'getTaskStatus']);
+            Route::get('/services-duration', [CoreController::class, 'getServiceDuration']);
         });
 
         Route::prefix('settings')->group(function () {

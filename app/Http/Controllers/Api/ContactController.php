@@ -11,6 +11,7 @@ use App\Exports\ContactsExport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contacts\ContactRequest;
+use App\Http\Resources\ContactDDLResource;
 use App\Http\Resources\ContactResource;
 use App\Http\Resources\ContactShowResource;
 use App\Imports\ContactsImport;
@@ -46,11 +47,11 @@ class ContactController extends Controller
             $filters = array_filter($request->all(), function ($value) {
                 return ($value !== null && $value !== false && $value !== '');
             });
-            $withRelations = ['user', 'source', 'contactPhones'];
             if ($request->has('ddl')) {
-                $contacts = $this->contactService->index($filters, $withRelations);
-                $data = ContactResource::collection($contacts);
+                $contacts = $this->contactService->index($filters);
+                $data = ContactDDLResource::collection($contacts);
             } else {
+                $withRelations = ['user', 'source', 'contactPhones'];
                 $contacts = $this->contactService->index($filters, $withRelations, $filters['per_page'] ?? 10);
                 $data = ContactResource::collection($contacts)->response()->getData(true);
             }
