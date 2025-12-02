@@ -24,6 +24,7 @@ class Team extends Model
     ];
 
     protected $casts = [
+        'status' => 'boolean',
         'is_target' => 'boolean',
         'leader_has_target' => 'boolean',
     ];
