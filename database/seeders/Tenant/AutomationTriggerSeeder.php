@@ -78,8 +78,8 @@ class AutomationTriggerSeeder extends Seeder
                 'key' => 'opportunity_no_action_for_x_time',
                 'module_name' => 'opportunity',
                 'icon' => 'clock',
-                'name' => ['لا يوجد نشاط لفترة زمنية'
-                    'ar' => ,
+                'name' => [
+                    'ar' => 'لا يوجد نشاط لفترة زمنية',
                     'en' => 'No Action for X Time',
                     'fr' => 'Aucune action pendant X temps',
                     'es' => 'Sin acción por X tiempo'
