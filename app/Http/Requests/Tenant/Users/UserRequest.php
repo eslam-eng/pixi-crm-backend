@@ -29,15 +29,15 @@ class UserRequest extends BaseRequest
             'department_id' => 'required|exists:departments,id,is_active,1',
             'role' => ['required', Rule::exists('roles', 'name')],
             'job_title' => 'nullable|string',
-            'team_id' => 'nullable|exists:teams,id',
             'lang' => ['required', 'string', Rule::in(['ar', 'en', 'fr', 'es'])],
             'is_active' => 'required|boolean',
-            'monthly_target' => 'nullable|array',
-            'monthly_target.*.amount' => 'required|numeric|min:1',
-            'monthly_target.*.month' => 'required|distinct|integer|min:1|max:12',
-            'quarterly_target' => 'nullable|array',
-            'quarterly_target.*.amount' => 'required|numeric|min:1',
-            'quarterly_target.*.quarter' => 'required|distinct|integer|min:1|max:4',
+            'requires_clock' => 'required|boolean',
+            'period_type' => 'nullable|string|in:monthly,quarterly',
+            'targets' => 'requiredIf:period_type,monthly,quarterly|array',
+            'targets.*.year' => 'requiredIf:period_type,monthly,quarterly|integer|min:2025',
+            'targets.*.part' => 'requiredIf:period_type,monthly,quarterly|integer|min:1|max:12',
+            'targets.*.amount' => 'requiredIf:period_type,monthly,quarterly|numeric|min:1',
+        
         ];
     }
 

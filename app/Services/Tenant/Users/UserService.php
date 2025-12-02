@@ -98,7 +98,7 @@ class UserService extends BaseService
         }
 
         $validator = validator([], []); // Create empty validator
-        if ($userDTO->monthly_target || $userDTO->quarterly_target) {
+        if ($userDTO->targets) {
             $chair = $user->chairs()->create([
                 'team_id' => null,
                 'started_at' => now(),
@@ -106,39 +106,39 @@ class UserService extends BaseService
             ]);
         }
 
-        if ($userDTO->monthly_target) {
-            foreach ($userDTO->monthly_target as $index => $target) {
-                if ($this->IsAllowMonthlyTarget($target['month'])) {
+        if ($userDTO->period_type == "monthly") {
+            foreach ($userDTO->targets as $index => $target) {
+                if ($this->IsAllowMonthlyTarget($target['part'], $target['year'])) {
                     $chair->targets()->create([
-                        'period_type' => "monthly",
-                        'year' => now()->year,
-                        'period_number' => $target['month'],
+                        'period_type' => $userDTO->period_type,
+                        'year' => $target['year'],
+                        'period_number' => $target['part'],
                         'target_value' => $target['amount'],
-                        'effective_from' => now()->month((int)$target['month'])->startOfMonth(),
-                        'effective_to' => now()->month((int)$target['month'])->endOfMonth(),
+                        'effective_from' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->startOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_to' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->endOfMonth()->format('Y-m-d H:i:s'),
                     ]);
                 } else {
-                    $monthName = now()->copy()->setMonth((int)$target['month']);
+                    $monthName = now()->copy()->setMonth((int)$target['part']);
                     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
                 }
             }
         }
 
-
-        if ($userDTO->quarterly_target) {
-            foreach ($userDTO->quarterly_target as $index => $target) {
-                if ($this->IsAllowQuarterlyTarget($target['quarter'])) {
-                    $this->checkIfQuarterlyEqualMonths($target['quarter'], $target['amount'], $userDTO->monthly_target, $validator);
+        // dd($userDTO);
+        if ($userDTO->period_type == "quarterly") {
+            foreach ($userDTO->targets as $index => $target) {
+                if ($this->IsAllowQuarterlyTarget($target['part'], $target['year'])) {    
+                    [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target['year'], $target['part']);
                     $chair->targets()->create([
-                        'period_type' => "quarterly",
-                        'year' => now()->year,
-                        'period_number' => $target['quarter'],
-                        'effective_from' => now()->startOfQuarter(),
-                        'effective_to' => now()->endOfQuarter(),
+                        'period_type' => $userDTO->period_type,
+                        'year' => $target['year'],
+                        'period_number' => $target['part'],
+                        'effective_from' => $startOfQuarter->format('Y-m-d H:i:s'),
+                        'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
                         'target_value' => $target['amount'],
                     ]);
                 } else {
-                    $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $target['quarter']);
+                    $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $target['part']);
                 }
             }
         }
@@ -171,9 +171,10 @@ class UserService extends BaseService
             $user->syncRoles([$userDTO->role]);
         }
 
-        if ($userDTO->monthly_target || $userDTO->quarterly_target) {
+        if ($userDTO->targets) {
             if ($user->activeChairs()->exists()) {
                 $chair = $user->activeChairs()->first();
+                $chair->targets()->delete();
             } else {
                 $chair = $user->chairs()->create([
                     'team_id' => null,
@@ -188,44 +189,41 @@ class UserService extends BaseService
         }
 
         $validator = validator([], []); // Create empty validator
-        if ($userDTO->monthly_target) {
-            foreach ($userDTO->monthly_target as $index => $target) {
-                if ($this->IsAllowMonthlyTarget($target['month'])) {
+        if ($userDTO->period_type == "monthly") {
+            foreach ($userDTO->targets as $index => $target) {
+                // if ($this->IsAllowMonthlyTarget($target['part'], $target['year'])) {
                     $chair->targets()->updateOrCreate([
-                        'period_type' => "monthly",
-                        'year' => now()->year,
-                        'period_number' => $target['month'],
-                        'effective_from' => now()->setMonth((int)$target['month'])->startOfMonth()->format('Y-m-d H:i:s'),
-                        'effective_to' => now()->setMonth((int)$target['month'])->endOfMonth()->format('Y-m-d H:i:s'),
+                        'period_type' => $userDTO->period_type,
+                        'year' => $target['year'],
+                        'period_number' => $target['part'],
+                        'effective_from' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->startOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_to' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->endOfMonth()->format('Y-m-d H:i:s'),
                     ], [
                         'target_value' => $target['amount'],
                     ]);
-                } else {
-                    $monthName = now()->copy()->setMonth((int)$target['month']);
-                    $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
-                }
-            }
-            if ($userDTO->quarterly_target) {
-                $this->TotalMonthlyTargetInQuarter($userDTO->quarterly_target, $chair, $validator);
+                // } else {
+                //     $monthName = now()->copy()->setMonth((int)$target['part']);
+                //     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
+                // }
             }
         }
 
-        if ($userDTO->quarterly_target) {
-            foreach ($userDTO->quarterly_target as $index => $target) {
-                if ($this->IsAllowQuarterlyTarget($target['quarter'])) {
-                    $this->checkIfQuarterlyEqualMonths($target['quarter'], $target['amount'], $userDTO->monthly_target, $validator);
+        if ($userDTO->period_type == "quarterly") {
+            foreach ($userDTO->targets as $index => $target) {
+                // if ($this->IsAllowQuarterlyTarget($target['part'], $target['year'])) {
+                    [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target['year'], $target['part']);
                     $chair->targets()->updateOrCreate([
                         'period_type' => "quarterly",
-                        'year' => now()->year,
-                        'period_number' => $target['quarter'],
-                        'effective_from' => now()->startOfQuarter(),
-                        'effective_to' => now()->endOfQuarter(),
+                        'year' => $target['year'],
+                        'period_number' => $target['part'],
+                        'effective_from' => $startOfQuarter->format('Y-m-d H:i:s'),
+                        'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
                     ], [
                         'target_value' => $target['amount'],
                     ]);
-                } else {
-                    $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $target['quarter']);
-                }
+                // } else {
+                //     $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $target['quarter']);
+                // }
             }
         }
 
@@ -335,7 +333,7 @@ class UserService extends BaseService
         $validator = validator([], []);
         if ($assignToTeamDTO->monthly_target) {
             foreach ($assignToTeamDTO->monthly_target as $index => $target) {
-                if ($this->IsAllowMonthlyTarget($target['month'])) {
+                if ($this->IsAllowMonthlyTarget($target['month'], $target['year'])) {
                     $chair->targets()->create([
                         'period_type' => "monthly",
                         'year' => now()->year,
@@ -357,11 +355,11 @@ class UserService extends BaseService
         if ($assignToTeamDTO->quarterly_target) {
             foreach ($assignToTeamDTO->quarterly_target as $index => $target) {
                 if ($this->IsAllowQuarterlyTarget($target['quarter'])) {
-                    $this->checkIfQuarterlyEqualMonths($target['quarter'], $target['amount'], $assignToTeamDTO->monthly_target, $validator);
+                    // $this->checkIfQuarterlyEqualMonths($target['quarter'], $target['amount'], $assignToTeamDTO->monthly_target, $validator);
                     $chair->targets()->create([
                         'period_type' => "quarterly",
-                        'year' => now()->year,
-                        'period_number' => $target['quarter'],
+                        'year' => $target['year'],
+                        'period_number' => $target['part'],
                         'effective_from' => now()->startOfQuarter(),
                         'effective_to' => now()->endOfQuarter(),
                         'target_value' => $target['amount'],
@@ -393,34 +391,39 @@ class UserService extends BaseService
         }
     }
 
-    public function IsAllowMonthlyTarget($month): bool
+    public function IsAllowMonthlyTarget($month, $year): bool
     {
-        $selectedDate  = now()->copy()->month((int)$month)->startOfMonth();
+        $selectedDate  = now()->copy()->year((int)$year)->month((int)$month)->startOfMonth();
         $minDateAllowed = now()->copy()->startOfMonth();
         return ($selectedDate >= $minDateAllowed);
     }
 
-    public function IsAllowQuarterlyTarget($quarter): bool
+    public function IsAllowQuarterlyTarget($quarter, $year): bool
     {
+        if ($quarter > 4 || $quarter < 1) {
+            throw ValidationException::withMessages([
+                'quarter' => 'Quarter must be between 1 and 4',
+            ]);
+        }
         $endDateOfQuarter = match ((int)$quarter) {
-            1 => now()->copy()->setMonth((int)$quarter * 3)->endOfMonth(),
-            2 => now()->copy()->setMonth((int)$quarter * 3)->endOfMonth(),
-            3 => now()->copy()->setMonth((int)$quarter * 3)->endOfMonth(),
-            4 => now()->copy()->setMonth((int)$quarter * 3)->endOfMonth(),
+            1 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
+            2 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
+            3 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
+            4 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
         };
         $maxDateAllowed  = $endDateOfQuarter;
         return (now() < $maxDateAllowed);
     }
 
-    public function checkIfQuarterlyEqualMonths($quarter, $amount, $monthly_target, $validator): void
+    public function checkIfQuarterlyEqualMonths($quarter, $amount, $target, $validator): void
     {
-        if ($monthly_target) {
-            $monthly_target_amounts = array_column($monthly_target, 'amount', 'month');
+        if ($target) {
+            $target_amounts = array_column($target, 'amount', 'month');
             $amount_of_quarter = match ((int)$quarter) {
-                1 => ($monthly_target_amounts[1] ?? 0) + ($monthly_target_amounts[2] ?? 0) + ($monthly_target_amounts[3] ?? 0),
-                2 => ($monthly_target_amounts[4] ?? 0) + ($monthly_target_amounts[5] ?? 0) + ($monthly_target_amounts[6] ?? 0),
-                3 => ($monthly_target_amounts[7] ?? 0) + ($monthly_target_amounts[8] ?? 0) + ($monthly_target_amounts[9] ?? 0),
-                4 => ($monthly_target_amounts[10] ?? 0) + ($monthly_target_amounts[11] ?? 0) + ($monthly_target_amounts[12] ?? 0),
+                1 => ($target_amounts[1] ?? 0) + ($target_amounts[2] ?? 0) + ($target_amounts[3] ?? 0),
+                2 => ($target_amounts[4] ?? 0) + ($target_amounts[5] ?? 0) + ($target_amounts[6] ?? 0),
+                3 => ($target_amounts[7] ?? 0) + ($target_amounts[8] ?? 0) + ($target_amounts[9] ?? 0),
+                4 => ($target_amounts[10] ?? 0) + ($target_amounts[11] ?? 0) + ($target_amounts[12] ?? 0),
             };
 
             if (($amount_of_quarter !== $amount) && ($amount_of_quarter = 0)) {
@@ -529,6 +532,15 @@ class UserService extends BaseService
                 'required' => false,
                 'type' => 'url'
             ],
+        ];
+    }
+
+    public function getStartAndEndOfQuarter(int $year, int $quarter): array
+    {
+        $month = ($quarter - 1) * 3 + 1;
+        return [
+            now()->copy()->year($year)->month($month)->startOfMonth(),
+            now()->copy()->year($year)->month($month)->addMonths(2)->endOfMonth(),
         ];
     }
 }

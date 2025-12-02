@@ -17,10 +17,9 @@ class ChairResource extends JsonResource
             'started_at' => $this->started_at,
             'user' => UserResource::make($this->whenLoaded('user')),
             'team' => TeamResource::make($this->whenLoaded('team')),
+            'period_type' => $this->whenLoaded('targets')?->first()?->period_type,
             'targets' => ChairTargetResource::collection($this->whenLoaded('targets')),
             'deals' => DealShowResource::collection($this->whenLoaded('deals')),
-            'monthly_targets' => ChairMonthlyTargetResource::collection($this->whenLoaded('monthlyTargets')),
-            'Quarterly_targets' => ChairQuarterlyTargetResource::collection($this->whenLoaded('quarterlyTargets')),
         ];
     }
 }

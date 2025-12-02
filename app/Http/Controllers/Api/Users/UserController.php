@@ -69,7 +69,7 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            $user = $this->userService->getModel()->with(['roles', 'team'])->find($id);
+            $user = $this->userService->getModel()->with(['roles', 'team', 'department', 'activeIndividualChair' => ['targets']])->find($id);
             if (!$user) {
                 return apiResponse(message: trans('app.data not found'), code: 404);
             }
