@@ -6,7 +6,9 @@ use App\DTO\Item\ItemDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Item\ItemStoreRequest;
 use App\Http\Requests\Item\ItemUpdateRequest;
+use App\Http\Resources\ItemDDLResource;
 use App\Http\Resources\ItemResource;
+use App\Http\Resources\Tenant\ItemCategory\ItemCategoryDDLResource;
 use App\Services\Tenant\ItemService;
 use DB;
 use Exception;
@@ -31,7 +33,7 @@ class ItemController extends Controller
 
         if ($request->has('ddl')) {
             $items = $this->itemService->index(filters: $filters, withRelations: []);
-            $data = ItemResource::collection($items);
+            $data = ItemDDLResource::collection($items);
         } else {
             $items = $this->itemService->index(filters: $filters, withRelations: [], perPage: $filters['per_page'] ?? 10);
             $data = ItemResource::collection($items)->response()->getData(true);

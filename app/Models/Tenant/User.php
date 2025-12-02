@@ -37,6 +37,7 @@ class User extends Authenticatable
         'last_login_at',
         'department_id',
         'is_active',
+        'requires_clock',
         'target',
         'target_type',
         'job_title',
@@ -49,6 +50,7 @@ class User extends Authenticatable
         'target' => 'float',
         'last_login_at' => 'date',
         'is_active' => 'boolean',
+        'requires_clock' => 'boolean',
     ];
 
     /**

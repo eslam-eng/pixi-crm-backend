@@ -146,6 +146,7 @@ Route::middleware([
         Route::post('contacts/merge-ignore/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'ignoreById']);
         Route::post('contacts/duplicate/{id}', [\App\Http\Controllers\Api\ContactMergeController::class, 'duplicateById']);
         Route::post('contacts/duplicate', [\App\Http\Controllers\Api\ContactMergeController::class, 'duplicate']);
+        Route::get('contacts/{contact}/details', [\App\Http\Controllers\Api\ContactController::class, 'details']);
         Route::apiResource('contacts', \App\Http\Controllers\Api\ContactController::class);
 
         Route::prefix('item-attributes')->group(function () {
@@ -228,6 +229,10 @@ Route::middleware([
         Route::prefix('core')->group(function () {
             Route::get('/sidebar-counts', [CoreController::class, 'getSidebarCounts']);
             Route::get('/currencies', [CoreController::class, 'getCurrencies']);
+            Route::get('/billing-cycles', [CoreController::class, 'getBillingCycle']);
+            Route::get('/payment-status', [CoreController::class, 'getPaymentStatus']);
+            Route::get('/tasks-status', [CoreController::class, 'getTaskStatus']);
+            Route::get('/services-duration', [CoreController::class, 'getServiceDuration']);
         });
 
         Route::prefix('settings')->group(function () {

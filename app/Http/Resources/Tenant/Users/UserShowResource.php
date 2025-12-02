@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Tenant\Users;
 
+use App\Http\Resources\Tenant\Chairs\ChairResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,12 +17,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class UserShowResource extends JsonResource
 {
-
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
@@ -30,9 +25,20 @@ class UserShowResource extends JsonResource
             'last_name' => $this->last_name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'department_id' => $this->department_id,
+            'department' => $this->whenLoaded('department', function () {
+                return [
+                        'id' => $this->department?->id,
+                        'name' => $this->department?->name
+                ];
+            }),
             'is_active' => $this->is_active,
-            'role' => $this->whenLoaded('roles', fn() => $this->roles->first()?->name),
+            'role' => $this->whenLoaded('roles', function () {
+                return [
+                        'id' => $this->roles->first()?->id,
+                        'name' => $this->roles->first()?->name
+                ];
+            }),
+            'activeIndividualChair' => $this->whenLoaded('activeIndividualChair', new ChairResource($this->activeIndividualChair)),
         ];
     }
 }

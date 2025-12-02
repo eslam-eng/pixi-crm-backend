@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Stage\StageStoreRequest;
 use App\Http\Requests\Stage\StageUpdateRequest;
+use App\Http\Resources\StageDDLResource;
 use App\Http\Resources\StageResource;
 use App\Services\StageService;
 use Exception;
@@ -27,9 +28,16 @@ class StageController extends Controller
             $filters = array_filter($request->get('filters', []), function ($value) {
                 return ($value !== null && $value !== false && $value !== '');
             });
-            $withRelations = ['pipeline'];
-            $pipelines = $this->stageService->index($filters, $withRelations, $perPage, $pipelineId);
-            return ApiResponse(stageResource::collection($pipelines), 'Stages retrieved successfully');
+            if ($request->has('ddl')) {
+                $withRelations = [];
+                $pipelines = $this->stageService->index($filters, $withRelations, $perPage, $pipelineId);
+                $data = StageDDLResource::collection($pipelines);
+            }else{
+                $withRelations = ['pipeline'];
+                $pipelines = $this->stageService->index($filters, $withRelations, $perPage, $pipelineId);
+                $data = StageResource::collection($pipelines)->response()->getData(true);
+            }
+            return ApiResponse($data, 'Stages retrieved successfully');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }

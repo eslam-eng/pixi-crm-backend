@@ -377,7 +377,7 @@ class TeamService extends BaseService
 
             foreach ($memberDTO->targets as $index => $target) {
                 $target = TargetMemberDTO::fromArray($target);
-                if ($this->IsAllowMonthlyTarget($target->part, $target->year)) {
+                // if ($this->IsAllowMonthlyTarget($target->part, $target->year)) {
                     $chair->targets()->create([
                         'period_type' => "monthly",
                         'year' => $target->year,
@@ -386,10 +386,10 @@ class TeamService extends BaseService
                         'effective_to' => now()->copy()->year((int)$target->year)->month((int)$target->part)->endOfMonth()->format('Y-m-d H:i:s'),
                         'target_value' => $target->amount,
                     ]);
-                } else {
-                    $monthName = now()->copy()->year((int)$target->year)->month((int)$target->part);
-                    $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
-                }
+                // } else {
+                //     $monthName = now()->copy()->year((int)$target->year)->month((int)$target->part);
+                //     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
+                // }
             }
         }
 
@@ -423,7 +423,7 @@ class TeamService extends BaseService
 
             foreach ($memberDTO->targets as $index => $target) {
                 $target = TargetMemberDTO::fromArray($target);
-                if ($this->IsAllowQuarterlyTarget($target->part, $target->year, $validator)) {
+                // if ($this->IsAllowQuarterlyTarget($target->part, $target->year, $validator)) {
 
                     [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target->year, $target->part);
                     $chair->targets()->create([
@@ -434,10 +434,10 @@ class TeamService extends BaseService
                         'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
                         'target_value' => $target->amount,
                     ]);
-                } else {
-                    $quarterName = now()->copy()->year((int)$target->year)->setQuarter((int)$target->part);
-                    $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $quarterName->format('F Y'));
-                }
+                // } else {
+                //     $quarterName = now()->copy()->year((int)$target->year)->setQuarter((int)$target->part);
+                //     $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $quarterName->format('F Y'));
+                // }
             }
         }
 

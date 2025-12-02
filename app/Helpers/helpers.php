@@ -81,7 +81,7 @@ if (!function_exists('user_id')) {
 
     function user_id()
     {
-        return  auth('api_tenant')->user()->id;
+        return  auth('api_tenant')->user()?->id;
     }
 }
 

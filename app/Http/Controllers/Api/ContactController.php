@@ -11,6 +11,7 @@ use App\Exports\ContactsExport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contacts\ContactRequest;
+use App\Http\Resources\ContactDDLResource;
 use App\Http\Resources\ContactResource;
 use App\Http\Resources\ContactShowResource;
 use App\Imports\ContactsImport;
@@ -46,11 +47,11 @@ class ContactController extends Controller
             $filters = array_filter($request->all(), function ($value) {
                 return ($value !== null && $value !== false && $value !== '');
             });
-            $withRelations = ['country', 'city', 'user', 'source', 'contactPhones'];
             if ($request->has('ddl')) {
-                $contacts = $this->contactService->index($filters, $withRelations);
-                $data = ContactResource::collection($contacts);
+                $contacts = $this->contactService->index($filters);
+                $data = ContactDDLResource::collection($contacts);
             } else {
+                $withRelations = ['user', 'source', 'contactPhones'];
                 $contacts = $this->contactService->index($filters, $withRelations, $filters['per_page'] ?? 10);
                 $data = ContactResource::collection($contacts)->response()->getData(true);
             }
@@ -214,7 +215,21 @@ class ContactController extends Controller
     public function show(int $contact)
     {
         try {
-            $withRelations = ['country', 'city', 'user', 'source', 'contactPhones'];
+            $withRelations = ['country', 'city', 'user', 'source', 'contactPhones','department'];
+            $contact = $this->contactService->show($contact, $withRelations);
+
+            return ApiResponse(new ContactShowResource($contact), 'Contact retrieved successfully');
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Contact not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function details(int $contact)
+    {
+        try {
+            $withRelations = ['user', 'source', 'contactPhones'];
             $contact = $this->contactService->show($contact, $withRelations);
 
             return ApiResponse(new ContactResource($contact), 'Contact retrieved successfully');

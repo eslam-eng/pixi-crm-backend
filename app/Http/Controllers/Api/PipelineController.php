@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Resources\PipelineCollection;
 use Illuminate\Http\Request;
 use App\DTO\Pipeline\PipelineDTO;
 use App\Services\PipelineService;
@@ -10,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pipeline\PipelineStoreRequest;
 use App\Http\Requests\Pipeline\PipelineUpdateRequest;
+use App\Http\Resources\PipelineDDLResource;
 use App\Http\Resources\PipelineResource;
 use App\Models\Tenant\Pipeline;
 use Exception;
@@ -30,9 +30,16 @@ class PipelineController extends Controller
             $filters = array_filter($request->get('filters', []), function ($value) {
                 return ($value !== null && $value !== false && $value !== '');
             });
-            $withRelations = ['stages'];
-            $pipelines = $this->pipelineService->index($filters, $withRelations, $perPage);
-            return ApiResponse(new PipelineCollection($pipelines), 'Pipelines retrieved successfully');
+            if ($request->has('ddl')) {
+                $withRelations = [];
+                $pipelines = $this->pipelineService->index($filters, $withRelations, $perPage);
+                $data = PipelineDDLResource::collection($pipelines);
+            }else{
+                $withRelations = ['stages'];
+                $pipelines = $this->pipelineService->index($filters, $withRelations, $perPage);
+                $data = PipelineResource::collection($pipelines)->response()->getData(true);
+            }
+            return ApiResponse($data, 'Pipelines retrieved successfully');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }

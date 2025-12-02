@@ -27,7 +27,7 @@ class ContactRequest extends FormRequest
             'contact_phones.*.is_primary' => 'sometimes|boolean',
             'contact_phones.*.enable_whatsapp' => 'sometimes|boolean',
             'job_title' => 'nullable|string|max:255',
-            'department' => 'nullable|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
             'status' => ['nullable', Rule::enum(ContactStatus::class)],
             'source_id' => 'nullable|exists:sources,id',
             'campaign_name' => 'nullable|string|max:255',
