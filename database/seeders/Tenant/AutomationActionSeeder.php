@@ -12,6 +12,9 @@ class AutomationActionSeeder extends Seeder
      */
     public function run(): void
     {
+        // Disable foreign key checks and handle auto-increment
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         $actions = [
             [
                 'id' => 2,
@@ -330,10 +333,33 @@ class AutomationActionSeeder extends Seeder
         ];
 
         foreach ($actions as $action) {
-            AutomationAction::firstOrCreate(
-                ['id' => $action['id']],
-                $action
-            );
+            // Check if record exists by ID
+            $existing = AutomationAction::find($action['id']);
+
+            if ($existing) {
+                // Update existing record without changing the ID
+                $existing->update($action);
+            } else {
+                // Insert new record with explicit ID
+                // We need to temporarily allow explicit ID insertion
+                $model = new AutomationAction();
+                $model->id = $action['id'];
+                $model->key = $action['key'];
+                $model->icon = $action['icon'] ?? null;
+                $model->name = $action['name'];
+                $model->description = $action['description'] ?? null;
+                $model->configs = $action['configs'] ?? null;
+                $model->module_name = $action['module_name'] ?? null;
+                $model->except_trigger_ids = $action['except_trigger_ids'] ?? null;
+                $model->is_active = $action['is_active'] ?? true;
+
+                // Force save with explicit ID
+                $model->exists = false;
+                $model->save();
+            }
         }
+
+        // Re-enable foreign key checks
+        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }
