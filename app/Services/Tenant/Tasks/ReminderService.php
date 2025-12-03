@@ -18,7 +18,8 @@ class ReminderService
 
     public function __construct(
         public Reminder $model,
-    ) {}
+    ) {
+    }
 
     public function getModel(): Reminder
     {
@@ -100,18 +101,22 @@ class ReminderService
     {
         $now = now();
 
-        return Task::whereHas('taskReminders', function ($query) use ( $reminder, $now) {
-                $query->where('is_sent', false)
-                      ->whereNotNull('reminder_at')
-                      ->where('reminder_id', $reminder->id)
-                      ->where('reminder_at', '<=', $now);
-            })
-            ->with(['assignedTo', 'priority', 'taskReminders' => function ($query) use ( $reminder, $now) {
-                $query->where('is_sent', false)
-                      ->whereNotNull('reminder_at')
-                      ->where('reminder_id', $reminder->id)
-                      ->where('reminder_at', '<=', $now);
-            }])
+        return Task::whereHas('taskReminders', function ($query) use ($reminder, $now) {
+            $query->where('is_sent', false)
+                ->whereNotNull('reminder_at')
+                ->where('reminder_id', $reminder->id)
+                ->where('reminder_at', '<=', $now);
+        })
+            ->with([
+                'assignedTo',
+                'priority',
+                'taskReminders' => function ($query) use ($reminder, $now) {
+                    $query->where('is_sent', false)
+                        ->whereNotNull('reminder_at')
+                        ->where('reminder_id', $reminder->id)
+                        ->where('reminder_at', '<=', $now);
+                }
+            ])
             ->get();
     }
 
@@ -241,7 +246,7 @@ class ReminderService
                 ->get();
 
             if ($dueTaskReminders->isEmpty()) {
-                Log::info('No overdue unsent task reminders found.');
+                //No overdue unsent task reminders found.
                 return;
             }
 
