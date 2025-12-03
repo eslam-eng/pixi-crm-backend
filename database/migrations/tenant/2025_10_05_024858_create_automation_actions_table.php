@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->json('configs')->nullable();
             $table->boolean('is_active')->default(true);
             $table->string('module_name')->nullable();
+            $table->json('except_trigger_ids')->nullable();
 
             $table->timestamps();
 
