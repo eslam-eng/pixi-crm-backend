@@ -329,7 +329,17 @@ class LeadService extends BaseService
 
         // Update action times after stage change
         $this->updateActionTimes($lead);
-        //TODO : add Activity Log to save stage change
+
+        activity()
+            ->causedBy(user_id())
+            ->performedOn($lead)
+            ->withProperties([
+                'old_stage' => $lead->stage_id,
+                'new_stage' => $stageId
+            ])
+            ->useLog('lead')
+            ->log('stage_changed');
+
         return $lead;
     }
 
@@ -337,8 +347,8 @@ class LeadService extends BaseService
     {
         $lead = $this->findById($id);
         activity()
-            ->causedBy(Auth::user()) // optional
-            ->performedOn($lead)     // optional model
+            ->causedBy(user_id()) // optional
+            ->performedOn($lead) // optional model
             ->withProperties([
                 'call_notes' => $data->call_notes,
                 'call_direction' => $data->call_direction,

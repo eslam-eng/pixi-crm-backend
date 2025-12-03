@@ -924,7 +924,16 @@ class AutomationWorkflowExecutorService
                     if ($nextStage) {
                         $triggerable->update(['stage_id' => $nextStage->id]);
 
-                        //TODO : add Activity Log to save stage change
+                        activity()
+                            ->causedBy(user_id())
+                            ->performedOn($triggerable)
+                            ->withProperties([
+                                'old_stage' => $triggerable->stage?->id,
+                                'new_stage' => $nextStage->id
+                            ])
+                            ->useLog('lead')
+                            ->log('stage_changed');
+
                         Log::info("Move stage action executed", [
                             'lead_id' => $triggerable->id,
                             'from_stage' => $currentStage->name,

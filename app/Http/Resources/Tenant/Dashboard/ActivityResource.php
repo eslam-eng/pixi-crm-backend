@@ -10,10 +10,10 @@ class ActivityResource extends JsonResource
     {
         return [
             'id' => $this['id'],
-            'description' => __('app.' . $this['description']),
-            'type' => __('app.' . $this['subject_type']),
-            'time' => $this['created_at']->diffForHumans(),
-            'user' => $this['user'] ? $this['user'] : __('app.system'),
+            'description' => __('app.' . $this->description),
+            'type' => __('app.' . $this->subject_type),
+            'time' => $this->created_at->diffForHumans(),
+            'user' => $this->causer ? $this->causer->first_name.' '.$this->causer->last_name : __('app.system'),
         ];
     }
 }

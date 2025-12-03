@@ -392,4 +392,5 @@ return array(
   'system' => 'système',
   'log_call' => 'appel de journalisation',
   'opportunity_activity_added' => 'Activité de possibilité ajoutée',
+  'stage_changed' => 'Etape changée',
 );
