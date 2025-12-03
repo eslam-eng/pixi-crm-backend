@@ -32,16 +32,19 @@ class CoreService extends BaseService
     public function getSidebarCounts(): array
     {
         try {
-            // Get task counts using TaskService
-            $taskStatistics = $this->taskService->getStatistics();
-            
-            // Get opportunity counts
-            $opportunityCounts = $this->getOpportunityCounts();
-            
-            return [
-                'tasks' => $taskStatistics['total_tasks']['value'],
-                'opportunities' => $opportunityCounts
-            ];
+            // Cache for 5 minutes to prevent repeated expensive queries
+            return \Cache::remember('sidebar_counts_' . user_id(), 300, function () {
+                // Get task counts using TaskService
+                $taskStatistics = $this->taskService->getStatistics();
+
+                // Get opportunity counts
+                $opportunityCounts = $this->getOpportunityCounts();
+
+                return [
+                    'tasks' => $taskStatistics['total_tasks']['value'],
+                    'opportunities' => $opportunityCounts
+                ];
+            });
         } catch (Exception $e) {
             throw new Exception('Failed to get sidebar counts: ' . $e->getMessage());
         }
@@ -54,7 +57,7 @@ class CoreService extends BaseService
     {
         try {
             $totalOpportunities = Lead::count();
-        
+
             return $totalOpportunities;
         } catch (Exception $e) {
             throw new Exception('Failed to get opportunity counts: ' . $e->getMessage());

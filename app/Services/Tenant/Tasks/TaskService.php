@@ -16,7 +16,8 @@ class TaskService extends BaseService
 {
     public function __construct(
         public Task $model,
-    ) {}
+    ) {
+    }
 
     public function getModel(): Task
     {
@@ -32,7 +33,7 @@ class TaskService extends BaseService
     {
         // dd($filters);
         return parent::getQuery($filters)
-            ->when(! empty($filters), fn(Builder $builder) => $builder->filter(new TaskFilters($filters)));
+            ->when(!empty($filters), fn(Builder $builder) => $builder->filter(new TaskFilters($filters)));
     }
 
     public function paginate(?array $filters = [], ?array $withRelations = [], int $limit = 10): CursorPaginator
@@ -128,10 +129,10 @@ class TaskService extends BaseService
     {
         // First, detach all existing reminders
         $task->reminders()->detach();
-        
+
         // Then add the new reminders
         $reminders = Reminder::whereIn('id', $reminderIds)->get();
-        
+
         foreach ($reminders as $reminder) {
             $task->addReminder($reminder);
         }
@@ -213,51 +214,51 @@ class TaskService extends BaseService
     {
         $now = now();
         $lastMonth = $now->copy()->subMonth();
-        
-        // Get current counts
-        $totalTasks = $this->model->count();
-        $completedTasks = $this->model->where('status', 'completed')->count();
-        $inProgressTasks = $this->model->where('status', 'in_progress')->count();
-        $overdueTasks = $this->model->where('status', '!=', 'completed')
-            ->where('due_date', '<', $now->toDateString())
-            ->count();
 
-        // Get previous month counts for trend calculation
-        $previousTotalTasks = $this->model->where('created_at', '<=', $lastMonth)->count();
-        $previousCompletedTasks = $this->model->where('status', 'completed')
-            ->where('updated_at', '<=', $lastMonth)
-            ->count();
-        $previousInProgressTasks = $this->model->where('status', 'in_progress')
-            ->where('updated_at', '<=', $lastMonth)
-            ->count();
-        $previousOverdueTasks = $this->model->where('status', '!=', 'completed')
-            ->where('due_date', '<', $lastMonth->toDateString())
-            ->count();
+        // Use single query with conditional aggregation for better performance
+        $stats = \DB::table('tasks')
+            ->selectRaw('
+                COUNT(*) as total_tasks,
+                SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed_tasks,
+                SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END) as in_progress_tasks,
+                SUM(CASE WHEN status != "completed" AND due_date < ? THEN 1 ELSE 0 END) as overdue_tasks,
+                SUM(CASE WHEN created_at <= ? THEN 1 ELSE 0 END) as previous_total_tasks,
+                SUM(CASE WHEN status = "completed" AND updated_at <= ? THEN 1 ELSE 0 END) as previous_completed_tasks,
+                SUM(CASE WHEN status = "in_progress" AND updated_at <= ? THEN 1 ELSE 0 END) as previous_in_progress_tasks,
+                SUM(CASE WHEN status != "completed" AND due_date < ? THEN 1 ELSE 0 END) as previous_overdue_tasks
+            ', [
+                $now->toDateString(),
+                $lastMonth,
+                $lastMonth,
+                $lastMonth,
+                $lastMonth->toDateString()
+            ])
+            ->first();
 
         // Calculate percentage changes
-        $totalTasksChange = $this->calculatePercentageChange($previousTotalTasks, $totalTasks);
-        $completedTasksChange = $this->calculatePercentageChange($previousCompletedTasks, $completedTasks);
-        $inProgressTasksChange = $this->calculatePercentageChange($previousInProgressTasks, $inProgressTasks);
-        $overdueTasksChange = $this->calculatePercentageChange($previousOverdueTasks, $overdueTasks);
+        $totalTasksChange = $this->calculatePercentageChange($stats->previous_total_tasks, $stats->total_tasks);
+        $completedTasksChange = $this->calculatePercentageChange($stats->previous_completed_tasks, $stats->completed_tasks);
+        $inProgressTasksChange = $this->calculatePercentageChange($stats->previous_in_progress_tasks, $stats->in_progress_tasks);
+        $overdueTasksChange = $this->calculatePercentageChange($stats->previous_overdue_tasks, $stats->overdue_tasks);
 
         return [
             'total_tasks' => [
-                'value' => $totalTasks,
+                'value' => $stats->total_tasks,
                 'change_percentage' => $totalTasksChange,
                 'trend' => $totalTasksChange >= 0 ? 'up' : 'down'
             ],
             'completed' => [
-                'value' => $completedTasks,
+                'value' => $stats->completed_tasks,
                 'change_percentage' => $completedTasksChange,
                 'trend' => $completedTasksChange >= 0 ? 'up' : 'down'
             ],
             'in_progress' => [
-                'value' => $inProgressTasks,
+                'value' => $stats->in_progress_tasks,
                 'change_percentage' => $inProgressTasksChange,
                 'trend' => $inProgressTasksChange >= 0 ? 'up' : 'down'
             ],
             'overdue' => [
-                'value' => $overdueTasks,
+                'value' => $stats->overdue_tasks,
                 'change_percentage' => $overdueTasksChange,
                 'trend' => $overdueTasksChange >= 0 ? 'up' : 'down'
             ]
@@ -272,7 +273,7 @@ class TaskService extends BaseService
         if ($oldValue == 0) {
             return $newValue > 0 ? 100 : 0;
         }
-        
+
         return round((($newValue - $oldValue) / $oldValue) * 100, 1);
     }
 }
