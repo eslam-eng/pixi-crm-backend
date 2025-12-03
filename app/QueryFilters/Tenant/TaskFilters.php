@@ -259,7 +259,7 @@ class TaskFilters extends QueryFilter
 
     public function user_id($term)
     {
-    
+
         return $this->builder->where('assigned_to_id', $term);
     }
 
@@ -273,5 +273,23 @@ class TaskFilters extends QueryFilter
         return $this->builder->whereHas('assignedTo', function ($query) use ($term) {
             $query->where('team_id', $term);
         });
+    }
+
+    /**
+     * Filter by contact through lead relationship
+     */
+    public function contact_id($term)
+    {
+        return $this->builder->whereHas('lead', function ($query) use ($term) {
+            $query->where('contact_id', $term);
+        });
+    }
+
+    /**
+     * Filter by task type ID
+     */
+    public function task_type_id($term)
+    {
+        return $this->builder->where('task_type_id', $term);
     }
 }

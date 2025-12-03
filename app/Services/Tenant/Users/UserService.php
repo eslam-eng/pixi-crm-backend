@@ -260,7 +260,7 @@ class UserService extends BaseService
         if (!$user->activeChair()->exists()) {
             throw ValidationException::withMessages([
                 'user' => 'User does not have a target',
-            ], 400);
+            ]);
         }
         $chair = $user->activeChair()->first();
         return $chair->targets()->get();
@@ -353,7 +353,7 @@ class UserService extends BaseService
 
         if ($assignToTeamDTO->quarterly_target) {
             foreach ($assignToTeamDTO->quarterly_target as $index => $target) {
-                if ($this->IsAllowQuarterlyTarget($target['quarter'])) {
+                if ($this->IsAllowQuarterlyTarget($target['quarter'], $target['year'])) {
                     // $this->checkIfQuarterlyEqualMonths($target['quarter'], $target['amount'], $assignToTeamDTO->monthly_target, $validator);
                     $chair->targets()->create([
                         'period_type' => "quarterly",

@@ -7,6 +7,7 @@ use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Tasks\TaskRequest;
 use App\Http\Requests\Tenant\Tasks\TaskChangeStatusRequest;
+use App\Http\Requests\Tenant\Tasks\TaskCalendarRequest;
 use App\Http\Resources\Tenant\Tasks\TaskResource;
 use App\Http\Resources\Tenant\Tasks\TaskShowResource;
 use App\Services\Tenant\Tasks\TaskService;
@@ -16,7 +17,9 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function __construct(public TaskService $taskService) {}
+    public function __construct(public TaskService $taskService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -24,15 +27,15 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         try {
-    
+
             $filters = array_filter($request->all(), function ($value) {
                 return ($value !== null && $value !== false && $value !== '');
             });
-            $withRelations = [  'assignedTo.roles', 'priority.color'];
-            $tasks = $this->taskService->paginate(filters: $filters,withRelations: $withRelations, limit: per_page());
+            $withRelations = ['assignedTo.roles', 'priority.color'];
+            $tasks = $this->taskService->paginate(filters: $filters, withRelations: $withRelations, limit: per_page());
 
-            $data =  TaskResource::collection($tasks)->response()->getData(true);
-            return apiResponse( $data, trans('app.data displayed successfully'));
+            $data = TaskResource::collection($tasks)->response()->getData(true);
+            return apiResponse($data, trans('app.data displayed successfully'));
         } catch (Exception $e) {
             return apiResponse(message: $e->getMessage(), code: 500);
         }
@@ -144,5 +147,41 @@ class TaskController extends Controller
         }
     }
 
- 
+    /**
+     * Get tasks for calendar view
+     */
+    public function calendar(TaskCalendarRequest $request)
+    {
+        try {
+            $filters = $request->validated();
+
+            // Build date filters based on calendar_type
+            if ($filters['calendar_type'] === 'month') {
+                $year = $filters['year'];
+                $month = str_pad($filters['month'], 2, '0', STR_PAD_LEFT);
+                $startDate = "$year-$month-01";
+                $endDate = date('Y-m-t', strtotime($startDate));
+                $filters['due_date_range'] = ['start' => $startDate, 'end' => $endDate];
+                unset($filters['month'], $filters['year']);
+            }
+            // For week, due_date_range is already set
+
+            unset($filters['calendar_type']);
+
+            // Remove null/empty values
+            $filters = array_filter($filters, function ($value) {
+                return ($value !== null && $value !== false && $value !== '');
+            });
+
+            $withRelations = ['assignedTo.roles', 'priority.color', 'taskType', 'lead.contact'];
+            $tasks = $this->taskService->getAll(filters: $filters, withRelations: $withRelations);
+
+            $data = TaskResource::collection($tasks);
+            return apiResponse($data, trans('app.data displayed successfully'));
+        } catch (Exception $e) {
+            return apiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+
 }

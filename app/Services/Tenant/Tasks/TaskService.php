@@ -23,9 +23,9 @@ class TaskService extends BaseService
         return $this->model;
     }
 
-    public function getAll(array $filters = [])
+    public function getAll(array $filters = [], ?array $withRelations = [])
     {
-        return $this->getQuery($filters)->get();
+        return $this->getQuery($filters)->with($withRelations)->get();
     }
 
     public function getQuery(?array $filters = []): ?Builder

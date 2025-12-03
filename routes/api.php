@@ -203,6 +203,7 @@ Route::middleware([
         Route::apiResource('tasks', TaskController::class);
         Route::get('/tasks/get/statistics', [TaskController::class, 'statistics']);
         Route::post('/tasks/{id}/change-status', [TaskController::class, 'changeStatus']);
+        Route::get('/calendar', [TaskController::class, 'calendar']);
 
         // Deals routes
         Route::apiResource('deals', DealController::class);
