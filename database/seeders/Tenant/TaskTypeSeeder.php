@@ -15,13 +15,13 @@ class TaskTypeSeeder extends Seeder
         $now = now();
 
         $types = [
-            ['name' => 'Call', 'icon' => 'phone', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Call', 'icon' => 'phone', 'created_at' => $now, 'updated_at' => $now, 'is_default' => 0],
             ['name' => 'Meeting', 'icon' => null, 'created_at' => $now, 'updated_at' => $now, 'is_default' => 1],
-            ['name' => 'Email', 'icon' => 'mail', 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Follow-up', 'icon' => null, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Presentation', 'icon' => null, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Demo', 'icon' => null, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Other', 'icon' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Email', 'icon' => 'mail', 'created_at' => $now, 'updated_at' => $now, 'is_default' => 0],
+            ['name' => 'Follow-up', 'icon' => null, 'created_at' => $now, 'updated_at' => $now, 'is_default' => 0],
+            ['name' => 'Presentation', 'icon' => null, 'created_at' => $now, 'updated_at' => $now, 'is_default' => 0],
+            ['name' => 'Demo', 'icon' => null, 'created_at' => $now, 'updated_at' => $now, 'is_default' => 0],
+            ['name' => 'Other', 'icon' => null, 'created_at' => $now, 'updated_at' => $now, 'is_default' => 0],
         ];
 
         DB::table('task_types')->upsert(
