@@ -129,7 +129,8 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Créer une tâche d\'intégration',
                     'es' => 'Crear tarea de incorporación'
                 ],
-                'description' => 'Kick off handover to Success/Implementation team'
+                'description' => 'Kick off handover to Success/Implementation team',
+                'except_trigger_ids' => json_encode([13])
             ],
             [
                 'id' => 14,
@@ -169,18 +170,19 @@ class AutomationActionSeeder extends Seeder
                 'description' => 'Move opportunity to Qualification stage',
                 'module_name' => 'opportunity'
             ],
-            [
-                'id' => 20,
-                'key' => 'create_contact',
-                'icon' => 'user-plus',
-                'name' => [
-                    'ar' => 'إنشاء جهة اتصال',
-                    'en' => 'Create Contact',
-                    'fr' => 'Créer contact',
-                    'es' => 'Crear contacto'
-                ],
-                'description' => 'Create contact'
-            ],
+            // [
+            //     'id' => 20,
+            //     'key' => 'create_contact',
+            //     'icon' => 'user-plus',
+            //     'name' => [
+            //         'ar' => 'إنشاء جهة اتصال',
+            //         'en' => 'Create Contact',
+            //         'fr' => 'Créer contact',
+            //         'es' => 'Crear contacto'
+            //     ],
+            //     'description' => 'Create contact',
+            // 'except_trigger_ids' => json_encode([1])
+            // ],
             [
                 'id' => 21,
                 'key' => 'notify_admin',

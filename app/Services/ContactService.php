@@ -73,9 +73,6 @@ class ContactService extends BaseService
         foreach ($admins as $admin) {
             $admin->notify(new CreateNewContactNotification($contact));
         }
-        
-        \Log::info("Contact created: {$contact->name}");
-        
         $contact->load('country', 'city', 'user', 'source', 'contactPhones');
         return $contact;
     }

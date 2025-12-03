@@ -31,6 +31,10 @@ use App\Services\ContactService;
 use App\Services\LeadService;
 use App\Services\PipelineService;
 use App\Services\Tenant\TemplateService;
+use App\Services\Tenant\Tasks\TaskService;
+use App\DTO\Tenant\TaskDTO;
+use App\Models\Tenant\Priority;
+use App\Models\Tenant\TaskType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -43,18 +47,22 @@ class AutomationWorkflowExecutorService
     public PipelineService $pipelineService;
     public ContactService $contactService;
     public TemplateService $templateService;
+    public TaskService $taskService;
+
     public function __construct(
         LeadService $opportunityService,
         ConditionService $conditionService,
         PipelineService $pipelineService,
         ContactService $contactService,
-        TemplateService $templateService
+        TemplateService $templateService,
+        TaskService $taskService
     ) {
         $this->opportunityService = $opportunityService;
         $this->conditionService = $conditionService;
         $this->pipelineService = $pipelineService;
         $this->contactService = $contactService;
         $this->templateService = $templateService;
+        $this->taskService = $taskService;
     }
 
     // /**
@@ -733,8 +741,8 @@ class AutomationWorkflowExecutorService
                 return $this->executeEscalateTaskAction($triggerable, $contextData);
 
             // Task Actions
-            case AutomationActionsEnum::CREATE_ONBOARDING_TASK->value: //Inprogress
-                return $this->executeCreateOnboardingTaskAction($triggerable, $contextData);
+            case AutomationActionsEnum::CREATE_ONBOARDING_TASK->value:   //Done
+                return $this->executeCreateOnboardingTaskAction($triggerable, $stepData);
 
             // Notification Actions
             case AutomationActionsEnum::NOTIFY_ADMIN->value://Done
@@ -749,8 +757,8 @@ class AutomationWorkflowExecutorService
                 return $this->executeSendReminderAction($triggerable, $stepData);
 
             // Complex Actions
-            case 'create_contact':
-                return $this->executeCreateContactAction($triggerable, $contextData, $stepData);
+            // case 'create_contact':
+            //     return $this->executeCreateContactAction($triggerable, $contextData, $stepData);
 
             case AutomationActionsEnum::CREATE_OPPORTUNITY->value://Done
                 return $this->executeCreateOpportunityAction($triggerable, $contextData);
@@ -948,10 +956,57 @@ class AutomationWorkflowExecutorService
     private function executeEscalateAction(Model $triggerable, array $contextData): bool
     {
         try {
-            // Notify manager or reassign
+            // 1. Identify the user associated with the triggerable
+            $userId = $this->getAssignedUserIdFromTriggerable($triggerable);
+            if (!$userId) {
+                Log::warning("Could not identify user for escalate action", [
+                    'triggerable_type' => get_class($triggerable),
+                    'triggerable_id' => $triggerable->id
+                ]);
+                return false;
+            }
+
+            $user = User::with('team')->find($userId);
+            if (!$user) {
+                Log::warning("User not found for escalate action", ['user_id' => $userId]);
+                return false;
+            }
+
+            // 2. Find the manager (Team Leader)
+            $managerId = null;
+            if ($user->team && $user->team->leader_id) {
+                $managerId = $user->team->leader_id;
+            } else {
+                $managerId = $user->id;
+            }
+
+            if (!$managerId) {
+                Log::info("No manager found for user", ['user_id' => $user->id]);
+                return true;
+            }
+
+            $manager = User::find($managerId);
+            if (!$manager) {
+                Log::warning("Manager user not found", ['manager_id' => $managerId]);
+                return false;
+            }
+
+            // 3. Send Notification
+            $message = "ESCALATION: Action happened for " . (get_class($triggerable) ?? 'item with id '.$triggerable->id);
+            $manager->notify(new AutomationManagerNotification($manager, $message, $triggerable));
+
+            // 4. Update Priority if applicable
+            // if ($triggerable instanceof Task || $triggerable instanceof Lead) {
+            //     $highPriority = Priority::where('name', 'High')->first();
+            //     if ($highPriority) {
+            //         $triggerable->update(['priority_id' => $highPriority->id]);
+            //     }
+            // }
+
             Log::info("Escalate action executed", [
                 'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
+                'triggerable_id' => $triggerable->id,
+                'manager_id' => $manager->id
             ]);
             return true;
         } catch (\Exception $e) {
@@ -1078,10 +1133,24 @@ class AutomationWorkflowExecutorService
     private function executeEscalateTaskAction(Model $triggerable, array $contextData): bool
     {
         try {
-            // Notify team lead or reassign task
+            if (!($triggerable instanceof Task)) {
+                Log::warning("Escalate task action skipped: Triggerable is not a Task", [
+                    'triggerable_type' => get_class($triggerable)
+                ]);
+                return false;
+            }
+
+            // 1. Set Priority to Urgent
+            $urgentPriority = Priority::where('name', 'Urgent')->first();
+            if ($urgentPriority) {
+                $triggerable->update(['priority_id' => $urgentPriority->id]);
+            }
+
+            // 2. Notify Manager (reuse logic or call executeNotifyManagerAction with specific message)
+            $this->executeNotifyManagerAction($triggerable, ['message' => 'TASK ESCALATION: Urgent attention required']);
+
             Log::info("Escalate task action executed", [
-                'triggerable_type' => get_class($triggerable),
-                'triggerable_id' => $triggerable->id
+                'task_id' => $triggerable->id
             ]);
             return true;
         } catch (\Exception $e) {
@@ -1093,10 +1162,39 @@ class AutomationWorkflowExecutorService
     /**
      * Execute create onboarding task action
      */
-    private function executeCreateOnboardingTaskAction(Model $triggerable, array $contextData): bool
+    private function executeCreateOnboardingTaskAction(Model $triggerable, array $stepData): bool
     {
         try {
-            // Kick off handover to Success/Implementation team
+            $taskType = TaskType::where('is_default', 1)->first();
+            $priority = Priority::where('is_default', 1)->first();
+
+            // Determine assignee
+            $assignedToId = $this->getAssignedUserIdFromTriggerable($triggerable);
+            if (!$assignedToId) {
+                $assignedToId = auth()->id() ?? User::first()->id; // Fallback
+            }
+
+            $leadId = null;
+            if ($triggerable instanceof Lead) {
+                $leadId = $triggerable->id;
+            } elseif ($triggerable instanceof Task) {
+                $leadId = $triggerable->lead_id;
+            }
+
+            $taskDTO = TaskDTO::fromArray([
+                'title' => $taskType->name." - Onboarding: New Client",
+                'description' => "Onboarding task generated by automation for " . get_class($triggerable),
+                'task_type_id' => $taskType?->id,
+                'status' => TaskStatusEnum::PENDING->value,
+                'priority_id' => $priority?->id,
+                'due_date' => now()->addDays(3)->format('Y-m-d'),
+                'due_time' => '09:00',
+                'assigned_to_id' => $assignedToId,
+                'lead_id' => $leadId,
+            ]);
+
+            $this->taskService->store($taskDTO);
+
             Log::info("Create onboarding task action executed", [
                 'triggerable_type' => get_class($triggerable),
                 'triggerable_id' => $triggerable->id
@@ -1241,18 +1339,11 @@ class AutomationWorkflowExecutorService
     {
         try {
             // Extract data from stepData or triggerable
-            $name = $stepData['name'] ?? $triggerable->name ?? '';
             $firstName = $stepData['first_name'] ?? $triggerable->first_name ?? '';
             $lastName = $stepData['last_name'] ?? $triggerable->last_name ?? '';
             $email = $stepData['email'] ?? $triggerable->email ?? null;
             $phone = $stepData['phone'] ?? $triggerable->phone ?? null;
-            
-            // Handle name splitting if first/last name not provided
-            if (empty($firstName) && !empty($name)) {
-                $parts = explode(' ', $name, 2);
-                $firstName = $parts[0];
-                $lastName = $parts[1] ?? '';
-            }
+
 
             // Prepare contact phones
             $contactPhones = [];
@@ -1270,13 +1361,6 @@ class AutomationWorkflowExecutorService
                 'last_name' => $lastName,
                 'email' => $email,
                 'contact_phones' => $contactPhones,
-                'address' => $stepData['address'] ?? $triggerable->address ?? null,
-                'city' => $stepData['city'] ?? $triggerable->city ?? null,
-                'state' => $stepData['state'] ?? $triggerable->state ?? null,
-                'zip_code' => $stepData['zip'] ?? $triggerable->zip ?? null,
-                'country' => $stepData['country'] ?? $triggerable->country ?? null,
-                'contactable_id' => $triggerable->id,
-                'contactable_type' => get_class($triggerable),
             ]);
             $this->contactService->store($contactDTO);
             Log::info("Automation:Create contact  action executed", [

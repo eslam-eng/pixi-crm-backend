@@ -16,7 +16,7 @@ class TaskTypeSeeder extends Seeder
 
         $types = [
             ['name' => 'Call', 'icon' => 'phone', 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Meeting', 'icon' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Meeting', 'icon' => null, 'created_at' => $now, 'updated_at' => $now, 'is_default' => 1],
             ['name' => 'Email', 'icon' => 'mail', 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Follow-up', 'icon' => null, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Presentation', 'icon' => null, 'created_at' => $now, 'updated_at' => $now],
@@ -27,7 +27,7 @@ class TaskTypeSeeder extends Seeder
         DB::table('task_types')->upsert(
             $types,
             ['name'],                 // unique-by
-            ['icon', 'updated_at']     // columns to update on conflict
+            ['icon', 'updated_at', 'is_default']     // columns to update on conflict
         );
     }
 }

@@ -228,6 +228,7 @@ Route::middleware([
         // Core routes
         Route::prefix('core')->group(function () {
             Route::get('/sidebar-counts', [CoreController::class, 'getSidebarCounts']);
+            Route::get('/templates', [CoreController::class, 'templates']);
             Route::get('/currencies', [CoreController::class, 'getCurrencies']);
             Route::get('/billing-cycles', [CoreController::class, 'getBillingCycle']);
             Route::get('/payment-status', [CoreController::class, 'getPaymentStatus']);

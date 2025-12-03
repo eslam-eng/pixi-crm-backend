@@ -4,15 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::table('automation_workflow_steps', function (Blueprint $table) {
-            //
+        Schema::table('automation_actions', function (Blueprint $table) {
+            $table->json('except_trigger_ids')->nullable();
         });
     }
 
@@ -21,8 +20,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('automation_workflow_steps', function (Blueprint $table) {
-            //
+        Schema::table('contacts', function (Blueprint $table) {
+            $table->dropColumn('external_lead_id');
         });
     }
 };

@@ -11,9 +11,9 @@ class AutomationActionService
      * Get all active automation actions for dropdown
      * Filters by module_name if provided (returns actions with null module_name OR matching module_name)
      */
-    public function getDropdownOptions(?string $moduleName = null): Collection
+    public function getDropdownOptions(?string $moduleName = null, ?int $except_trigger_id = null): Collection
     {
-        return AutomationAction::getDropdownOptions($moduleName);
+        return AutomationAction::getDropdownOptions($moduleName, $except_trigger_id);
     }
 
     /**

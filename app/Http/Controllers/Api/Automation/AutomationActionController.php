@@ -23,7 +23,8 @@ class AutomationActionController extends Controller
     public function index(Request $request): JsonResponse
     {
         $moduleName = $request->input('module_name');
-        $actions = $this->automationActionService->getDropdownOptions($moduleName);
+        $except_trigger_id = $request->input('except_trigger_id');
+        $actions = $this->automationActionService->getDropdownOptions($moduleName, $except_trigger_id);
 
         return apiResponse(
             data: AutomationActionResource::collection($actions),
