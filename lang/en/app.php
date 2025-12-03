@@ -399,4 +399,5 @@ return array(
   'system' => 'System',
   'log_call' => 'Log Call',
   'opportunity_activity_added' => 'Opportunity activity added',
+  'stage_changed' => 'Stage changed',
 );

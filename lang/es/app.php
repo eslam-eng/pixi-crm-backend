@@ -392,4 +392,5 @@ return array(
   'system' => 'Sistema',
   'log_call' => 'Registrar llamada',
   'opportunity_activity_added' => 'Actividad de oportunidad agregada',
+  'stage_changed' => 'Etapa cambiada',
 );
