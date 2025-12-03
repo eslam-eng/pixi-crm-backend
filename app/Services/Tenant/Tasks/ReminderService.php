@@ -203,24 +203,14 @@ class ReminderService
         // 2) Then process near-future window similarly to previous behavior (next 60 minutes)
         $now = now();
         $nextHour = $now->copy()->addHour();
-
-        Log::info("Processing upcoming reminders from {$now} to {$nextHour}");
-
         $reminders = $this->getRemindersForTimeRange($now, $nextHour);
-
-        Log::info("Found " . count($reminders) . " applicable reminder definitions");
 
         foreach ($reminders as $reminder) {
             $tasks = $this->getTasksForReminder($reminder);
-
-            Log::info("Found " . count($tasks) . " tasks for reminder: {$reminder->display_name}");
-
             foreach ($tasks as $task) {
                 $this->sendReminderNotification($task, $reminder);
             }
         }
-
-        Log::info("Finished processing reminders");
     }
 
     /**
