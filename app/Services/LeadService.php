@@ -6,7 +6,9 @@ use App\DTO\Tenant\LeadDTO;
 use App\DTO\Tenant\LeadItemDTO;
 use App\DTO\Tenant\LogCallDTO;
 use App\DTO\Tenant\Opportunity\ActivityLogDTO;
+use App\DTO\Tenant\Opportunity\SendOpportunityItemsDTO;
 use App\Enums\OpportunityStatus;
+use App\Mail\OpportunityItemsMail;
 use App\QueryFilters\LeadFilters;
 use Illuminate\Database\Eloquent\Builder;
 use App\Exceptions\GeneralException;
@@ -366,5 +368,28 @@ class LeadService extends BaseService
             ->withProperties($dto->toArray())
             ->useLog('lead')
             ->log('opportunity_activity_added');
+    }
+
+    public function sendItems(int $id, SendOpportunityItemsDTO $dto): void
+    {
+        $lead = $this->findById($id);
+
+        // Get all items associated with the lead
+        $items = $lead->items()->get();
+
+        if ($dto->channel === 'email') {
+            if (!$lead->contact || !$lead->contact->email) {
+                throw new GeneralException('Contact email is missing.');
+            }
+
+            \Mail::to($lead->contact->email)->send(new OpportunityItemsMail($lead, $items, $dto->selected_item_columns, $dto->subject));
+        } elseif ($dto->channel === 'whatsapp') {
+            if (!$lead->contact || !$lead->contact->phone) {
+                throw new GeneralException('Contact phone is missing.');
+            }
+            // Logic for WhatsApp integration would go here
+            // For now, we can log it or throw a not implemented exception if no provider is set up
+            // This is a placeholder for the actual WhatsApp sending logic
+        }
     }
 }

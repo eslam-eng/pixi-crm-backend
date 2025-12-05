@@ -16,9 +16,10 @@ class ActivationCodeDTO extends BaseDTO
         public int $count = 1,     // Number of codes to generate
         public int $parts = 2,        // Number of parts per code
         public int $partLength = 3,   // Length of each part
-        public string $status = ActivationCodeStatusEnum::AVAILABLE->value,
+        public ActivationCodeStatusEnum $status = ActivationCodeStatusEnum::AVAILABLE,
         public ?string $expire_at = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): static
     {
@@ -29,7 +30,7 @@ class ActivationCodeDTO extends BaseDTO
             count: Arr::get($data, 'count', 1),
             parts: Arr::get($data, 'parts', 2),
             partLength: Arr::get($data, 'part_length', 3),
-            status: Arr::get($data, 'status', true),
+            status: isset($data['status']) ? ActivationCodeStatusEnum::from($data['status']) : ActivationCodeStatusEnum::AVAILABLE,
             expire_at: Arr::get($data, 'expire_at'),
         );
     }
@@ -43,7 +44,7 @@ class ActivationCodeDTO extends BaseDTO
             count: $request->count ?? 1,
             parts: $request->parts ?? 2,
             partLength: $request->part_length ?? 3,
-            status: $request->status,
+            status: isset($request->status) ? ActivationCodeStatusEnum::from($request->status) : ActivationCodeStatusEnum::AVAILABLE,
             expire_at: $request->expire_at,
         );
     }
@@ -54,7 +55,7 @@ class ActivationCodeDTO extends BaseDTO
             'plan_id' => $this->planId,
             'source_id' => $this->source_id,
             'validity_days' => $this->validityDays,
-            'status' => $this->status ?? ActivationCodeStatusEnum::AVAILABLE->value,
+            'status' => $this->status->value,
             'expire_at' => $this->expire_at,
         ];
     }

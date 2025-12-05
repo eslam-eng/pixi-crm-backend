@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\DTO\Tenant\LeadDTO;
 use App\DTO\Tenant\LogCallDTO;
 use App\DTO\Tenant\Opportunity\ActivityLogDTO;
+use App\DTO\Tenant\Opportunity\SendOpportunityItemsDTO;
 use App\Enums\OpportunityStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Lead\LogCallRequest;
 use App\Http\Requests\Tenant\Opportunity\ActivityLogReuest;
 use App\Http\Requests\Tenant\Opportunity\OpportunityRequest;
+use App\Http\Requests\Tenant\Opportunity\SendOpportunityItemsRequest;
 use App\Http\Requests\Tenant\Opportunity\StatusRequest;
 use App\Http\Resources\AuditOpportunityResource;
 use App\Http\Resources\Opportunity\OpportunityResource;
@@ -136,7 +138,7 @@ class OpportunityController extends Controller
                 'stage_id' => 'required|exists:stages,id',
             ]);
             $opportunity = $this->leadService->changeStage($opportunity, $validated['stage_id']);
-            
+
             DB::commit();
             return ApiResponse(message: 'Opportunity stage changed successfully', code: 200, data: new OpportunityResource($opportunity));
         } catch (ModelNotFoundException $e) {
@@ -194,6 +196,19 @@ class OpportunityController extends Controller
             $data = ActivityLogDTO::fromRequest($request);
             $this->leadService->addActivityLog($opportunityId, $data);
             return ApiResponse(message: 'Activity log added successfully', code: 200);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function sendItemData(int $opportunityId, SendOpportunityItemsRequest $request)
+    {
+        try {
+            $dto = SendOpportunityItemsDTO::fromRequest($request);
+            $this->leadService->sendItems($opportunityId, $dto);
+            return ApiResponse(message: 'Items sent successfully via ' . $dto->channel, code: 200);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {

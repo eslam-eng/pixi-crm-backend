@@ -25,8 +25,8 @@ trait HasTenantMedia
     }
 
     /**
-    * Convert original to WebP after upload
-    */
+     * Convert original to WebP after upload
+     */
     public function registerMediaConversions(Media $media = null): void
     {
         // Only convert images, not documents
@@ -53,7 +53,7 @@ trait HasTenantMedia
     public function getTenantMediaUrl(string $collectionName = 'default', string $conversionName = ''): ?string
     {
         $media = $this->getFirstMedia($collectionName);
-        
+
         if (!$media) {
             return null;
         }
@@ -65,7 +65,8 @@ trait HasTenantMedia
         }
 
         // Extract relative path from full system path
-        if (preg_match('/storage\/(tenant[^\/]+)\/app\/public\/(.+)$/', $path, $matches)) {
+        // Matches storage/tenant{id}/app/public/... OR storage/{id}/app/public/...
+        if (preg_match('/storage\/(?:tenant)?([^\/]+)\/app\/public\/(.+)$/', $path, $matches)) {
             return url("/storage/{$matches[1]}/{$matches[2]}");
         }
 
@@ -91,7 +92,7 @@ trait HasTenantMedia
 
     protected function extractCorrectUrl(string $path): string
     {
-        if (preg_match('/storage\/(tenant[^\/]+)\/app\/public\/(.+)$/', $path, $matches)) {
+        if (preg_match('/storage\/(?:tenant)?([^\/]+)\/app\/public\/(.+)$/', $path, $matches)) {
             return url("/storage/{$matches[1]}/{$matches[2]}");
         }
         return $path;

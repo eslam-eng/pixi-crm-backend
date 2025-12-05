@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Integrations\{
     IntegratedFormController
 };
 use App\Http\Controllers\Api\IntegrationController;
+use App\Http\Controllers\Api\OpportunityController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Central\Api\AdminAuthController;
 use App\Http\Controllers\Api\AuthController;
@@ -52,6 +53,7 @@ use App\Http\Controllers\Central\Api\CountryCodeController;
 use App\Http\Controllers\Central\Api\CurrencyController;
 use App\Http\Controllers\Central\Api\DiscountCodeController;
 use App\Http\Controllers\Central\Api\FeatureController;
+use App\Http\Controllers\Central\Api\CoreLandlordController;
 use App\Http\Controllers\Central\Api\LocaleController;
 use App\Http\Controllers\Central\Api\PayoutSourceController;
 use App\Http\Controllers\Central\Api\PlanController;
@@ -112,6 +114,9 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::apiResource('discount-codes', DiscountCodeController::class);
 
             Route::apiResource('sources', SourceController::class);
+        });
+        Route::group(['prefix' => 'core'], function () {
+            Route::get('plans', [CoreLandlordController::class, 'index']);
         });
     });
 }
@@ -384,14 +389,15 @@ Route::middleware([
             Route::get('/top-performing-sales-reps', [DashboardController::class, 'getTopPerformingSalesReps']); // still working on it
         });
 
-        Route::get('/opportunities/kanban-list', [\App\Http\Controllers\Api\OpportunityController::class, 'kanbanList']);
-        Route::get('/opportunities/statistics', [\App\Http\Controllers\Api\OpportunityController::class, 'statistics']);
-        Route::patch('opportunities/{opportunity}/change-stage', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStage']);
-        Route::patch('opportunities/{opportunity}/change-status', [\App\Http\Controllers\Api\OpportunityController::class, 'changeStatus']);
-        Route::get('opportunities/{opportunity}/activities-list', [\App\Http\Controllers\Api\OpportunityController::class, 'getActivitiesList']);
-        Route::post('opportunities/{opportunity}/log-call', [\App\Http\Controllers\Api\OpportunityController::class, 'logCall']);
-        Route::post('opportunities/{opportunity}/add-activity-log', [\App\Http\Controllers\Api\OpportunityController::class, 'AddActivityLog']);
-        Route::apiResource('opportunities', \App\Http\Controllers\Api\OpportunityController::class);
+        Route::get('/opportunities/kanban-list',[ OpportunityController::class, 'kanbanList']);
+        Route::get('/opportunities/statistics',[  OpportunityController::class, 'statistics']);
+        Route::patch('opportunities/{opportunity}/change-stage', [ OpportunityController::class, 'changeStage']);
+        Route::patch('opportunities/{opportunity}/change-status', [ OpportunityController::class, 'changeStatus']);
+        Route::get('opportunities/{opportunity}/activities-list',[  OpportunityController::class, 'getActivitiesList']);
+        Route::post('opportunities/{opportunity}/log-call', [ OpportunityController::class, 'logCall']);
+        Route::post('opportunities/{opportunity}/add-activity-log',[  OpportunityController::class, 'AddActivityLog']);
+        Route::post('opportunities/{opportunity}/send-item-data', [ OpportunityController::class, 'sendItemData']);
+        Route::apiResource('opportunities', OpportunityController::class);
 
         Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);
         Route::post('teams/team-bulk-assign', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkAssign']);

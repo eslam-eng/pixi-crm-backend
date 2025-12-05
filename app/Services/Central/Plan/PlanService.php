@@ -44,7 +44,7 @@ class PlanService extends BaseService
         return $this->getQuery(filters: $filters, withRelation: $withRelation)
             ->orderBy('id')
             ->orderBy('sort_order')
-            ->paginate();
+            ->paginate(per_page());
     }
 
     public function activePlans(array $filters = [], array $withRelation = [])
@@ -93,7 +93,7 @@ class PlanService extends BaseService
             $plan->update($planData);
 
             $allFeaturesToAttach = $this->prepareFeaturesAndLimits($planDTO);
-            
+
             $plan->features()->sync($allFeaturesToAttach);
 
             return $plan;
