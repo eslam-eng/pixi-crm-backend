@@ -4,6 +4,7 @@ namespace App\Models\Filters;
 
 use App\Abstracts\QueryFilter;
 use App\Enums\DurationUnits;
+use App\Enums\PermissionsEnum;
 use Illuminate\Support\Arr;
 
 class OpportunityFilter extends QueryFilter
@@ -22,6 +23,11 @@ class OpportunityFilter extends QueryFilter
     public function assigned_to_id($term)
     {
         return $this->builder->where('assigned_to_id', $term);
+    }
+
+    public function assigned_to_users(array $term)
+    {
+        return $this->builder->whereIn('assigned_to_id', $term);
     }
 
     public function stage_id($term)
@@ -66,5 +72,28 @@ class OpportunityFilter extends QueryFilter
     public function description($term)
     {
         return $this->builder->where('description', $term);
+    }
+
+    public function dashboard_view($term)
+    {
+        $user = $term;
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_ADMIN_DASHBOARD->value)) {
+            return $this->builder;
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_MANAGER_DASHBOARD->value)) {
+            $teamId = $user->teamManager()->value('id');
+            return $this->builder
+                ->whereHas('user', function ($query) use ($teamId) {
+                    $query->where('team_id', $teamId);
+                });
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_AGENT_DASHBOARD->value)) {
+            return $this->builder->where('assigned_to_id', $user->id);
+        }
+
+         return $this->builder->where('assigned_to_id', $user->id);
     }
 }

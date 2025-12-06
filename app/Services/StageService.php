@@ -11,16 +11,17 @@ use Illuminate\Database\Eloquent\Builder;
 class StageService extends BaseService
 {
     public function __construct(
-        public PipelineService  $pipelineService,
-        public Stage  $model,
-    ) {}
+        public PipelineService $pipelineService,
+        public Stage $model,
+    ) {
+    }
 
     public function getModel(): Stage
     {
         return $this->model;
     }
 
-    public function getTableName(): String
+    public function getTableName(): string
     {
         return $this->getModel()->getTable();
     }
@@ -72,7 +73,9 @@ class StageService extends BaseService
             'name' => $stageDTO->name,
             'probability' => $stageDTO->probability,
         ]);
-        return $stage->load('pipeline');
+
+        $stage = $stage->load('pipeline')->first();
+        return $stage;
     }
 
     public function show(int $id)

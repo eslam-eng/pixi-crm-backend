@@ -3,6 +3,7 @@
 namespace App\QueryFilters\Tenant;
 
 use App\Abstracts\QueryFilter;
+use App\Enums\PermissionsEnum;
 use Carbon\Carbon;
 
 class TaskFilters extends QueryFilter
@@ -291,5 +292,28 @@ class TaskFilters extends QueryFilter
     public function task_type_id($term)
     {
         return $this->builder->where('task_type_id', $term);
+    }
+
+       public function dashboard_view($term)
+    {
+        $user = $term;
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_ADMIN_DASHBOARD->value)) {
+            return $this->builder;
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_MANAGER_DASHBOARD->value)) {
+            $teamId = $user->teamManager()->value('id');
+            return $this->builder
+                ->whereHas('assignedTo', function ($query) use ($teamId) {
+                    $query->where('team_id', $teamId);
+                });
+        }
+
+        if ($user->hasPermissionTo(PermissionsEnum::VIEW_AGENT_DASHBOARD->value)) {
+            return $this->builder->where('assigned_to_id', $user->id);
+        }
+
+         return $this->builder->where('assigned_to_id', $user->id);
     }
 }

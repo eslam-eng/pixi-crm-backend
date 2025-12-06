@@ -1,6 +1,7 @@
 <?php
 
 return array(
+  'logout_successfully' => 'تم تسجيل الخروج بنجاح',
   'invalid inputs' => 'خطأ في المدخلات',
   'actions' => 'فعل',
   'all_awbs' => 'كل البوليصات',

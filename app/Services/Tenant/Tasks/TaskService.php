@@ -5,6 +5,7 @@ namespace App\Services\Tenant\Tasks;
 use App\DTO\Tenant\TaskDTO;
 use App\Exceptions\GeneralException;
 use App\Models\Tenant\Reminder;
+use Auth;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Tenant\Task;
 use App\QueryFilters\Tenant\TaskFilters;
@@ -276,4 +277,13 @@ class TaskService extends BaseService
 
         return round((($newValue - $oldValue) / $oldValue) * 100, 1);
     }
+
+    public function tasksCount()
+    {
+        $filters['dashboard_view'] = Auth::user();
+
+        $count = $this->getQuery($filters)->count();
+        return $count;
+    }
+
 }

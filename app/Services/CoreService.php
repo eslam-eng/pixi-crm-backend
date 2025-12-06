@@ -10,10 +10,12 @@ use Exception;
 class CoreService extends BaseService
 {
     protected $taskService;
+    protected $leadService;
 
-    public function __construct(TaskService $taskService)
+    public function __construct(TaskService $taskService, LeadService $leadService)
     {
         $this->taskService = $taskService;
+        $this->leadService = $leadService;
     }
 
     /**
@@ -32,35 +34,20 @@ class CoreService extends BaseService
     public function getSidebarCounts(): array
     {
         try {
-            // Cache for 5 minutes to prevent repeated expensive queries
-            return \Cache::remember('sidebar_counts_' . user_id(), 300, function () {
-                // Get task counts using TaskService
-                $taskStatistics = $this->taskService->getStatistics();
+            // Get task counts using TaskService
+            $tasksCount = $this->taskService->tasksCount();
 
-                // Get opportunity counts
-                $opportunityCounts = $this->getOpportunityCounts();
+            // Get opportunity counts
+            $opportunitiesCount = $this->leadService->opportunityCount();
 
-                return [
-                    'tasks' => $taskStatistics['total_tasks']['value'],
-                    'opportunities' => $opportunityCounts
-                ];
-            });
+            return [
+                'tasks' => $tasksCount,
+                'opportunities' => $opportunitiesCount
+            ];
+
         } catch (Exception $e) {
             throw new Exception('Failed to get sidebar counts: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Get opportunity counts
-     */
-    private function getOpportunityCounts()
-    {
-        try {
-            $totalOpportunities = Lead::count();
-
-            return $totalOpportunities;
-        } catch (Exception $e) {
-            throw new Exception('Failed to get opportunity counts: ' . $e->getMessage());
-        }
-    }
 }

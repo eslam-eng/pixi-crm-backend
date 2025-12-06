@@ -1,6 +1,7 @@
 <?php
 
 return array(
+  'logout_successfully' => 'logout successfully',
   'invalid inputs' => 'invalid inputs',
 
   'actions' => 'Actions',

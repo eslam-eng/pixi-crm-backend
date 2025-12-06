@@ -189,5 +189,6 @@ class DealsFilter extends QueryFilter
         if ($user->hasPermissionTo(PermissionsEnum::VIEW_AGENT_DASHBOARD->value)) {
             return $this->builder->where('assigned_to_id', $user->id);
         }
+        return $this->builder->where('assigned_to_id', $user->id);
     }
 }

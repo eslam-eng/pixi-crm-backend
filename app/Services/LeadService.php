@@ -392,4 +392,13 @@ class LeadService extends BaseService
             // This is a placeholder for the actual WhatsApp sending logic
         }
     }
+
+    public function opportunityCount()
+    {
+
+        $filters['dashboard_view'] = Auth::user();
+
+        $count = $this->queryGet($filters)->count();
+        return $count;
+    }
 }

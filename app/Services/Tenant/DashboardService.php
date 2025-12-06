@@ -252,8 +252,8 @@ class DashboardService
         $end_date = Carbon::parse($filters['end_date'])->copy();
         $days = $first_date->diffInDays($end_date);
 
-        $filters['start_date'] = $first_date->subDay($days)->toDateString();
-        $filters['end_date'] = $end_date->subDay($days)->toDateString();
+        $filters['start_date'] = $first_date->subDays($days)->toDateString();
+        $filters['end_date'] = $end_date->subDays($days)->toDateString();
 
         return $filters;
     }
