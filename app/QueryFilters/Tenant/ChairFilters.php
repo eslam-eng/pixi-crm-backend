@@ -12,16 +12,19 @@ class ChairFilters extends QueryFilter
         parent::__construct($params);
     }
 
-    public function user($term){
+    public function user($term)
+    {
         return $this->builder->where('user_id', $term);
     }
 
-    public function team($term){
+    public function team($term)
+    {
         return $this->builder->where('team_id', $term);
     }
 
-    public function chair_rarget($term){
-        return $this->builder->whereHas('targets', function($query) use ($term){
+    public function chair_target($term)
+    {
+        return $this->builder->whereHas('targets', function ($query) use ($term) {
             $query->where('year', $term['year'])->where('period_number', $term['period_number']);
         });
     }

@@ -15,6 +15,8 @@ class Chair extends Pivot
 {
     use HasFactory, Filterable;
 
+    protected $table = 'chairs';
+
     protected $fillable = ['team_id', 'user_id', 'started_at', 'ended_at'];
 
     protected $casts = [
@@ -50,12 +52,12 @@ class Chair extends Pivot
      */
     public function targets()
     {
-        return $this->hasMany(ChairTarget::class);
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id');
     }
 
     public function target($year, $period_number): HasOne
     {
-        return $this->hasOne(ChairTarget::class)->ofMany(
+        return $this->hasOne(ChairTarget::class, 'chair_id', 'id')->ofMany(
             [],
             function (Builder $query) use ($year, $period_number) {
                 $query->where('year', $year)->where('period_number', $period_number);
@@ -68,7 +70,7 @@ class Chair extends Pivot
      */
     public function activeTargets()
     {
-        return $this->hasMany(ChairTarget::class)->whereNull('effective_to');
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id')->whereNull('effective_to');
     }
 
     /**
@@ -76,7 +78,7 @@ class Chair extends Pivot
      */
     public function achievements()
     {
-        return $this->hasMany(ChairAchievement::class);
+        return $this->hasMany(ChairAchievement::class, 'chair_id', 'id');
     }
 
     /**
@@ -84,7 +86,7 @@ class Chair extends Pivot
      */
     public function monthlyTargets()
     {
-        return $this->hasMany(ChairTarget::class)
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id')
             ->where('period_type', PeriodType::MONTHLY);
     }
 
@@ -93,7 +95,7 @@ class Chair extends Pivot
      */
     public function quarterlyTargets()
     {
-        return $this->hasMany(ChairTarget::class)
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id')
             ->where('period_type', PeriodType::QUARTERLY);
     }
 
@@ -104,7 +106,7 @@ class Chair extends Pivot
      */
     public function deals()
     {
-        return $this->hasMany(Deal::class);
+        return $this->hasMany(Deal::class, 'chair_id', 'id');
     }
 
     /**
