@@ -17,7 +17,9 @@ class RegisterController extends Controller
      */
     public function __invoke(RegisterRequest $request, RegisterService $registerService)
     {
+        $inputs = $request->validated();
         try {
+
             $userDTO = UserDTO::fromRequest($request);
             $userDTO->create_free_trial = $request->free_trial ?? false;
             $result = $registerService->handle(registerDTO: $userDTO);
@@ -28,9 +30,7 @@ class RegisterController extends Controller
 
             return ApiResponse::success(data: $data);
         } catch (\Exception $e) {
-            dd($e);
-
-            return ApiResponse::error(message: 'there is an error please try again later or contact with support for fast response');
+            return ApiResponse::error(message: 'there is an error please try again later or contact with support for fast response' . $e->getMessage());
         }
     }
 }

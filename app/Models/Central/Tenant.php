@@ -31,8 +31,12 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     protected $fillable = [
         'name',
+        'data',
         'status',
         'owner_id',
+        'has_used_trial',
+        'trial_plan_id',
+
     ];
 
 
@@ -198,10 +202,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     //     return DB::statement("CREATE DATABASE IF NOT EXISTS `$database_name`");
     // }
 
-    // public function hasHadTrial()
-    // {
-    //     return $this->has_used_trial;
-    // }
+    public function hasHadTrial()
+    {
+        return $this->has_used_trial;
+    }
 
     /**
      * Mark user as having used their free trial

@@ -331,4 +331,9 @@ class User extends Authenticatable
     {
         return $this->createToken($name, $abilities)->plainTextToken;
     }
+
+    public function tenant()
+    {
+        return $this->hasOne(\App\Models\Central\Tenant::class, 'owner_id', 'landlord_user_id');
+    }
 }

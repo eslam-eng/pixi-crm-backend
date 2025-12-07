@@ -23,19 +23,22 @@ class RegisterRequest extends BaseRequest
      */
     public function rules(): array
     {
+
         return [
             'name' => 'required|string|max:255',
             'organization_name' => ['required', 'string', 'max:255', Rule::unique('tenants', 'name')],
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()],
-            'free_trial' => 'boolean', // ✅ add validation rule
+            'free_trial' => 'nullable|boolean',
+            'plan_id' => 'nullable|integer|exists:plans,id',
         ];
+
     }
 
     public function prepareForValidation(): void
     {
         $this->merge([
-            'free_trial' => $this->routeIs('central.landlord.auth.free-trial') ? 1 : 0,
+            'free_trial' => $this->routeIs('central.landlord.auth.register') ? 1 : 0,
         ]);
     }
 }

@@ -69,7 +69,7 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             Route::post('admin/login', AdminAuthController::class);
-            Route::post('free-trial', RegisterController::class)->name('landlord.auth.free-trial');
+            Route::post('register', RegisterController::class)->name('landlord.auth.register');
         });
 
         Route::get('active-plans', [PlanController::class, 'activePlans']);
@@ -116,7 +116,7 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::apiResource('sources', SourceController::class);
         });
         Route::group(['prefix' => 'core'], function () {
-            Route::get('plans', [CoreLandlordController::class, 'index']);
+            Route::get('plans', [CoreLandlordController::class, 'plans']);
         });
     });
 }

@@ -21,6 +21,11 @@ class CoreLandlordController extends Controller
     
         $plans = $this->planService->activePlans(filters: $filters);
 
-        return PlanResource::collection($plans);
+        $data =  PlanResource::collection($plans);
+
+        return apiResponse(
+                message: 'success',
+                data: $data
+            );
     }
 }
