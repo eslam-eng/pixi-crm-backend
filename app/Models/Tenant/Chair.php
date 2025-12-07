@@ -7,10 +7,11 @@ use App\Traits\Filterable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class Chair extends Model
+// Chair must extend Pivot because it is used in a BelongsToMany relationship with ->using(Chair::class)
+class Chair extends Pivot
 {
     use HasFactory, Filterable;
 
