@@ -2,21 +2,22 @@
 
 namespace App\Services;
 
-use App\Models\Module;
+use Illuminate\Database\Eloquent\Model as Module;
 
 
 class ModuleService extends BaseService
 {
     public function __construct(
-        public Module  $model,
-    ) {}
+        public Module $model,
+    ) {
+    }
 
     public function getModel(): Module
     {
         return $this->model;
     }
 
-    public function getTableName(): String
+    public function getTableName(): string
     {
         return $this->getModel()->getTable();
     }
@@ -37,7 +38,7 @@ class ModuleService extends BaseService
                 ];
             });
         });
-        
+
     }
 
 }

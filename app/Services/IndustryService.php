@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\DTO\Industry\IndustryDTO;
-use App\Models\Industry;
+use Illuminate\Database\Eloquent\Model as Industry;
 use App\QueryFilters\IndustryFilters;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -11,8 +11,9 @@ use Illuminate\Database\Eloquent\Builder;
 class IndustryService extends BaseService
 {
     public function __construct(
-        public Industry               $model,
-    ) {}
+        public Industry $model,
+    ) {
+    }
 
     public function getModel(): Industry
     {
@@ -24,7 +25,7 @@ class IndustryService extends BaseService
         return $this->queryGet($filters)->get();
     }
 
-    public function getTableName(): String
+    public function getTableName(): string
     {
         return $this->getModel()->getTable();
     }

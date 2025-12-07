@@ -4,10 +4,10 @@ namespace App\Models\Tenant;
 
 use App\Enums\OpportunityStatus;
 use App\Models\City;
-use App\Models\CustomField;
-use App\Models\Industry;
-use App\Models\Reason;
-use App\Models\Service;
+use App\Models\Tenant\CustomField;
+// use App\Models\Industry;
+use App\Models\Tenant\LossReason;
+use App\Models\Tenant\Service;
 use App\Models\Stage;
 use App\Observers\LeadObserver;
 use App\Traits\Filterable;
@@ -43,9 +43,9 @@ class Lead extends Model implements Auditable
     protected $casts = [
         'status' => OpportunityStatus::class,
         'is_qualifying' => 'boolean',
-        'deal_value'           => 'decimal:2',
-        'win_probability'      => 'decimal:0',
-        'expected_close_date'  => 'date',
+        'deal_value' => 'decimal:2',
+        'win_probability' => 'decimal:0',
+        'expected_close_date' => 'date',
     ];
 
     // Lead belongs to a Contact
@@ -87,14 +87,14 @@ class Lead extends Model implements Auditable
     // Lead belongs to a Reason (if lost)
     public function reason()
     {
-        return $this->belongsTo(Reason::class);
+        return $this->belongsTo(LossReason::class);
     }
 
     // Lead has many Industries (Many-to-Many)
-    public function industries()
-    {
-        return $this->belongsToMany(Industry::class, 'lead_industry')->withTimestamps();
-    }
+    // public function industries()
+    // {
+    //     return $this->belongsToMany(Industry::class, 'lead_industry')->withTimestamps();
+    // }
 
     // Lead has many Services (Many-to-Many)
     public function services()

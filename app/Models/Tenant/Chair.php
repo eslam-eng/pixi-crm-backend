@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Chair extends Model
 {
-    use HasFactory,Filterable;
+    use HasFactory, Filterable;
 
     protected $fillable = ['team_id', 'user_id', 'started_at', 'ended_at'];
 
@@ -51,13 +51,15 @@ class Chair extends Model
     {
         return $this->hasMany(ChairTarget::class);
     }
-    
+
     public function target($year, $period_number): HasOne
     {
-        return $this->hasOne(ChairTarget::class)->ofMany([],
-         function (Builder $query) use ($year, $period_number) {
-           $query->where('year', $year)->where('period_number', $period_number);
-        });
+        return $this->hasOne(ChairTarget::class)->ofMany(
+            [],
+            function (Builder $query) use ($year, $period_number) {
+                $query->where('year', $year)->where('period_number', $period_number);
+            }
+        );
     }
 
     /**

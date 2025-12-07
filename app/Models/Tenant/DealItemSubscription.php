@@ -36,11 +36,11 @@ class DealItemSubscription extends Model
     /**
      * Get the deal through the deal item.
      */
-    public function deal(): BelongsTo
-    {
-        return $this->belongsTo(Deal::class, 'deal_id', 'id')
-            ->through('dealItem');
-    }
+    // public function deal(): BelongsTo
+    // {
+    //     return $this->belongsTo(Deal::class, 'deal_id', 'id')
+    //         ->through('dealItem');
+    // }
 
     /**
      * Check if the subscription is currently active.
@@ -83,7 +83,7 @@ class DealItemSubscription extends Model
     {
         $now = Carbon::now();
         return $query->where('start_at', '<=', $now)
-                    ->where('end_at', '>=', $now);
+            ->where('end_at', '>=', $now);
     }
 
     /**

@@ -38,8 +38,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase, HasMedia
         return $this->belongsTo(User::class);
     }
 
-    public function tiers()
-    {
-        return $this->belongsToMany(Tier::class);
-    }
+    // public function tiers()
+    // {
+    //     return $this->belongsToMany(Tier::class);
+    // }
 }

@@ -283,10 +283,10 @@ class User extends Authenticatable
     /**
      * Get the FCM tokens for the user.
      */
-    public function fcm_tokens()
-    {
-        return $this->hasMany(FcmToken::class);
-    }
+    // public function fcm_tokens()
+    // {
+    //     return $this->hasMany(FcmToken::class);
+    // }
 
     /**
      * Get all deals across all chair assignments

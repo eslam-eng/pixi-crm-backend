@@ -2,18 +2,20 @@
 
 namespace App\Services;
 
-use App\Models\Service;
+use App\Models\Tenant\Service;
 use App\DTO\Service\ServiceDTO;
 use Illuminate\Support\Facades\Log;
 use App\QueryFilters\ServiceFilters;
 use Illuminate\Database\Eloquent\Builder;
 
-class ServiceService extends BaseService{
+class ServiceService extends BaseService
+{
     public $user;
 
     public function __construct(
-        public Service               $model,
-    ) {}
+        public Service $model,
+    ) {
+    }
 
     public function getModel(): Service
     {
@@ -25,7 +27,7 @@ class ServiceService extends BaseService{
         return $this->queryGet($filters)->get();
     }
 
-    public function getTableName(): String
+    public function getTableName(): string
     {
         return $this->getModel()->getTable();
     }

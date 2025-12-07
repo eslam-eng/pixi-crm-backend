@@ -65,10 +65,10 @@ class Location extends Model
         return $query->where('status', 1);
     }
 
-    public function clients()
-    {
-        return $this->hasMany(Client::class, 'city_id');
-    }
+    // public function clients()
+    // {
+    //     return $this->hasMany(Client::class, 'city_id');
+    // }
 
     public function contacts()
     {
