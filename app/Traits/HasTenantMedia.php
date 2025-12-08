@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use Spatie\MediaLibrary\Conversions\Manipulations;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -11,17 +12,11 @@ trait HasTenantMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('avatars')
-            ->useDisk('public')
-            ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+        $this->addMediaCollection('avatars');
 
-        $this->addMediaCollection('images')
-            ->useDisk('public')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+        $this->addMediaCollection('images');
 
-        $this->addMediaCollection('documents')
-            ->useDisk('public');
+        $this->addMediaCollection('documents');
     }
 
     /**
@@ -34,17 +29,18 @@ trait HasTenantMedia
             return;
         }
 
-        // Define conversions as needed, e.g., to WebP
         $this->addMediaConversion('webp')
             ->format('webp')
-            ->nonQueued();
+            ->quality(85);
+    }
 
-        $this->addMediaCollection('images')
-            ->useDisk('public')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
-
-        $this->addMediaCollection('documents')
-            ->useDisk('public');
+    /**
+    * Collections that should be converted to WebP.
+    * Override this in your model if needed.
+    */
+    protected function webpCollections(): array
+    {
+        return ['images', 'avatars', 'default'];
     }
 
     /**
@@ -67,9 +63,8 @@ trait HasTenantMedia
         // Extract relative path from full system path
         // Matches storage/tenant{id}/app/public/... OR storage/{id}/app/public/...
         if (preg_match('/storage\/(?:tenant)?([^\/]+)\/app\/public\/(.+)$/', $path, $matches)) {
-            return url("/storage/{$matches[1]}/{$matches[2]}");
+            return url("/storage/tenant{$matches[1]}/{$matches[2]}");
         }
-
         // Fallback to default
         return $conversionName ? $media->getUrl($conversionName) : $media->getUrl();
     }
@@ -93,7 +88,7 @@ trait HasTenantMedia
     protected function extractCorrectUrl(string $path): string
     {
         if (preg_match('/storage\/(?:tenant)?([^\/]+)\/app\/public\/(.+)$/', $path, $matches)) {
-            return url("/storage/{$matches[1]}/{$matches[2]}");
+            return url("/storage/tenant{$matches[1]}/{$matches[2]}");
         }
         return $path;
     }
