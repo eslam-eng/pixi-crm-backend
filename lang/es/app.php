@@ -393,4 +393,7 @@ return array(
   'log_call' => 'Registrar llamada',
   'opportunity_activity_added' => 'Actividad de oportunidad agregada',
   'stage_changed' => 'Etapa cambiada',
+  'updated' => 'Actualizado',
+  'created' => 'Creado',
+  'deleted' => 'Eliminado',
 );

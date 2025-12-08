@@ -393,4 +393,7 @@ return array(
   'log_call' => 'appel de journalisation',
   'opportunity_activity_added' => 'Activité de possibilité ajoutée',
   'stage_changed' => 'Etape changée',
+  'updated' => 'Mis à jour',
+  'created' => 'Créé',
+  'deleted' => 'Supprimé',
 );

@@ -83,4 +83,7 @@ return array(
   'log_call' => 'تسجيل مكالمة',
   'opportunity_activity_added' => 'تم اضافة نشاط في الفرصة',
   'stage_changed' => 'تم تغيير المرحلة',
+  'updated' => 'تم التحديث',
+  'created' => 'تم الانشاء',
+  'deleted' => 'تم الحذف',
 );

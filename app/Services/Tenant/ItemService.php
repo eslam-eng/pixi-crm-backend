@@ -18,8 +18,10 @@ use App\Models\Tenant\Service;
 use App\Services\BaseService;
 use App\Services\Tenant\ProductVariantService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Intervention\Image\Laravel\Facades\Image;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ItemService extends BaseService
@@ -466,10 +468,12 @@ class ItemService extends BaseService
     * Upload Thumbnail Image
     */
     protected function uploadThumbnailImage(Item $item, $thumbnail_image): void
-    {
-        $media = $item->addMedia($thumbnail_image)
+    {   
+        $image = $this->convertToWebp($thumbnail_image);
+
+        $media = $item->addMedia($image)
             ->toMediaCollection('uploadThumbnailImage');
-        
+        @unlink($image);
         // Track uploaded media for potential rollback
         $this->uploadedMedia[] = $media;
     }
@@ -478,11 +482,13 @@ class ItemService extends BaseService
     * Upload multiple images
     */
     protected function uploadImages(Item $item, array $images): void
-    {
+    {   
         foreach ($images as $image) {
+            $image = $this->convertToWebp($image);   
             $media = $item->addMedia($image)
                 ->toMediaCollection('images');
 
+            @unlink($image);
             // Track uploaded media for potential rollback
             $this->uploadedMedia[] = $media;
         }
@@ -500,6 +506,36 @@ class ItemService extends BaseService
             // Track uploaded media for potential rollback
             $this->uploadedMedia[] = $media;
         }
+    }
+
+    protected function convertToWebp(UploadedFile $file, int $quality = 90): string
+    {
+        // Read the uploaded image
+        $image = Image::read($file);
+
+        // Convert to WebP
+        $encoded = $image->toWebp(quality: $quality);
+
+        // Create a temp file
+        $tempPath = tempnam(sys_get_temp_dir(), 'img_');
+        if ($tempPath === false) {
+            throw new \RuntimeException('Unable to create a temporary file.');
+        }
+
+        // Ensure the file has a .webp extension
+        $webpPath = $tempPath . '.webp';
+
+        // Write WebP data
+        if (file_put_contents($webpPath, $encoded) === false) {
+            throw new \RuntimeException("Unable to write WebP image to temporary file: $webpPath");
+        }
+
+        // Remove the original temp file created by tempnam
+        if (file_exists($tempPath)) {
+            @unlink($tempPath);
+        }
+
+        return $webpPath;
     }
 
 }

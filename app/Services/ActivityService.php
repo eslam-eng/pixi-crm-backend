@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Tenant\Activity;
 
 class ActivityService
 {

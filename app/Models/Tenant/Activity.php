@@ -26,4 +26,26 @@ class Activity extends SpatieActivity
         // Agent → See only their own activity
         return $query->where('causer_id', $user->id);
     }
+
+    public function changedValues(): array
+    {
+        // "properties" is the actual column in Spatie Activity
+        $changes = $this->properties['attributes'] ?? [];
+        $old = $this->properties['old'] ?? [];
+
+        $result = [];
+
+        foreach ($changes as $key => $newValue) {
+            $oldValue = $old[$key] ?? null;
+
+            if ($oldValue !== $newValue) {
+                $result[$key] = [
+                    'old' => $oldValue,
+                    'new' => $newValue,
+                ];
+            }
+        }
+
+        return $result;
+    }
 }

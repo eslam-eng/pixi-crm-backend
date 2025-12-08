@@ -16,12 +16,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Auditable as AuditableTrait;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 #[ObservedBy([LeadObserver::class])]
 class Lead extends Model implements Auditable
 {
 
-    use Filterable, AuditableTrait;
+    use Filterable, AuditableTrait, LogsActivity;
 
     protected $table = 'leads';
     protected $fillable = [
@@ -131,5 +133,25 @@ class Lead extends Model implements Auditable
         return $this->belongsToMany(Stage::class, 'lead_stage')
             ->withPivot('start_date', 'exit_date', 'pipline_id')
             ->withTimestamps();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logOnly([
+            'status',
+            'contact_id',
+            'stage_id',
+            'is_qualifying',
+            'deal_value',
+            'win_probability',
+            'expected_close_date',
+            'assigned_to_id',
+            'notes',
+            'description',
+            'assigned_at',
+            'first_action_at',
+            'avg_action_time',
+        ]);
     }
 }
