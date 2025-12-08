@@ -55,6 +55,9 @@ enum PermissionsEnum: string
     case VIEW_ATTENDANCE = 'view-attendance';
     case CREATE_ATTENDANCE = 'create-attendance';
 
+    // Activity Management
+    case VIEW_SYSTEM_ACTIVITY = 'view-activity-system';
+
     // Settings
     case MANAGE_SETTINGS = 'manage-settings';
 
@@ -106,6 +109,8 @@ enum PermissionsEnum: string
 
             self::VIEW_ATTENDANCE,
             self::CREATE_ATTENDANCE => 'attendance',
+
+            self::VIEW_SYSTEM_ACTIVITY => 'activity',
 
             self::MANAGE_SETTINGS => 'settings',
         };
@@ -183,6 +188,8 @@ enum PermissionsEnum: string
             
             self::VIEW_ATTENDANCE => 'View attendance',
             self::CREATE_ATTENDANCE => 'Create attendance',
+
+            self::VIEW_SYSTEM_ACTIVITY => 'View system activity',
             
             self::MANAGE_SETTINGS => 'Manage system settings',
         };

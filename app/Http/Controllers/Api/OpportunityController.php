@@ -15,6 +15,7 @@ use App\Http\Requests\Tenant\Opportunity\SendOpportunityItemsRequest;
 use App\Http\Requests\Tenant\Opportunity\StatusRequest;
 use App\Http\Resources\AuditOpportunityResource;
 use App\Http\Resources\Opportunity\OpportunityResource;
+use App\Http\Resources\Tenant\Dashboard\ActivityResource;
 use App\Http\Resources\Tenant\Opportunity\OpportunityDDLResource;
 use App\Http\Resources\Tenant\Stage\StageWithOpportunityResource;
 use App\Models\Tenant\Activity;
@@ -168,8 +169,8 @@ class OpportunityController extends Controller
     {
         try {
             $opportunity = Lead::findOrFail($id);
-            $audits = $opportunity->audits()->with('user')->latest()->get();
-            return ApiResponse(message: 'Opportunity activity list retrieved successfully', code: 200, data: AuditOpportunityResource::collection($audits));
+            $activities = $opportunity->activities()->with('causer')->latest()->get();
+            return ApiResponse(message: 'Opportunity activity list retrieved successfully', code: 200, data: ActivityResource::collection($activities));
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
