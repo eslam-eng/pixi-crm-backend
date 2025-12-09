@@ -240,6 +240,11 @@ Route::middleware([
             Route::get('/payment-status', [CoreController::class, 'getPaymentStatus']);
             Route::get('/tasks-status', [CoreController::class, 'getTaskStatus']);
             Route::get('/services-duration', [CoreController::class, 'getServiceDuration']);
+            Route::get('/contacts', [CoreController::class, 'getContacts']);
+            Route::get('/opportunities', [CoreController::class, 'getOpportunities']);
+            Route::get('/items', [CoreController::class, 'getItems']);
+            Route::get('/deals', [CoreController::class, 'getDeals']);
+            Route::get('/tasks', [CoreController::class, 'getTasks']);
         });
 
         Route::prefix('settings')->group(function () {

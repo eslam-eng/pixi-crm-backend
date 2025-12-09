@@ -11,8 +11,11 @@ use App\Enums\CurrencyEnum;
 use App\Enums\PaymentStatusEnum;
 use App\Enums\ServiceDuration;
 use App\Enums\TaskStatusEnum;
+use App\Http\Resources\ContactDDLResource;
+use App\Services\ContactService;
 use App\Services\Tenant\TemplateService;
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 class CoreController extends Controller
 {
@@ -159,5 +162,16 @@ class CoreController extends Controller
                 code: 500
             );
         }
+    }
+
+    public function getContacts(ContactService $contactService) : JsonResponse 
+    {
+        $contacts = $contactService->queryGet(withRelations:['contactPhones'])->select('id', 'first_name','last_name','company_name','email')->get();
+        $data = ContactDDLResource::collection($contacts);
+        return apiResponse(
+            $data,
+            'Contacts retrieved successfully',
+            200
+        );
     }
 }
