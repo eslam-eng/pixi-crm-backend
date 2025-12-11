@@ -12,6 +12,9 @@ class ContactDDLResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => "$this->first_name $this->last_name",
+            'company_name' => $this->company_name,
+            'email' => $this->email,
+            'phones' => $this->whenLoaded('contactPhones', fn() => ContactPhoneResource::collection($this->contactPhones)),
         ];
     }
 }

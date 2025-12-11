@@ -20,7 +20,6 @@ class PriorityResource extends JsonResource
             'color' => new PriorityColorResource($this->color),
             'level' => $this->level,
             'is_default' => $this->is_default,
-
         ];
     }
 }

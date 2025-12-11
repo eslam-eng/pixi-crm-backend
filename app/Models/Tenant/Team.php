@@ -112,6 +112,13 @@ class Team extends Model
     {
         $currentYear = Carbon::now()->year;
         
-        return $this->hasManyThrough(ChairTarget::class, Chair::class)->where('chair_targets.year', $currentYear);
+        return $this->hasManyThrough(
+            ChairTarget::class, 
+            Chair::class,
+            'team_id',
+            'chair_id',
+            'id',
+            'id'
+        )->where('chair_targets.year', $currentYear);
     }
 }

@@ -18,7 +18,7 @@ class StageController extends Controller
 {
     public function __construct(public StageService $stageService)
     {
-        $this->middleware('permission:manage-settings')->except(['index']);
+        $this->middleware('permission:manage-settings');
     }
 
     public function index(Request $request, $pipelineId): JsonResponse

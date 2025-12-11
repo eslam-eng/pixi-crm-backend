@@ -19,8 +19,6 @@ class ContactPhoneResource extends JsonResource
             'phone' => $this->phone,
             'is_primary' => $this->is_primary,
             'enable_whatsapp' => $this->enable_whatsapp,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
         ];
     }
 }

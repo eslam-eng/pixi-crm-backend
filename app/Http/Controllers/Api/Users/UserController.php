@@ -28,7 +28,7 @@ class UserController extends Controller
 {
     public function __construct(private readonly UserService $userService)
     {
-        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+        $this->middleware('permission:manage-settings');
     }
 
     public function index(Request $request): JsonResponse

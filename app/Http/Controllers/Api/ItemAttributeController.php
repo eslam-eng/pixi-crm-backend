@@ -15,7 +15,7 @@ class ItemAttributeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+        $this->middleware('permission:manage-settings');
     }
     public function index()
     {
