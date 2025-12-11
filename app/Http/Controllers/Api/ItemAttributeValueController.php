@@ -16,6 +16,7 @@ class ItemAttributeValueController extends Controller
 {
     public function __construct()
     {
+        $this->middleware('permission:manage-settings');
     }
 
     public function store(CreateAttributeValueRequest $request, ItemAttribute $attribute)

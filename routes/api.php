@@ -242,9 +242,21 @@ Route::middleware([
             Route::get('/services-duration', [CoreController::class, 'getServiceDuration']);
             Route::get('/contacts', [CoreController::class, 'getContacts']);
             Route::get('/opportunities', [CoreController::class, 'getOpportunities']);
+            Route::get('/teams', [CoreController::class, 'getTeams']);
             Route::get('/items', [CoreController::class, 'getItems']);
             Route::get('/deals', [CoreController::class, 'getDeals']);
             Route::get('/tasks', [CoreController::class, 'getTasks']);
+            Route::get('/priorities', [CoreController::class, 'getPriorities']);
+            Route::get('/task-types', [CoreController::class, 'getTaskTypes']);
+            Route::get('/item-categories', [CoreController::class, 'getItemCategories']);
+            Route::get('/pipelines', [CoreController::class, 'getPipelines']);
+            Route::get('/pipelines/{pipeline}/stages', [CoreController::class, 'getStagesPipeline']);
+            Route::get('/sources', [CoreController::class, 'getSources']);
+            Route::get('/roles', [CoreController::class, 'getRoles']);
+            Route::get('/roles/permissions', [CoreController::class, 'getPermissions']);
+            Route::get('/departments', [CoreController::class, 'getDepartments']);
+            Route::get('/opportunities', [CoreController::class, 'getOpportunities']);
+            Route::get('/users', [CoreController::class, 'getUsers']);
         });
 
         Route::prefix('settings')->group(function () {

@@ -25,7 +25,7 @@ class TeamsController extends Controller
 
     public function __construct(private readonly TeamService $teamService)
     {
-        $this->middleware('permission:manage-settings')->except(['index']);
+        $this->middleware('permission:manage-settings');
     }
 
     public function index(Request $request): JsonResponse

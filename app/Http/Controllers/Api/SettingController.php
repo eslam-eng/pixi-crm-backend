@@ -16,7 +16,7 @@ class SettingController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:manage-settings')->except(['changeValue', 'getSettingsByGroup']);
+        $this->middleware('permission:manage-settings');
     }
 
     /**

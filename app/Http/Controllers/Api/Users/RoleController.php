@@ -21,7 +21,7 @@ class RoleController extends Controller
 {
     public function __construct(private readonly RoleService $roleService)
     {
-        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+        $this->middleware('permission:manage-settings');
     }
 
     public function index(Request $request): JsonResponse

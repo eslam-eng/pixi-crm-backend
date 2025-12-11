@@ -23,7 +23,7 @@ class TemplatesController extends Controller
         private readonly TemplateService $templateService,
         private readonly WhatsAppService $whatsAppService
     ) {
-        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+        $this->middleware('permission:manage-settings');
     }
 
     public function index(): JsonResponse

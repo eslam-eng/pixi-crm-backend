@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
-    public function __construct(private readonly DepartmentService $departmentService) {}
+    public function __construct(private readonly DepartmentService $departmentService) {
+        $this->middleware('permission:manage-settings');
+    }
 
 
     public function index(Request $request): JsonResponse

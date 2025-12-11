@@ -20,7 +20,7 @@ class ResourceController extends Controller
 {
     public function __construct(public ResourceService $resourceService)
     {
-        $this->middleware('permission:manage-settings')->except(['index']);
+        $this->middleware('permission:manage-settings');
     }
 
     public function index(Request $request): \Illuminate\Http\JsonResponse

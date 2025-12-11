@@ -20,7 +20,7 @@ class PipelineController extends Controller
 {
     public function __construct(public PipelineService $pipelineService)
     {
-        $this->middleware('permission:manage-settings')->except(['index', 'show']);
+        $this->middleware('permission:manage-settings');
     }
 
     public function index(Request $request): JsonResponse
