@@ -412,4 +412,9 @@ return array(
       'blocked' => 'Blocked',
     ],
   ],
+  'general_note' => 'General Note',
+  'strategy' => 'Strategy',
+  'follow_up' => 'Follow-up',
+  'concern' => 'Concern',
+  'decision' => 'Decision',
 );

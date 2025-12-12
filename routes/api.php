@@ -342,6 +342,12 @@ Route::middleware([
         Route::post('opportunities/{opportunity}/log-call', [OpportunityController::class, 'logCall']);
         Route::post('opportunities/{opportunity}/add-activity-log', [OpportunityController::class, 'AddActivityLog']);
         Route::post('opportunities/{opportunity}/send-item-data', [OpportunityController::class, 'sendItemData']);
+
+        // Opportunity Notes routes
+        Route::get('opportunities/{opportunity}/notes', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'index']);
+        Route::post('opportunities/{opportunity}/notes', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'store']);
+        Route::put('opportunities/notes/{note}', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'update']);
+        Route::delete('opportunities/notes/{note}', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'destroy']);
         Route::apiResource('opportunities', OpportunityController::class);
 
         Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);
