@@ -3,6 +3,7 @@
 namespace App\Models\Central;
 
 use App\Enums\Landlord\ActivationCodeStatusEnum;
+use App\Models\Admin;
 use App\Traits\Filterable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -16,14 +17,22 @@ class ActivationCode extends Model
     use HasUuids, Filterable, HasFactory;
 
     protected $fillable = [
-        'code', 'source_id',
-        'validity_days', 'status',
-        'plan_id', 'expired_at',
-        'tenant_id', 'user_id', 'redeemed_at', 'collected_at',
+        'code',
+        'source_id',
+        'validity_days',
+        'status',
+        'plan_id',
+        'expired_at',
+        'tenant_id',
+        'user_id',
+        'redeemed_at',
+        'collected_at',
+        'created_by_id'
     ];
 
     protected $casts = [
         // 'status' => ActivationCodeStatusEnum::class,
+        'expired_at' => 'date',
         'redeemed_at' => 'datetime',
         'collected_at' => 'datetime',
     ];
@@ -49,6 +58,10 @@ class ActivationCode extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'created_by_id');
     }
 
     public function plan(): BelongsTo

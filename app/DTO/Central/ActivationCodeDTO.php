@@ -12,6 +12,9 @@ class ActivationCodeDTO extends BaseDTO
     public function __construct(
         public int $planId,   // Package ID
         public int $source_id,
+        public ?int $user_id,
+        public ?string $code,
+        public int $created_by_id,
         public int $validityDays, // Validity in days
         public int $count = 1,     // Number of codes to generate
         public int $parts = 2,        // Number of parts per code
@@ -26,6 +29,9 @@ class ActivationCodeDTO extends BaseDTO
         return new self(
             planId: Arr::get($data, 'plan_id'),
             source_id: Arr::get($data, 'source_id'),
+            user_id: Arr::get($data, 'user_id'),
+            code: Arr::get($data, 'code'),
+            created_by_id: Arr::get($data, 'created_by_id'),
             validityDays: Arr::get($data, 'validity_days'),
             count: Arr::get($data, 'count', 1),
             parts: Arr::get($data, 'parts', 2),
@@ -40,10 +46,13 @@ class ActivationCodeDTO extends BaseDTO
         return new self(
             planId: $request->plan_id,
             source_id: $request->source_id,
+            user_id: $request->user_id,
+            code: $request->code,
+            created_by_id: $request->created_by_id,
             validityDays: $request->validity_days,
             count: $request->count ?? 1,
             parts: $request->parts ?? 2,
-            partLength: $request->part_length ?? 3,
+            partLength: $request->partLength ?? 3,
             status: isset($request->status) ? ActivationCodeStatusEnum::from($request->status) : ActivationCodeStatusEnum::AVAILABLE,
             expire_at: $request->expire_at,
         );
@@ -53,7 +62,10 @@ class ActivationCodeDTO extends BaseDTO
     {
         return [
             'plan_id' => $this->planId,
-            'source_id' => $this->source_id,
+            'source_id' => $this->source_id,    
+            'user_id' => $this->user_id,
+            'code' => $this->code,
+            'created_by_id' => $this->created_by_id,
             'validity_days' => $this->validityDays,
             'status' => $this->status->value,
             'expire_at' => $this->expire_at,

@@ -404,4 +404,12 @@ return array(
   'updated' => 'Updated',
   'created' => 'Created',
   'deleted' => 'Deleted',
+  'activation_code' => [
+    'status' => [
+      'available' => 'Available',
+      'used' => 'Used',
+      'expired' => 'Expired',
+      'blocked' => 'Blocked',
+    ],
+  ],
 );

@@ -86,4 +86,12 @@ return array(
   'updated' => 'تم التحديث',
   'created' => 'تم الانشاء',
   'deleted' => 'تم الحذف',
+  'activation_code' => [
+    'status' => [
+      'available' => 'متاح',
+      'used' => 'مستخدم',
+      'expired' => 'منتهي الصلاحية',
+      'blocked' => 'محظور',
+    ],
+  ],
 );

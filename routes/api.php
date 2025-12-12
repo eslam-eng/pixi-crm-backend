@@ -96,7 +96,12 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::group(['prefix' => 'activation-codes'], function () {
                 Route::get('/', [ActivationCodeController::class, 'index']);
                 Route::get('/statics', [ActivationCodeController::class, 'statics']);
-                Route::post('generate', [ActivationCodeController::class, 'store']);
+                Route::post('/export-codes', [ActivationCodeController::class, 'exportCodes']);
+                Route::post('/', [ActivationCodeController::class, 'store']);
+                Route::post('/validation', [ActivationCodeController::class, 'storeValidation']);
+                Route::get('generate-code', [ActivationCodeController::class, 'generateCode']);
+                Route::post('/multi-update-status', [ActivationCodeController::class, 'multiUpdateStatus']);
+                Route::post('/multi-delete', [ActivationCodeController::class, 'multiDelete']);
                 Route::delete('{activation_code}', [ActivationCodeController::class, 'delete']);
             });
 
@@ -406,14 +411,14 @@ Route::middleware([
             Route::get('/top-performing-sales-reps', [DashboardController::class, 'getTopPerformingSalesReps']); // still working on it
         });
 
-        Route::get('/opportunities/kanban-list',[ OpportunityController::class, 'kanbanList']);
-        Route::get('/opportunities/statistics',[  OpportunityController::class, 'statistics']);
-        Route::patch('opportunities/{opportunity}/change-stage', [ OpportunityController::class, 'changeStage']);
-        Route::patch('opportunities/{opportunity}/change-status', [ OpportunityController::class, 'changeStatus']);
-        Route::get('opportunities/{opportunity}/activities-list',[  OpportunityController::class, 'getActivitiesList']);
-        Route::post('opportunities/{opportunity}/log-call', [ OpportunityController::class, 'logCall']);
-        Route::post('opportunities/{opportunity}/add-activity-log',[  OpportunityController::class, 'AddActivityLog']);
-        Route::post('opportunities/{opportunity}/send-item-data', [ OpportunityController::class, 'sendItemData']);
+        Route::get('/opportunities/kanban-list', [OpportunityController::class, 'kanbanList']);
+        Route::get('/opportunities/statistics', [OpportunityController::class, 'statistics']);
+        Route::patch('opportunities/{opportunity}/change-stage', [OpportunityController::class, 'changeStage']);
+        Route::patch('opportunities/{opportunity}/change-status', [OpportunityController::class, 'changeStatus']);
+        Route::get('opportunities/{opportunity}/activities-list', [OpportunityController::class, 'getActivitiesList']);
+        Route::post('opportunities/{opportunity}/log-call', [OpportunityController::class, 'logCall']);
+        Route::post('opportunities/{opportunity}/add-activity-log', [OpportunityController::class, 'AddActivityLog']);
+        Route::post('opportunities/{opportunity}/send-item-data', [OpportunityController::class, 'sendItemData']);
         Route::apiResource('opportunities', OpportunityController::class);
 
         Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);
