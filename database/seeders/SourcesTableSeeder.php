@@ -21,12 +21,14 @@ class SourcesTableSeeder extends Seeder
         $sources = [
             [
                 'name' => 'AppSumo',
+                'payout_percentage' => 20,
                 'is_active' => ActivationStatusEnum::ACTIVE->value,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'name' => 'Envato',
+                'payout_percentage' => 30,
                 'is_active' => ActivationStatusEnum::ACTIVE->value,
                 'created_at' => now(),
                 'updated_at' => now(),
