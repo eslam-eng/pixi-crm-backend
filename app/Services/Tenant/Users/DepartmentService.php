@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DepartmentService extends BaseService
 {
-    public function __construct(private Department $model) {}
+    public function __construct(private Department $model)
+    {
+    }
 
     public function getModel(): Model
     {
@@ -21,7 +23,7 @@ class DepartmentService extends BaseService
     {
         return $this->queryGet($filters)->get();
     }
-    
+
     public function listing(array $filters = [], array $withRelations = [], $perPage = 10): \Illuminate\Contracts\Pagination\CursorPaginator
     {
         return $this->queryGet(filters: $filters, withRelations: $withRelations)->cursorPaginate($perPage);
@@ -42,4 +44,21 @@ class DepartmentService extends BaseService
         return $query->get();
     }
 
+    public function store(array $data)
+    {
+        return $this->getModel()->create($data);
+    }
+
+    public function update(int $id, array $data)
+    {
+        $department = $this->findById($id);
+        $department->update($data);
+        return $department;
+    }
+
+    public function destroy(int $id)
+    {
+        $department = $this->findById($id);
+        return $department->delete();
+    }
 }

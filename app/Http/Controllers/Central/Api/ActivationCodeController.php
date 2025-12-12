@@ -12,6 +12,7 @@ use App\Http\Requests\Central\MultiDeleteActivationCodeRequest;
 use App\Http\Requests\Central\ExportCodesRequest;
 use App\Http\Requests\Central\UpdateActivationCodeStatusRequest;
 use App\Http\Resources\Central\ActivationCodeResource;
+use App\Http\Resources\Central\ActivationCodeDetailResource;
 use App\Models\Central\ActivationCode;
 use App\Services\Central\ActivationCode\ActivationCodeService;
 use Illuminate\Http\Request;
@@ -32,6 +33,19 @@ class ActivationCodeController extends Controller
         $data = ActivationCodeResource::collection($activationCodes)->response()->getData(true);
         return ApiResponse::success(data: $data, message: 'Activation codes generated successfully');
 
+    }
+
+    public function show(ActivationCode|string|int $activation_code)
+    {
+        if (!$activation_code instanceof ActivationCode) {
+            $activation_code = $this->activationCodeService->findById(
+                $activation_code,
+                ['plan', 'source', 'user', 'createdBy']
+            );
+        }
+
+        $data = new ActivationCodeDetailResource($activation_code);
+        return ApiResponse::success(data: $data, message: 'Activation code retrieved successfully');
     }
 
     public function store(ActivationCodeRequest $request)
@@ -58,9 +72,9 @@ class ActivationCodeController extends Controller
         return ApiResponse::success(data: $code);
     }
 
-    public function delete(ActivationCode|string|int $activation_code)
+    public function destroy(ActivationCode|string|int $activation_code)
     {
-      
+
         $this->activationCodeService->delete($activation_code);
 
         return ApiResponse::success(message: 'Activation code deleted successfully');

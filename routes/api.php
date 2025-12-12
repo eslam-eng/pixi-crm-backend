@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\Integrations\{
 use App\Http\Controllers\Api\IntegrationController;
 use App\Http\Controllers\Api\OpportunityController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Central\Api\AdminAuthController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\FormSubmissionController;
@@ -43,88 +42,12 @@ use App\Http\Controllers\Api\ItemAttributeController;
 use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
 use App\Http\Controllers\Api\TranslatableExampleController;
-use App\Http\Controllers\Central\Api\AuthController as centralAuthController;
-use App\Http\Controllers\Central\Api\PaymentController;
-use App\Http\Controllers\Central\Api\SettingController;
+
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
-use App\Http\Controllers\Central\Api\ActivationCodeController;
-use App\Http\Controllers\Central\Api\AdminController;
-use App\Http\Controllers\Central\Api\CountryCodeController;
-use App\Http\Controllers\Central\Api\CurrencyController;
-use App\Http\Controllers\Central\Api\DiscountCodeController;
-use App\Http\Controllers\Central\Api\FeatureController;
-use App\Http\Controllers\Central\Api\CoreLandlordController;
-use App\Http\Controllers\Central\Api\LocaleController;
-use App\Http\Controllers\Central\Api\PayoutSourceController;
-use App\Http\Controllers\Central\Api\PlanController;
-use App\Http\Controllers\Central\Api\RoleController as RoleCentralController;
-use App\Http\Controllers\Central\Api\SourceController;
-use App\Http\Controllers\Central\Api\TimeZoneController;
-use App\Http\Controllers\Central\Api\Auth\RegisterController;
+
 
 // //////////// landlord routes
-foreach (config('tenancy.central_domains') as $domain) {
-    Route::domain($domain)->name('central.')->group(function () {
-
-
-        Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
-            Route::post('admin/login', AdminAuthController::class);
-            Route::post('register', RegisterController::class)->name('landlord.auth.register');
-        });
-
-        Route::get('active-plans', [PlanController::class, 'activePlans']);
-        Route::get('locales', LocaleController::class);
-        Route::get('country-code', CountryCodeController::class);
-        Route::get('currencies', CurrencyController::class);
-        Route::get('timezones', TimeZoneController::class);
-
-        // for tenant and shared tables for tenant section
-        Route::middleware(['auth:sanctum', 'users.only'])->group(function () {
-            Route::get('discount-codes/{discount_code}/plans/{plan}', [DiscountCodeController::class, 'validateDiscountCode']);
-        });
-
-        Route::group(['middleware' => 'auth:landlord'], function () {
-            Route::post('admins/{admin}/status', [AdminController::class, 'toggleStatus']);
-            Route::get('admins/profile', [AdminController::class, 'profile']);
-            Route::apiResource('admins', AdminController::class);
-            Route::put('locale', [AdminController::class, 'updateLocale']);
-
-            Route::get('plans/statics', [PlanController::class, 'statics']);
-            Route::apiResource('plans', PlanController::class);
-            Route::apiResource('features', FeatureController::class)->only(['index']);
-
-            Route::group(['prefix' => 'activation-codes'], function () {
-                Route::get('/', [ActivationCodeController::class, 'index']);
-                Route::get('/statics', [ActivationCodeController::class, 'statics']);
-                Route::post('/export-codes', [ActivationCodeController::class, 'exportCodes']);
-                Route::post('/', [ActivationCodeController::class, 'store']);
-                Route::post('/validation', [ActivationCodeController::class, 'storeValidation']);
-                Route::get('generate-code', [ActivationCodeController::class, 'generateCode']);
-                Route::post('/multi-update-status', [ActivationCodeController::class, 'multiUpdateStatus']);
-                Route::post('/multi-delete', [ActivationCodeController::class, 'multiDelete']);
-                Route::delete('{activation_code}', [ActivationCodeController::class, 'delete']);
-            });
-
-
-            Route::group(['prefix' => 'source-collections'], function () {
-                Route::get('/', [PayoutSourceController::class, 'index']);
-                Route::post('/', [PayoutSourceController::class, 'createCollection']);
-                Route::get('/{collection_id}', [PayoutSourceController::class, 'details']);
-                Route::patch('/{collection_id}/collect', [PayoutSourceController::class, 'markCollected']);
-                Route::patch('/{collection_id}/codes/collect', [PayoutSourceController::class, 'collectedSpaceficPayoutItem']);
-            });
-
-            Route::get('permissions', [RoleCentralController::class, 'permissionsList']);
-            Route::apiResource('roles', RoleCentralController::class);
-            Route::apiResource('discount-codes', DiscountCodeController::class);
-
-            Route::apiResource('sources', SourceController::class);
-        });
-        Route::group(['prefix' => 'core'], function () {
-            Route::get('plans', [CoreLandlordController::class, 'plans']);
-        });
-    });
-}
+require_once(__DIR__ . '/central_apis.php');
 
 // //////////// tenant routes
 Route::middleware([
