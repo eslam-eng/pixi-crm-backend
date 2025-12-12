@@ -394,7 +394,6 @@ return array(
   'lead_delete' => 'Lead deleted',
   'task_created' => 'Task created',
   'deal_created' => 'Deal created',
-  'lead' => 'Lead',
   'deal' => 'Deal',
   'task' => 'Task',
   'system' => 'System',
