@@ -396,4 +396,5 @@ return array(
   'updated' => 'Actualizado',
   'created' => 'Creado',
   'deleted' => 'Eliminado',
+  'status_changed' => 'Estado cambiado',
 );

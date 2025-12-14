@@ -86,4 +86,5 @@ return array(
   'updated' => 'تم التحديث',
   'created' => 'تم الانشاء',
   'deleted' => 'تم الحذف',
+  'status_changed' => 'تم تغيير الحالة',
 );

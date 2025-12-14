@@ -404,4 +404,5 @@ return array(
   'updated' => 'Updated',
   'created' => 'Created',
   'deleted' => 'Deleted',
+  'status_changed' => 'Status changed',
 );

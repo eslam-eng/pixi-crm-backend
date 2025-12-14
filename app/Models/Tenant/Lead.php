@@ -9,21 +9,16 @@ use App\Models\Industry;
 use App\Models\Reason;
 use App\Models\Service;
 use App\Models\Stage;
-use App\Observers\LeadObserver;
 use App\Traits\Filterable;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use OwenIt\Auditing\Contracts\Auditable;
-use OwenIt\Auditing\Auditable as AuditableTrait;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[ObservedBy([LeadObserver::class])]
-class Lead extends Model implements Auditable
+class Lead extends Model
 {
 
-    use Filterable, AuditableTrait, LogsActivity;
+    use Filterable, LogsActivity;
 
     protected $table = 'leads';
     protected $fillable = [
@@ -138,20 +133,22 @@ class Lead extends Model implements Auditable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->logOnly([
-            'status',
-            'contact_id',
-            'stage_id',
-            'is_qualifying',
-            'deal_value',
-            'win_probability',
-            'expected_close_date',
-            'assigned_to_id',
-            'notes',
-            'description',
-            'assigned_at',
-            'first_action_at',
-            'avg_action_time',
-        ]);
+            ->logOnly([
+                'status',
+                'contact_id',
+                'stage_id',
+                'is_qualifying',
+                'deal_value',
+                'win_probability',
+                'expected_close_date',
+                'assigned_to_id',
+                'notes',
+                'description',
+                'assigned_at',
+                'first_action_at',
+                'avg_action_time',
+            ])
+            ->logOnlyDirty()
+            ->useLogName('lead');
     }
 }
