@@ -7,12 +7,15 @@ use App\Traits\Filterable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class Chair extends Model
+// Chair must extend Pivot because it is used in a BelongsToMany relationship with ->using(Chair::class)
+class Chair extends Pivot
 {
-    use HasFactory,Filterable;
+    use HasFactory, Filterable;
+
+    protected $table = 'chairs';
 
     protected $fillable = ['team_id', 'user_id', 'started_at', 'ended_at'];
 
@@ -49,15 +52,17 @@ class Chair extends Model
      */
     public function targets()
     {
-        return $this->hasMany(ChairTarget::class);
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id');
     }
-    
+
     public function target($year, $period_number): HasOne
     {
-        return $this->hasOne(ChairTarget::class)->ofMany([],
-         function (Builder $query) use ($year, $period_number) {
-           $query->where('year', $year)->where('period_number', $period_number);
-        });
+        return $this->hasOne(ChairTarget::class, 'chair_id', 'id')->ofMany(
+            [],
+            function (Builder $query) use ($year, $period_number) {
+                $query->where('year', $year)->where('period_number', $period_number);
+            }
+        );
     }
 
     /**
@@ -65,7 +70,7 @@ class Chair extends Model
      */
     public function activeTargets()
     {
-        return $this->hasMany(ChairTarget::class)->whereNull('effective_to');
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id')->whereNull('effective_to');
     }
 
     /**
@@ -73,7 +78,7 @@ class Chair extends Model
      */
     public function achievements()
     {
-        return $this->hasMany(ChairAchievement::class);
+        return $this->hasMany(ChairAchievement::class, 'chair_id', 'id');
     }
 
     /**
@@ -81,7 +86,7 @@ class Chair extends Model
      */
     public function monthlyTargets()
     {
-        return $this->hasMany(ChairTarget::class)
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id')
             ->where('period_type', PeriodType::MONTHLY);
     }
 
@@ -90,7 +95,7 @@ class Chair extends Model
      */
     public function quarterlyTargets()
     {
-        return $this->hasMany(ChairTarget::class)
+        return $this->hasMany(ChairTarget::class, 'chair_id', 'id')
             ->where('period_type', PeriodType::QUARTERLY);
     }
 
@@ -101,7 +106,7 @@ class Chair extends Model
      */
     public function deals()
     {
-        return $this->hasMany(Deal::class);
+        return $this->hasMany(Deal::class, 'chair_id', 'id');
     }
 
     /**

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoices', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('invoice_number')->unique();
             $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('subscription_id')->nullable()->constrained()->nullOnDelete();

@@ -56,11 +56,26 @@ class ActivationCodeFilters extends QueryFilter
         $startDate = trim($dates[0]);
 
         // If end date is provided, use it; otherwise default to today
-        $endDate = isset($dates[1]) && ! empty(trim($dates[1]))
+        $endDate = isset($dates[1]) && !empty(trim($dates[1]))
             ? trim($dates[1])
             : Carbon::today()->format('Y-m-d');
 
         return $this->builder->whereBetween(DB::raw('DATE(redeemed_at)'), [$startDate, $endDate]);
 
+    }
+
+    public function code($term)
+    {
+        return $this->builder->where('code', 'LIKE', "%{$term}%");
+    }
+
+    public function redeem_at_from($term)
+    {
+        return $this->builder->whereDate('redeemed_at', '>=', $term);
+    }
+
+    public function redeem_at_to($term)
+    {
+        return $this->builder->whereDate('redeemed_at', '<=', $term);
     }
 }

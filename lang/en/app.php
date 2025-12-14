@@ -394,7 +394,6 @@ return array(
   'lead_delete' => 'Lead deleted',
   'task_created' => 'Task created',
   'deal_created' => 'Deal created',
-  'lead' => 'Lead',
   'deal' => 'Deal',
   'task' => 'Task',
   'system' => 'System',
@@ -405,4 +404,17 @@ return array(
   'created' => 'Created',
   'deleted' => 'Deleted',
   'status_changed' => 'Status changed',
+  'activation_code' => [
+    'status' => [
+      'available' => 'Available',
+      'used' => 'Used',
+      'expired' => 'Expired',
+      'blocked' => 'Blocked',
+    ],
+  ],
+  'general_note' => 'General Note',
+  'strategy' => 'Strategy',
+  'follow_up' => 'Follow-up',
+  'concern' => 'Concern',
+  'decision' => 'Decision',
 );

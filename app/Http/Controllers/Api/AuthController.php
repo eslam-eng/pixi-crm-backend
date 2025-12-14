@@ -53,7 +53,7 @@ class AuthController extends Controller
             );
 
             // Generate token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken('api_tenant')->plainTextToken;
 
             // Update last login timestamp
             $this->userService->updateLastLoginAt($user->id);

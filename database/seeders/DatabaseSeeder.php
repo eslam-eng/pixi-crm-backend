@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             // PackageSeeder::class,
             // SubscriptionSeeder::class,
             FeatureTableSeeder::class,
+            DepartmentLandloardSeeder::class,
+            IndustrySeeder::class,
             PlansTableSeeder::class,
             AdminTableSeeder::class,
             SourcesTableSeeder::class,

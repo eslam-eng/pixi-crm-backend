@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Central;
 
+use App\Enums\Landlord\ActivationCodeStatusEnum;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,21 +18,15 @@ class ActivationCodeResource extends JsonResource
         return [
             'id' => $this->id,
             'code' => $this->code,
-            'validity_days' => $this->validity_days,
-            'expired_at' => $this->expired_at,
-            //            'source' => FeatureGroupEnum::from($this->group)->getLabel(),
             'status' => $this->status,
-            'status_text' => $this->status->getLabel(),
+            'status_text' => ActivationCodeStatusEnum::from($this->status)->getLabel(),
             'plan_name' => $this->whenLoaded('plan', fn() => $this->plan->name),
-            'source' => SourceResource::make($this->whenLoaded('source')),
-            'redeemed_at' => $this->redeemed_at,
-            'user' => $this->whenLoaded('user', function () {
-                return [
-                    'id' => $this->user->id,
-                    'name' => $this->user->name,
-                    'email' => $this->user->email,
-                ];
-            }),
+            'source' => $this->whenLoaded('source', fn() => $this->source->name),
+            'redeemed_at' => $this->redeemed_at?->format('Y-m-d g:i a'),
+            'created_by' => $this->whenLoaded('createdBy', fn() => $this->createdBy->name),
+            'expired_at' => $this->expired_at?->format('Y-m-d'),
+            'created_at' => $this->created_at?->format('Y-m-d g:i a'),
+
         ];
     }
 }

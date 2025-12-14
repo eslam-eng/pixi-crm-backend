@@ -22,7 +22,8 @@ class DashboardService
         public UserService $userService,
         public ActivityService $activityService,
         public ChairService $chairService,
-    ) {}
+    ) {
+    }
 
     public function getWidgets(array $filters)
     {
@@ -188,13 +189,13 @@ class DashboardService
         if (isset($filters['user_id'])) {
             $filters['assigned_to_ids'] = $filters['user_id'] ?? user_id();
             unset($filters['user_id']);
-        }else {
+        } else {
             $filters['assigned_to_ids'] = $filters['assigned_to_ids'] ?? user_id();
         }
         $target = $this->getRequiredTarget($filters);
-        
+
         $deals_values = $this->dealService->queryGet($filters)->sum('total_amount');
-        
+
         if ($deals_values == 0) {
             return 0;
         }
@@ -202,7 +203,7 @@ class DashboardService
             return 'user has no target';
         }
 
-        $target_progress = $deals_values /  $target->target_value * 100;
+        $target_progress = $deals_values / $target->target_value * 100;
         return [
             'target_progress' => $target_progress,
             'deals_values' => $deals_values,
@@ -275,7 +276,7 @@ class DashboardService
         ];
 
         $chair = $this->chairService->queryGet([
-            'chair_rarget' => $newFilters
+            'chair_target' => $newFilters
         ])->first();
 
         if (!$chair || !$chair->exists()) {

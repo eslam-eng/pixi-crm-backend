@@ -25,20 +25,26 @@ class UserShowResource extends JsonResource
             'last_name' => $this->last_name,
             'email' => $this->email,
             'phone' => $this->phone,
+            'job_title' => $this->job_title,
             'department' => $this->whenLoaded('department', function () {
                 return [
-                        'id' => $this->department?->id,
-                        'name' => $this->department?->name
+                    'id' => $this->department?->id,
+                    'name' => $this->department?->name
                 ];
             }),
             'is_active' => $this->is_active,
+            'clock_in_out' => $this->requires_clock ?? false,
+            'has_target' => !is_null($this->target) && $this->target > 0,
             'role' => $this->whenLoaded('roles', function () {
                 return [
-                        'id' => $this->roles->first()?->id,
-                        'name' => $this->roles->first()?->name
+                    'id' => $this->roles->first()?->id,
+                    'name' => $this->roles->first()?->name
                 ];
             }),
             'activeIndividualChair' => $this->whenLoaded('activeIndividualChair', new ChairResource($this->activeIndividualChair)),
+            'created_by' => null, // No created_by_id field in users table
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

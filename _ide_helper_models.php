@@ -14,437 +14,786 @@
 namespace App\Models{
 /**
  * @property int $id
- * @property string $code
- * @property int $tier_id
- * @property string $source
- * @property string $status
- * @property int $trial_days
- * @property string $expires_at
- * @property \Illuminate\Support\Carbon|null $used_at
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string|null $phone
+ * @property string|null $locale
+ * @property \App\Enums\Landlord\ActivationStatusEnum $is_active
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $deleted_at
- * @property int $create_by
+ * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $createBy
- * @property-read bool $is_expired
- * @property-read bool $is_used
- * @property-read bool $is_valid
- * @property-read \App\Models\Tenant|null $tenant
- * @property-read \App\Models\Tier $tier
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode expired()
- * @method static \Database\Factories\ActivationCodeFactory factory($count = null, $state = [])
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property-read int|null $permissions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Role> $roles
+ * @property-read int|null $roles_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
+ * @property-read int|null $tokens_count
+ * @method static \Database\Factories\AdminFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin permission($permissions, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin role($roles, $guard = null, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withoutPermission($permissions)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withoutRole($roles, $guard = null)
+ */
+	class Admin extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property string $id
+ * @property string $code
+ * @property int $source_id
+ * @property int $validity_days
+ * @property string $status
+ * @property int $plan_id
+ * @property string|null $expired_at
+ * @property int|null $user_id
+ * @property \Illuminate\Support\Carbon|null $redeemed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Central\Plan $plan
+ * @property-read \App\Models\Central\Source $source
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\SourcePayoutItem> $sourcePayoutItems
+ * @property-read int|null $source_payout_items_count
+ * @property-read \App\Models\Central\Subscription|null $subscription
+ * @property-read \App\Models\Central\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode forModuleType(string $moduleType)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode used()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode valid()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereCreateBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereExpiredAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereSource($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode wherePlanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereRedeemedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereSourceId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereTierId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereTrialDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereUsedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ActivationCode whereValidityDays($value)
  */
 	class ActivationCode extends \Eloquent {}
 }
 
-namespace App\Models{
+namespace App\Models\Central{
 /**
- * @property-read \App\Models\Service|null $service
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Category filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Category newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Category newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Category query()
+ * @property int $id
+ * @property string $discount_code
+ * @property int $plan_id
+ * @property string $discount_type
+ * @property float $discount_percentage
+ * @property int|null $users_limit
+ * @property int|null $usage_limit
+ * @property string|null $expires_at
+ * @property \App\Enums\Landlord\ActivationStatusEnum $status
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Central\Plan $plan
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\DiscountCodeUsage> $usages
+ * @property-read int|null $usages_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereDiscountCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereDiscountPercentage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereDiscountType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode wherePlanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereUsageLimit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereUsersLimit($value)
  */
-	class Category extends \Eloquent {}
+	class DiscountCode extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property-read \App\Models\Central\DiscountCode|null $discountCode
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCodeUsage filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCodeUsage newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCodeUsage newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCodeUsage query()
+ */
+	class DiscountCodeUsage extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $slug
+ * @property array<array-key, mixed> $name
+ * @property int $group is features for limits or for modules values from enum Feature Group
+ * @property array<array-key, mixed>|null $description
+ * @property int $is_active
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $active_slug
+ * @property-read \App\Models\Central\FeaturePlan|\App\Models\Central\FeatureSubscription|null $pivot
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Subscription> $featureSubscriptions
+ * @property-read int|null $feature_subscriptions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Plan> $plans
+ * @property-read int|null $plans_count
+ * @property-read mixed $translations
+ * @method static \Database\Factories\Central\FeatureFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereActiveSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereLocale(string $column, string $locale)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereLocales(string $column, array $locales)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Feature withoutTrashed()
+ */
+	class Feature extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property int $plan_id
+ * @property int $feature_id
+ * @property string $value
+ * @property int $is_unlimited
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Central\Feature $feature
+ * @property-read \App\Models\Central\Plan $plan
+ * @method static \Database\Factories\Central\FeaturePlanFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan whereFeatureId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan whereIsUnlimited($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan wherePlanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeaturePlan whereValue($value)
+ */
+	class FeaturePlan extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $subscription_id
+ * @property int $feature_id
+ * @property string $slug
+ * @property string $name
+ * @property string $group
+ * @property string $value
+ * @property int $usage
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Central\FeaturePlan|null $feature
+ * @property-read \App\Models\Central\Subscription $subscription
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereFeatureId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereSubscriptionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereUsage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|FeatureSubscription whereValue($value)
+ */
+	class FeatureSubscription extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property string $id
+ * @property string $invoice_number
+ * @property string $tenant_id
+ * @property string|null $subscription_id
+ * @property numeric $subtotal
+ * @property numeric $tax_amount
+ * @property numeric $discount_percentage
+ * @property numeric $total
+ * @property string $currency
+ * @property \App\Enums\Landlord\InvoiceStatusEnum $status
+ * @property \Illuminate\Support\Carbon|null $due_date
+ * @property \Illuminate\Support\Carbon|null $paid_at
+ * @property array<array-key, mixed>|null $metadata
+ * @property \App\Enums\Landlord\PaymentMethodEnum|null $payment_method
+ * @property string|null $payment_reference
+ * @property array<array-key, mixed>|null $billing_address
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\DiscountCodeUsage> $discountCodeUsage
+ * @property-read int|null $discount_code_usage_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\InvoiceItem> $items
+ * @property-read int|null $items_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Payment> $payments
+ * @property-read int|null $payments_count
+ * @property-read \App\Models\Central\Subscription|null $subscription
+ * @property-read \App\Models\Central\Tenant $tenant
+ * @property-read \App\Models\Central\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereBillingAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereCurrency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereDiscountPercentage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereDueDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereInvoiceNumber($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereMetadata($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice wherePaidAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice wherePaymentMethod($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice wherePaymentReference($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereSubscriptionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereSubtotal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereTaxAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereTenantId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereTotal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereUpdatedAt($value)
+ */
+	class Invoice extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $invoice_id
+ * @property string|null $description
+ * @property int $quantity
+ * @property numeric $unit_price
+ * @property numeric $total
+ * @property array<array-key, mixed>|null $metadata
+ * @property string|null $period_start
+ * @property string|null $period_end
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Central\Invoice $invoice
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereInvoiceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereMetadata($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem wherePeriodEnd($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem wherePeriodStart($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereQuantity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereTotal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereUnitPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereUpdatedAt($value)
+ */
+	class InvoiceItem extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property-read \App\Models\Central\Invoice|null $invoice
+ * @property-read \App\Models\Central\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Payment query()
+ */
+	class Payment extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $guard_name
+ * @property string|null $group
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Role> $roles
+ * @property-read int|null $roles_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\User> $users
+ * @property-read int|null $users_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission permission($permissions, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission role($roles, $guard = null, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereGuardName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission withoutPermission($permissions)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission withoutRole($roles, $guard = null)
+ */
+	class Permission extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property array<array-key, mixed> $name
+ * @property array<array-key, mixed>|null $description
+ * @property string $currency_code
+ * @property numeric|null $monthly_price
+ * @property numeric|null $annual_price
+ * @property numeric|null $lifetime_price
+ * @property \App\Enums\Landlord\ActivationStatusEnum $is_active
+ * @property int $sort_order
+ * @property int $trial_days
+ * @property int $refund_days
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Central\FeaturePlan|null $pivot
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Feature> $addonFeatures
+ * @property-read int|null $addon_features_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Feature> $features
+ * @property-read int|null $features_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Feature> $limitFeatures
+ * @property-read int|null $limit_features_count
+ * @property-read mixed $translations
+ * @method static \Database\Factories\Central\PlanFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan trial()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereAnnualPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereCurrencyCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereLifetimePrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereLocale(string $column, string $locale)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereLocales(string $column, array $locales)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereMonthlyPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereRefundDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereSortOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereTrialDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Plan withoutTrashed()
+ */
+	class Plan extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Platform query()
+ */
+	class Platform extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $guard_name
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \App\Enums\Landlord\ActivationStatusEnum $is_active
+ * @property string|null $description
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property-read int|null $permissions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Admin> $users
+ * @property-read int|null $users_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role permission($permissions, $without = false)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereGuardName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role withoutPermission($permissions)
+ */
+	class Role extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property-read \App\Models\Central\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialLogin filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialLogin newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialLogin newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialLogin query()
+ */
+	class SocialLogin extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $name
+ * @property bool $is_active
+ * @property numeric $payout_percentage
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\SourcePayoutBatch> $payoutBatches
+ * @property-read int|null $payout_batches_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source wherePayoutPercentage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereUpdatedAt($value)
+ */
+	class Source extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property int $plan_id
+ * @property int $source_id
+ * @property string $total_amount
+ * @property string $period_start
+ * @property string $period_end
+ * @property string|null $collected_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\SourcePayoutItem> $payoutItems
+ * @property-read int|null $payout_items_count
+ * @property-read \App\Models\Central\Plan $plan
+ * @property-read \App\Models\Central\Source $source
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch whereCollectedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch wherePeriodEnd($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch wherePeriodStart($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch wherePlanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch whereSourceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch whereTotalAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutBatch whereUpdatedAt($value)
+ */
+	class SourcePayoutBatch extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property int $source_payout_batch_id
+ * @property string $activation_code_id
+ * @property string $payout_amount
+ * @property string|null $collected_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Central\ActivationCode $activationCode
+ * @property-read \App\Models\Central\SourcePayoutBatch|null $payoutBatch
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem whereActivationCodeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem whereCollectedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem wherePayoutAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem whereSourcePayoutBatchId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SourcePayoutItem whereUpdatedAt($value)
+ */
+	class SourcePayoutItem extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property string $id
+ * @property string $subscription_number
+ * @property int $plan_id
+ * @property \App\Enums\Landlord\SubscriptionStatusEnum $status active,canceled,expired,..
+ * @property string $starts_at
+ * @property string|null $ends_at
+ * @property string|null $trial_ends_at
+ * @property string|null $cancelled_at
+ * @property string $amount
+ * @property string $currency
+ * @property bool $auto_renew
+ * @property \App\Enums\Landlord\SubscriptionBillingCycleEnum|null $billing_cycle
+ * @property array<array-key, mixed> $plan_snapshot
+ * @property int $monthly_credit_tokens
+ * @property string $tenant_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $activation_code_id
+ * @property-read mixed $days_left
+ * @property-read mixed $ends_at_formatted
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\FeatureSubscription> $featureSubscriptions
+ * @property-read int|null $feature_subscriptions_count
+ * @property-read \App\Models\Central\FeatureSubscription|null $pivot
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Feature> $features
+ * @property-read int|null $features_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Invoice> $invoices
+ * @property-read int|null $invoices_count
+ * @property-read \App\Models\Central\Plan $plan
+ * @property-read mixed $plan_name
+ * @property-read mixed $starts_at_formatted
+ * @property-read \App\Models\Central\Tenant $tenant
+ * @property-read mixed $trial_ends_at_formatted
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription active(int $tenantId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereActivationCodeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereAutoRenew($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereBillingCycle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereCancelledAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereCurrency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereEndsAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereMonthlyCreditTokens($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription wherePlanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription wherePlanSnapshot($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereStartsAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereSubscriptionNumber($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereTenantId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereTrialEndsAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereUpdatedAt($value)
+ */
+	class Subscription extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property-read \App\Models\Central\Plan|null $fromPlan
+ * @property-read \App\Models\Central\Plan|null $toPlan
+ * @property-read \App\Models\Central\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionTransition filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionTransition newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionTransition newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionTransition query()
+ */
+	class SubscriptionTransition extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property string $id
+ * @property string $name
+ * @property array<array-key, mixed>|null $data
+ * @property \App\Enums\Landlord\ActivationStatusEnum $status
+ * @property int|null $owner_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int $has_used_trial
+ * @property string|null $trial_plan_id
+ * @property-read \App\Models\Central\Subscription|null $activeSubscription
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Stancl\Tenancy\Database\Models\Domain> $domains
+ * @property-read int|null $domains_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Invoice> $invoices
+ * @property-read int|null $invoices_count
+ * @property-read \App\Models\Central\Subscription|null $latestSubscription
+ * @property-read \App\Models\Central\User|null $owner
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\SubscriptionTransition> $subscriptionTransition
+ * @property-read int|null $subscription_transition_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\Subscription> $subscriptions
+ * @property-read int|null $subscriptions_count
+ * @method static \Stancl\Tenancy\Database\TenantCollection<int, static> all($columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Stancl\Tenancy\Database\TenantCollection<int, static> get($columns = ['*'])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereHasUsedTrial($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereOwnerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereTrialPlanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereUpdatedAt($value)
+ */
+	class Tenant extends \Eloquent implements \Stancl\Tenancy\Contracts\TenantWithDatabase {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property-read \App\Models\Central\Platform|null $platform
+ * @property-read \App\Models\Central\Tenant|null $tenant
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TenantPlatform filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TenantPlatform newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TenantPlatform newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TenantPlatform query()
+ */
+	class TenantPlatform extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TenantUser newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TenantUser newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TenantUser query()
+ */
+	class TenantUser extends \Eloquent {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property string|null $address
+ * @property string|null $phone
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \App\Enums\Landlord\SupportedLocalesEnum $locale
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Central\SocialLogin> $socialLogins
+ * @property-read int|null $social_logins_count
+ * @property-read \App\Models\Central\Tenant|null $tenant
+ * @property-read \Stancl\Tenancy\Database\TenantCollection<int, \App\Models\Central\Tenant> $tenants
+ * @property-read int|null $tenants_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFirstName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ */
+	class User extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
+}
+
+namespace App\Models\Central{
+/**
+ * @property int $id
+ * @property string $email
+ * @property string $code
+ * @property string $type
+ * @property int $attempts
+ * @property \Illuminate\Support\Carbon $expires_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereAttempts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VerificationCode whereUpdatedAt($value)
+ */
+	class VerificationCode extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * @property int $id
- * @property string $name
- * @property int $country_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Country $country
+ * @property-read \App\Models\Country|null $country
  * @method static \Illuminate\Database\Eloquent\Builder<static>|City newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|City newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|City query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|City whereCountryId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|City whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|City whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|City whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|City whereUpdatedAt($value)
  */
 	class City extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * @property int $id
- * @property string|null $stripe_id
- * @property string $company_name
- * @property string|null $contact_name
- * @property string $contact_email
- * @property string $contact_phone
- * @property string|null $job_title
- * @property string|null $website
- * @property string $subdomain
- * @property string|null $company_size
- * @property string|null $industry
- * @property int $city_id
- * @property string|null $postal_code
- * @property string|null $address
- * @property string $status
- * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Location|null $area
- * @property-read \App\Models\Source|null $source
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Subscription> $subscriptions
- * @property-read int|null $subscriptions_count
- * @method static \Database\Factories\ClientFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client hasExpiredGenericTrial()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client onGenericTrial()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereCityId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereCompanyName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereCompanySize($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereContactEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereContactName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereContactPhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereIndustry($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereJobTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereNotes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client wherePostalCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereStripeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereSubdomain($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Client whereWebsite($value)
- */
-	class Client extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property string $name
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\City> $cities
  * @property-read int|null $cities_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Country newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Country newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Country query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Country whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Country whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Country whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Country whereUpdatedAt($value)
  */
 	class Country extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Client> $clients
- * @property-read int|null $clients_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $deals
- * @property-read int|null $deals_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomField filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomField newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomField newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomField query()
- */
-	class CustomField extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
  * @property int $id
- * @property string $code
- * @property int $tier_id
- * @property string $source
- * @property string $status
- * @property int $trial_days
- * @property string $expires_at
- * @property \Illuminate\Support\Carbon|null $used_at
- * @property string $discount_percentage
- * @property string $usage_type
- * @property int|null $max_uses
- * @property string|null $deleted_at
- * @property int $create_by
+ * @property string $name
+ * @property int $is_active
+ * @property string $payout_percentage
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $createBy
- * @property-read bool $is_expired
- * @property-read bool $is_used
- * @property-read bool $is_valid
- * @property-read \App\Models\Tenant|null $tenant
- * @property-read \App\Models\Tier $tier
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode expired()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode forModuleType(string $moduleType)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode used()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode valid()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereCreateBy($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereDiscountPercentage($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereExpiresAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereMaxUses($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereSource($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereTierId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereTrialDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereUsageType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|DiscountCode whereUsedAt($value)
- */
-	class DiscountCode extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property int $user_id
- * @property string $token
- * @property string|null $device_type
- * @property string|null $device_id
- * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $last_used_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $user
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken active()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereDeviceId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereDeviceType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereLastUsedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|FcmToken whereUserId($value)
- */
-	class FcmToken extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Client> $clients
- * @property-read int|null $clients_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
- * @property-read int|null $leads_count
- * @property-read mixed $translations
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry whereLocale(string $column, string $locale)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Industry whereLocales(string $column, array $locales)
- */
-	class Industry extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property int $client_id
- * @property int $subscription_id
- * @property string $amount
- * @property string $status
- * @property string $due_date
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Client|null $client
- * @property-read \App\Models\Subscription|null $subscription
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereClientId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereDueDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereSubscriptionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereUpdatedAt($value)
- */
-	class Invoice extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property \App\Enums\ActivationStatus $status
- * @property-read \Kalnoy\Nestedset\Collection<int, Location> $children
- * @property-read int|null $children_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Client> $clients
- * @property-read int|null $clients_count
- * @property-read Location|null $parent
- * @property-write mixed $parent_id
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location active()
- * @method static \Kalnoy\Nestedset\Collection<int, static> all($columns = ['*'])
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location ancestorsAndSelf($id, array $columns = [])
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location ancestorsOf($id, array $columns = [])
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location applyNestedSetScope(?string $table = null)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location cities()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location countErrors()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location countries()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location d()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location defaultOrder(string $dir = 'asc')
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location descendantsAndSelf($id, array $columns = [])
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location descendantsOf($id, array $columns = [], $andSelf = false)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location fixSubtree($root)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location fixTree($root = null)
- * @method static \Kalnoy\Nestedset\Collection<int, static> get($columns = ['*'])
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location getNodeData($id, $required = false)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location getPlainNodeData($id, $required = false)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location getTotalErrors()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location governorates()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location hasChildren()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location hasParent()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location isBroken()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location leaves(array $columns = [])
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location makeGap(int $cut, int $height)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location moveNode($key, $position)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location newModelQuery()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location newQuery()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereAncestorOf(bool $id, bool $andSelf = false)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereDescendantOf($id)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereNodeBetween($values)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereNotDescendantOf($id)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location query()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location rebuildSubtree($root, array $data, $delete = false)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location rebuildTree(array $data, $delete = false, $root = null)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location reversed()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location root(array $columns = [])
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereAncestorOf($id, $andSelf = false, $boolean = 'and')
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereAncestorOrSelf($id)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereDescendantOf($id, $boolean = 'and', $not = false, $andSelf = false)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereDescendantOrSelf(string $id, string $boolean = 'and', string $not = false)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsAfter($id, $boolean = 'and')
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsBefore($id, $boolean = 'and')
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsLeaf()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsRoot()
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereNodeBetween($values, $boolean = 'and', $not = false, $query = null)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereNotDescendantOf($id)
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location withDepth(string $as = 'depth')
- * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location withoutRoot()
- */
-	class Location extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property array<array-key, mixed> $name
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string $key
- * @property string $group
- * @property array<array-key, mixed> $group_label
- * @property int $has_number_field
- * @property array<array-key, mixed>|null $number_field_label
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Client> $clients
- * @property-read int|null $clients_count
- * @property-read mixed $localized_group_label
- * @property-read mixed $localized_name
- * @property-read mixed $localized_number_field_label
- * @property-read mixed $translations
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereGroup($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereGroupLabel($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereHasNumberField($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereLocale(string $column, string $locale)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereLocales(string $column, array $locales)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereNumberFieldLabel($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Module whereUpdatedAt($value)
- */
-	class Module extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reason filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reason newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reason newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Reason query()
- */
-	class Reason extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Category> $categories
- * @property-read int|null $categories_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Client> $clients
- * @property-read int|null $clients_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Service filter(\App\Abstracts\QueryFilter $filters)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Service newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Service newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Service query()
- */
-	class Service extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property array<array-key, mixed>|null $sources
- * @property array<array-key, mixed>|null $departments
- * @property array<array-key, mixed>|null $industries
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereDepartments($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereIndustries($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereSources($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereUpdatedAt($value)
- */
-	class Setting extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Contact> $contacts
  * @property-read int|null $contacts_count
  * @property-read mixed $image_url
@@ -453,6 +802,12 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Source newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Source newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Source query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source wherePayoutPercentage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Source whereUpdatedAt($value)
  */
 	class Source extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
@@ -472,42 +827,6 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * @property int $id
- * @property int $client_id
- * @property int $tier_id
- * @property \Illuminate\Support\Carbon|null $subscription_start_date
- * @property \Illuminate\Support\Carbon|null $subscription_end_date
- * @property string $subscription_status
- * @property string $activition_method
- * @property string|null $source
- * @property string $auto_renew
- * @property \App\Enums\landlord\PaymentStatus $payment_status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Client $client
- * @property-read \App\Models\Tier $tier
- * @method static \Database\Factories\SubscriptionFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereActivitionMethod($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereAutoRenew($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereClientId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription wherePaymentStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereSource($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereSubscriptionEndDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereSubscriptionStartDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereSubscriptionStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereTierId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereUpdatedAt($value)
- */
-	class Subscription extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
-}
-
-namespace App\Models{
-/**
  * @property-read \App\Models\Tenant\Reminder|null $reminder
  * @property-read \App\Models\Tenant\Task|null $task
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskReminder newModelQuery()
@@ -521,28 +840,51 @@ namespace App\Models{
 /**
  * @property string $id
  * @property string $name
- * @property int|null $client_id
  * @property array<array-key, mixed>|null $data
+ * @property int $status
+ * @property int|null $owner_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int $has_used_trial
+ * @property string|null $trial_plan_id
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Stancl\Tenancy\Database\Models\Domain> $domains
  * @property-read int|null $domains_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tier> $tiers
- * @property-read int|null $tiers_count
  * @property-read \App\Models\User|null $user
  * @method static \Stancl\Tenancy\Database\TenantCollection<int, static> all($columns = ['*'])
  * @method static \Stancl\Tenancy\Database\TenantCollection<int, static> get($columns = ['*'])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereClientId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereHasUsedTrial($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereOwnerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereTrialPlanId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tenant whereUpdatedAt($value)
  */
 	class Tenant extends \Eloquent implements \Stancl\Tenancy\Contracts\TenantWithDatabase, \Spatie\MediaLibrary\HasMedia {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \Illuminate\Database\Eloquent\Model $causer
+ * @property-read \Illuminate\Support\Collection $changes
+ * @property-read \Illuminate\Database\Eloquent\Model $subject
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity causedBy(\Illuminate\Database\Eloquent\Model $causer)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity forBatch(string $batchUuid)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity forEvent(string $event)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity forSubject(\Illuminate\Database\Eloquent\Model $subject)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity hasBatch()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity inLog(...$logNames)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Activity visibleFor($user_id)
+ */
+	class Activity extends \Eloquent {}
 }
 
 namespace App\Models\Tenant{
@@ -577,6 +919,257 @@ namespace App\Models\Tenant\Attendance{
 
 namespace App\Models\Tenant{
 /**
+ * @property-read mixed $translations
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction whereLocale(string $column, string $locale)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationAction whereLocales(string $column, array $locales)
+ */
+	class AutomationAction extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\AutomationStepsImplement|null $automationStepsImplement
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationDelay dueInMinutes($minutes = 5)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationDelay newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationDelay newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationDelay pending()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationDelay processed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationDelay query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationDelay readyToExecute()
+ */
+	class AutomationDelay extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\User|null $triggeredBy
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog byStatus(string $status)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog byType(string $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog failed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog forEntity(string $entityType, int $entityId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationLog successful()
+ */
+	class AutomationLog extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\AutomationWorkflow|null $automationWorkflow
+ * @property-read \App\Models\Tenant\AutomationWorkflowStep|null $automationWorkflowStep
+ * @property-read \App\Models\Tenant\AutomationDelay|null $delay
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $triggerable
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement forTriggerable($type, $id)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement implemented()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement ofType($type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement pending()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationStepsImplement query()
+ */
+	class AutomationStepsImplement extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\AutomationTriggerField> $fields
+ * @property-read int|null $fields_count
+ * @property-read mixed $translations
+ * @property-read \App\Models\Tenant\AutomationWorkflow|null $workflow
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger whereLocale(string $column, string $locale)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTrigger whereLocales(string $column, array $locales)
+ */
+	class AutomationTrigger extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property int $id
+ * @property int $automation_trigger_id
+ * @property string $field_name
+ * @property string $field_type
+ * @property string $field_label
+ * @property string $field_category
+ * @property bool $is_relationship
+ * @property string|null $description
+ * @property string|null $example_value
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Tenant\AutomationTrigger|null $automationTrigger
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField directFields()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField relationshipFields()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereAutomationTriggerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereExampleValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereFieldCategory($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereFieldLabel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereFieldName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereFieldType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereIsRelationship($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationTriggerField whereUpdatedAt($value)
+ */
+	class AutomationTriggerField extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\AutomationTrigger|null $automationTrigger
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\AutomationWorkflowStep> $steps
+ * @property-read int|null $steps_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflow active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflow newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflow newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflow query()
+ */
+	class AutomationWorkflow extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\AutomationWorkflowStepAction|null $action
+ * @property-read \App\Models\Tenant\AutomationWorkflow|null $automationWorkflow
+ * @property-read \App\Models\Tenant\AutomationWorkflowStepCondition|null $condition
+ * @property-read \App\Models\Tenant\AutomationWorkflowStepDelay|null $delay
+ * @property-read mixed $step_data
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStep newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStep newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStep ofType($type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStep ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStep query()
+ */
+	class AutomationWorkflowStep extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\AutomationAction|null $automationAction
+ * @property-read \App\Models\Tenant\AutomationWorkflowStep|null $automationWorkflowStep
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepAction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepAction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepAction query()
+ */
+	class AutomationWorkflowStepAction extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\AutomationWorkflowStep|null $automationWorkflowStep
+ * @property-read \App\Models\Tenant\AutomationTriggerField|null $field
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepCondition newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepCondition newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepCondition query()
+ */
+	class AutomationWorkflowStepCondition extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\AutomationWorkflowStep|null $automationWorkflowStep
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepDelay newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepDelay newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AutomationWorkflowStepDelay query()
+ */
+	class AutomationWorkflowStepDelay extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ChairAchievement> $achievements
+ * @property-read int|null $achievements_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ChairTarget> $activeTargets
+ * @property-read int|null $active_targets_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $deals
+ * @property-read int|null $deals_count
+ * @property-read string $display_name
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ChairTarget> $monthlyTargets
+ * @property-read int|null $monthly_targets_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ChairTarget> $quarterlyTargets
+ * @property-read int|null $quarterly_targets_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ChairTarget> $targets
+ * @property-read int|null $targets_count
+ * @property-read \App\Models\Tenant\Team|null $team
+ * @property-read \App\Models\Tenant\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair activeAt($date)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair individual()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair withTeam()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Chair withoutTeam()
+ */
+	class Chair extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property \App\Enums\PeriodType $period_type
+ * @property-read \App\Models\Tenant\Chair|null $chair
+ * @property-read float $difference
+ * @property-read string $period_string
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement achieved()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement forPeriod(int $year, int $periodNumber)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement forYear(int $year)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement monthly()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement notAchieved()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement ofType(\App\Enums\PeriodType $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement quarterly()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairAchievement yearly()
+ */
+	class ChairAchievement extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property \App\Enums\PeriodType $period_type
+ * @property-read \App\Models\Tenant\Chair|null $chair
+ * @property-read string $period_string
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget forDate($date)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget forPeriod(int $year, int $periodNumber)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget forYear(int $year)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget monthly()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget ofType(\App\Enums\PeriodType $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget quarterly()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ChairTarget yearly()
+ */
+	class ChairTarget extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
  * @property-read \App\Models\Tenant\Lead|null $activeLead
  * @property-read \App\Models\City|null $city
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactMerge> $contactMerges
@@ -584,7 +1177,9 @@ namespace App\Models\Tenant{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactPhone> $contactPhones
  * @property-read int|null $contact_phones_count
  * @property-read \App\Models\Country|null $country
+ * @property-read \App\Models\Tenant\Department|null $department
  * @property-read mixed $name
+ * @property-read \App\Models\Tenant\ContactPhone|null $phone
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
  * @property-read int|null $leads_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
@@ -606,12 +1201,25 @@ namespace App\Models\Tenant{
  * @property \App\Enums\MergeContactType $merge_status
  * @property \App\Enums\IdenticalContactType $identical_contact_type
  * @property-read \App\Models\Tenant\Contact|null $contact
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ContactMergePhone> $contactMergePhones
+ * @property-read int|null $contact_merge_phones_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMerge query()
  */
 	class ContactMerge extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\ContactMerge|null $contactMerge
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMergePhone filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMergePhone newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMergePhone newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ContactMergePhone query()
+ */
+	class ContactMergePhone extends \Eloquent {}
 }
 
 namespace App\Models\Tenant{
@@ -654,6 +1262,8 @@ namespace App\Models\Tenant{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Item> $items
  * @property-read int|null $items_count
  * @property-read \App\Models\Tenant\Lead|null $lead
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\DealPayment> $payments
  * @property-read int|null $payments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ItemVariant> $variants
@@ -731,6 +1341,12 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property int $id
+ * @property array<array-key, mixed> $name
+ * @property string|null $description
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read mixed $localized_name
  * @property-read mixed $translations
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department active()
@@ -738,10 +1354,16 @@ namespace App\Models\Tenant{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereIsActive($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereJsonContainsLocale(string $column, string $locale, ?mixed $value, string $operand = '=')
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereJsonContainsLocales(string $column, array $locales, ?mixed $value, string $operand = '=')
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereLocale(string $column, string $locale)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereLocales(string $column, array $locales)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Department whereUpdatedAt($value)
  */
 	class Department extends \Eloquent {}
 }
@@ -796,12 +1418,48 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property \App\Enums\PlatformEnum $platform
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\IntegratedFormFieldMapping> $fieldMappings
+ * @property-read int|null $field_mappings_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IntegratedForm newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IntegratedForm newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IntegratedForm query()
+ */
+	class IntegratedForm extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\IntegratedForm|null $formMapping
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IntegratedFormFieldMapping newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IntegratedFormFieldMapping newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|IntegratedFormFieldMapping query()
+ */
+	class IntegratedFormFieldMapping extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property \App\Enums\IntegrationStatusEnum $status
+ * @property \App\Enums\PlatformEnum $platform
+ * @property-read int|null $token_expires_in
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Integration newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Integration newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Integration query()
+ */
+	class Integration extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
  * @property-read \App\Models\Tenant\ItemCategory|null $category
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $deals
  * @property-read int|null $deals_count
  * @property-read mixed $is_product
  * @property-read mixed $is_service
  * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $itemable
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $opportunities
  * @property-read int|null $opportunities_count
  * @property-read \App\Models\Tenant\Product|null $product
@@ -814,7 +1472,7 @@ namespace App\Models\Tenant{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Item ordered()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Item query()
  */
-	class Item extends \Eloquent {}
+	class Item extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
 
 namespace App\Models\Tenant{
@@ -848,6 +1506,7 @@ namespace App\Models\Tenant{
  * @property-read int|null $children_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Item> $items
  * @property-read int|null $items_count
+ * @property-read ItemCategory|null $parent
  * @method static \Database\Factories\Tenant\ItemCategoryFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ItemCategory newModelQuery()
@@ -893,14 +1552,12 @@ namespace App\Models\Tenant{
  * @property-read int|null $audits_count
  * @property-read \App\Models\City|null $city
  * @property-read \App\Models\Tenant\Contact|null $contact
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CustomField> $customFields
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\CustomField> $customFields
  * @property-read int|null $custom_fields_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Industry> $industries
- * @property-read int|null $industries_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Item> $items
  * @property-read int|null $items_count
- * @property-read \App\Models\Reason|null $reason
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Service> $services
+ * @property-read \App\Models\Tenant\LossReason|null $reason
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Service> $services
  * @property-read int|null $services_count
  * @property-read \App\Models\Stage|null $stage
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Stage> $stages
@@ -916,6 +1573,68 @@ namespace App\Models\Tenant{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Lead query()
  */
 	class Lead extends \Eloquent implements \OwenIt\Auditing\Contracts\Auditable {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property \App\Enums\ActivationStatus $status
+ * @property-read \Kalnoy\Nestedset\Collection<int, Location> $children
+ * @property-read int|null $children_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Contact> $contacts
+ * @property-read int|null $contacts_count
+ * @property-read Location|null $parent
+ * @property-write mixed $parent_id
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location active()
+ * @method static \Kalnoy\Nestedset\Collection<int, static> all($columns = ['*'])
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location ancestorsAndSelf($id, array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location ancestorsOf($id, array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location applyNestedSetScope(?string $table = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location cities()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location countErrors()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location countries()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location d()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location defaultOrder(string $dir = 'asc')
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location descendantsAndSelf($id, array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location descendantsOf($id, array $columns = [], $andSelf = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location fixSubtree($root)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location fixTree($root = null)
+ * @method static \Kalnoy\Nestedset\Collection<int, static> get($columns = ['*'])
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location getNodeData($id, $required = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location getPlainNodeData($id, $required = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location getTotalErrors()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location governorates()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location hasChildren()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location hasParent()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location isBroken()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location leaves(array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location makeGap(int $cut, int $height)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location moveNode($key, $position)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location newModelQuery()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location newQuery()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereAncestorOf(bool $id, bool $andSelf = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereDescendantOf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereNodeBetween($values)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location orWhereNotDescendantOf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location query()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location rebuildSubtree($root, array $data, $delete = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location rebuildTree(array $data, $delete = false, $root = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location reversed()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location root(array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereAncestorOf($id, $andSelf = false, $boolean = 'and')
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereAncestorOrSelf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereDescendantOf($id, $boolean = 'and', $not = false, $andSelf = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereDescendantOrSelf(string $id, string $boolean = 'and', string $not = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsAfter($id, $boolean = 'and')
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsBefore($id, $boolean = 'and')
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsLeaf()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereIsRoot()
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereNodeBetween($values, $boolean = 'and', $not = false, $query = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location whereNotDescendantOf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location withDepth(string $as = 'depth')
+ * @method static \Kalnoy\Nestedset\QueryBuilder<static>|Location withoutRoot()
+ */
+	class Location extends \Eloquent {}
 }
 
 namespace App\Models\Tenant{
@@ -942,6 +1661,7 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property-read \App\Models\Stage|null $firstStage
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\LossReason> $lossReasons
  * @property-read int|null $loss_reasons_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Stage> $stages
@@ -1024,6 +1744,41 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property-read \App\Models\Tenant\User|null $createdBy
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ReportExecution> $executions
+ * @property-read int|null $executions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ReportExecution> $latestExecution
+ * @property-read int|null $latest_execution_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report byCategory(string $category)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report byType(string $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Report scheduled()
+ */
+	class Report extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @property-read \App\Models\Tenant\User|null $executedBy
+ * @property-read int $duration
+ * @property-read \App\Models\Tenant\Report|null $report
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReportExecution failed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReportExecution filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReportExecution newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReportExecution newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReportExecution query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReportExecution running()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ReportExecution successful()
+ */
+	class ReportExecution extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
  * @property \App\Enums\ServiceType $service_type
  * @property \App\Enums\ServiceDuration $duration
  * @property-read \App\Models\Tenant\ItemCategory|null $category
@@ -1086,15 +1841,58 @@ namespace App\Models\Tenant{
 
 namespace App\Models\Tenant{
 /**
+ * @property int $id
+ * @property string $title
+ * @property int|null $leader_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Chair> $activeChairs
+ * @property-read int|null $active_chairs_count
+ * @property-read \App\Models\Tenant\Chair|null $pivot
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\User> $activeUsers
+ * @property-read int|null $active_users_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Chair> $chairs
+ * @property-read int|null $chairs_count
+ * @property-read \App\Models\Tenant\Chair|null $currentChair
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $deals
+ * @property-read int|null $deals_count
  * @property-read \App\Models\Tenant\User|null $leader
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\User> $members
+ * @property-read int|null $members_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\User> $sales
  * @property-read int|null $sales_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\User> $users
+ * @property-read int|null $users_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\ChairTarget> $year_total
+ * @property-read int|null $year_total_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Team filter(\App\Abstracts\QueryFilter $filters)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Team query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereLeaderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team withTargets()
  */
 	class Team extends \Eloquent {}
+}
+
+namespace App\Models\Tenant{
+/**
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template email()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template filter(\App\Abstracts\QueryFilter $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template whatsapp()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Template withoutTrashed()
+ */
+	class Template extends \Eloquent {}
 }
 
 namespace App\Models\Tenant{
@@ -1110,17 +1908,31 @@ namespace App\Models\Tenant{
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $stripe_id
- * @property string|null $pm_type
- * @property string|null $pm_last_four
- * @property string|null $trial_ends_at
+ * @property-read \App\Models\Tenant\Chair|null $activeChair
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Chair> $activeChairs
+ * @property-read int|null $active_chairs_count
+ * @property-read \App\Models\Tenant\Chair|null $activeIndividualChair
+ * @property-read \App\Models\Tenant\Chair|null $pivot
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Team> $activeTeams
+ * @property-read int|null $active_teams_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Activity> $activities
+ * @property-read int|null $activities_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $assignedDeals
+ * @property-read int|null $assigned_deals_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $chairDeals
+ * @property-read int|null $chair_deals_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Chair> $chairs
+ * @property-read int|null $chairs_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Deal> $deals
  * @property-read int|null $deals_count
  * @property-read \App\Models\Tenant\Department|null $department
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FcmToken> $fcm_tokens
- * @property-read int|null $fcm_tokens_count
  * @property string $image
  * @property-read string $name
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Chair> $individualChairs
+ * @property-read int|null $individual_chairs_count
+ * @property-read \App\Models\Tenant\Attendance\AttendancePunch|null $latestAttendancePunch
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Lead> $leads
+ * @property-read int|null $leads_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
@@ -1129,7 +1941,13 @@ namespace App\Models\Tenant{
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\UserTarget> $targets
  * @property-read int|null $targets_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Task> $tasks
+ * @property-read int|null $tasks_count
  * @property-read \App\Models\Tenant\Team|null $team
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tenant\Chair> $teamChairs
+ * @property-read int|null $team_chairs_count
+ * @property-read \App\Models\Tenant\Team|null $teamManager
+ * @property-read \App\Models\Central\Tenant|null $tenant
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
  * @property-read int|null $tokens_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User filter(\App\Abstracts\QueryFilter $filters)
@@ -1147,11 +1965,7 @@ namespace App\Models\Tenant{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePmLastFour($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePmType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStripeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTrialEndsAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, $guard = null)
@@ -1173,75 +1987,6 @@ namespace App\Models\Tenant{
 namespace App\Models{
 /**
  * @property int $id
- * @property string $package_name
- * @property string|null $description
- * @property float $price
- * @property string $duration_unit
- * @property int $duration
- * @property int $refund_period
- * @property int|null $max_users
- * @property int $max_contacts
- * @property int $storage_limit
- * @property string $status
- * @property string $availability
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property mixed $modules
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Subscription> $subscriptions
- * @property-read int|null $subscriptions_count
- * @property-read \Stancl\Tenancy\Database\TenantCollection<int, \App\Models\Tenant> $tenant
- * @property-read int|null $tenant_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TierModule> $tier_modules
- * @property-read int|null $tier_modules_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier active()
- * @method static \Database\Factories\TierFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereAvailability($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereDuration($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereDurationUnit($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereMaxContacts($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereMaxUsers($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier wherePackageName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier wherePrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereRefundPeriod($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereStorageLimit($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tier withModule(\App\Enums\ModuleType $module)
- */
-	class Tier extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property int $tier_id
- * @property int $module_id
- * @property int|null $limit_value
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Module $module
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule whereLimitValue($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule whereModuleId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule whereTierId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TierModule whereUpdatedAt($value)
- */
-	class TierModule extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
  * @property string $first_name
  * @property string $last_name
  * @property string $email
@@ -1252,12 +1997,7 @@ namespace App\Models{
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $stripe_id
- * @property string|null $pm_type
- * @property string|null $pm_last_four
- * @property string|null $trial_ends_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FcmToken> $fcm_tokens
- * @property-read int|null $fcm_tokens_count
+ * @property-read string $name
  * @property-read \App\Models\Tenant|null $tenant
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User filter(\App\Abstracts\QueryFilter $filters)
@@ -1275,11 +2015,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePmLastFour($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePmType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStripeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTrialEndsAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, $guard = null)

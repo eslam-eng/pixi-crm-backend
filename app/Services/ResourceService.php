@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services;
-use App\Models\Resource;
+// use App\Models\Resource;
 use App\DTO\Resource\ResourceDTO;
 use App\Models\Source;
 use App\QueryFilters\ResourceFilters;
@@ -11,7 +11,8 @@ class ResourceService extends BaseService
 {
     public function __construct(
         public Source $model,
-    ) {}
+    ) {
+    }
 
     public function getModel(): Source
     {
@@ -23,7 +24,7 @@ class ResourceService extends BaseService
         return $this->queryGet($filters)->get();
     }
 
-    public function getTableName(): String
+    public function getTableName(): string
     {
         return $this->getModel()->getTable();
     }
@@ -50,20 +51,22 @@ class ResourceService extends BaseService
     public function getResources(array $filters = [], array $withRelations = [], ?int $perPage = null): \Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Database\Eloquent\Collection
     {
         $query = $this->queryGet(filters: $filters, withRelations: $withRelations);
-        return $perPage ? $query->paginate($perPage): $query->get();
+        return $perPage ? $query->paginate($perPage) : $query->get();
     }
 
-    public function store(ResourceDTO $resourceDTO){
-        $resource_data=$resourceDTO->toArray();
-        $resource= $this->model->create($resource_data);
+    public function store(ResourceDTO $resourceDTO)
+    {
+        $resource_data = $resourceDTO->toArray();
+        $resource = $this->model->create($resource_data);
         if ($resourceDTO->getImage()) {
             $resource->addMedia($resourceDTO->getImage())->toMediaCollection('sources');
         }
         return $resource;
     }
 
-    public function update(ResourceDTO $resourceDTO,$id){
-        $resource=$this->findById($id);
+    public function update(ResourceDTO $resourceDTO, $id)
+    {
+        $resource = $this->findById($id);
         $resource->update($resourceDTO->toArray());
         return true;
     }

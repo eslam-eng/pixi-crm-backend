@@ -24,10 +24,24 @@ class ActivationCodeRequest extends BaseRequest
     public function rules(): array
     {
         return [
+            'generate_multiple' => 'nullable|integer|in:0,1',
+            'count' => 'required_if:generate_multiple,1|integer|min:1',
+            'parts' => 'required_if:generate_multiple,1|integer|in:3,4,5,6',
+            'partLength' => 'required_if:generate_multiple,1|integer|in:3,4,5,6',
+
+            'code' => 'required_if:generate_multiple,0|string|max:255|unique:activation_codes',
+
             'plan_id' => 'required|integer|exists:plans,id',
             'source_id' => 'required|integer|exists:sources,id',
             'validity_days' => 'required|integer',
-            'status' => ['required', 'string', Rule::in(ActivationCodeStatusEnum::values())],
+            'status' => [
+                'required',
+                'string',
+                Rule::in(
+                    ActivationCodeStatusEnum::AVAILABLE->value,
+                    ActivationCodeStatusEnum::EXPIRED->value
+                )
+            ],
         ];
     }
 
