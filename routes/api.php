@@ -190,6 +190,7 @@ Route::middleware([
             Route::get('/opportunities', [CoreController::class, 'getOpportunities']);
             Route::get('/users', [CoreController::class, 'getUsers']);
             Route::post('upload-media', MediaController::class);
+            Route::get('opportunities/{opportunity}/items', [OpportunityController::class, 'getItems']);
         });
 
         Route::prefix('settings')->group(function () {

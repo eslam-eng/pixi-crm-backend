@@ -14,6 +14,7 @@ use App\Http\Requests\Tenant\Opportunity\OpportunityRequest;
 use App\Http\Requests\Tenant\Opportunity\SendOpportunityItemsRequest;
 use App\Http\Requests\Tenant\Opportunity\StatusRequest;
 use App\Http\Resources\AuditOpportunityResource;
+use App\Http\Resources\ItemResource;
 use App\Http\Resources\Opportunity\OpportunityResource;
 use App\Http\Resources\Tenant\Dashboard\ActivityDetailsResource;
 use App\Http\Resources\Tenant\Dashboard\ActivityResource;
@@ -211,6 +212,18 @@ class OpportunityController extends Controller
             $dto = SendOpportunityItemsDTO::fromRequest($request);
             $this->leadService->sendItems($opportunityId, $dto);
             return ApiResponse(message: 'Items sent successfully via ' . $dto->channel, code: 200);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function getItems(int $opportunityId)
+    {
+        try {
+            $opportunity = $this->leadService->findById(id: $opportunityId, withRelations: ['items']);
+            return ApiResponse(message: 'Items retrieved successfully', code: Response::HTTP_OK, data: ItemResource::collection($opportunity->items));
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
