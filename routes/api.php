@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ItemAttributeController;
 use App\Http\Controllers\Api\ItemAttributeValueController;
 use App\Http\Controllers\Api\ItemVariantController;
+use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\TranslatableExampleController;
 
 use App\Http\Controllers\Api\SettingController as TenantSettingController;
@@ -126,6 +127,9 @@ Route::middleware([
             Route::post('/', [\App\Http\Controllers\Api\Users\UserController::class, 'export']);
         });
         Route::get('users/{user}/details', [UserController::class, 'details']);
+        Route::get('users/profile', [UserController::class, 'getProfile']);
+        Route::put('users/profile', [UserController::class, 'updateProfile']);
+        Route::put('users/update-password', [UserController::class, 'UpdatePassword']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{id}/change-active', [UserController::class, 'toggleStatus']);
         Route::get('departments', [DepartmentController::class, 'index']);
@@ -185,6 +189,8 @@ Route::middleware([
             Route::get('/departments', [CoreController::class, 'getDepartments']);
             Route::get('/opportunities', [CoreController::class, 'getOpportunities']);
             Route::get('/users', [CoreController::class, 'getUsers']);
+            Route::post('upload-media', MediaController::class);
+            Route::get('opportunities/{opportunity}/items', [OpportunityController::class, 'getItems']);
         });
 
         Route::prefix('settings')->group(function () {

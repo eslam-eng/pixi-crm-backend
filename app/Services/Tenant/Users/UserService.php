@@ -4,6 +4,7 @@ namespace App\Services\Tenant\Users;
 
 use App\DTO\Tenant\AssignToTeam\AssignToTeamDTO;
 use App\DTO\Tenant\UserDTO;
+use App\DTO\Tenant\UserUpdateProfileDTO;
 use App\Enums\TargetType;
 use App\Models\Tenant\Team;
 use App\Models\Tenant\User;
@@ -233,15 +234,22 @@ class UserService extends BaseService
         return $user;
     }
 
-    public function updateProfile($id, array $data = [])
+    public function updateProfile(UserUpdateProfileDTO $userDTO): User
+    {
+        $user = $this->findById(id: user_id(), withRelations: ['roles.permissions']);
+        $user->update($userDTO->toArray());
+        if ($userDTO->hasProfileImage()){
+            $user->clearMediaCollection('profile_image')->addMedia($userDTO->profile_image)->toMediaCollection('profile_image');
+        }
+        return $user;
+    }
+
+    public function updatePassword($id, array $data = [])
     {
         $user = $this->findById($id);
-        if (!isset($data['password']))
-            $user->update(Arr::except($data, ['password']));
-        else {
-            $data['password'] = bcrypt($data['password']);
-            $user->update($data);
-        }
+        $user->password = bcrypt($data['password']);
+        $user->save();
+        $user->tokens()->delete();
         return true;
     }
 
