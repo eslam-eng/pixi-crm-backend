@@ -24,11 +24,11 @@ class ItemStoreRequest extends BaseRequest
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:item_categories,id',
-            'thumbnail_image' => 'nullable|image|max:2048',
+            'thumbnail_image' => 'nullable|string|max:255',
             'images' => ['nullable', 'array', 'max:10'], // Max 10 images
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // 5MB per image
+            'images.*' => ['string', 'max:255'],
             'documents' => ['nullable', 'array', 'max:5'],
-            'documents.*' => ['file', 'mimes:pdf,doc,docx,xls,xlsx', 'max:5120'], // 5MB per file
+            'documents.*' => ['string', 'max:255'],
         ];
 
         // Add product-specific rules if type is product
