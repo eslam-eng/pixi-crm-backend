@@ -347,7 +347,7 @@ class LeadService extends BaseService
         $lead = $this->findById(id: $id, withRelations: ['contact', 'stage']);
         $stage = $this->stageService->findById($stageId);
 
-        activity()->withoutLogs(function () use ($lead, $stageId ) {
+        activity()->withoutLogs(function () use ($lead, $stageId) {
             $lead->update(['stage_id' => $stageId]);
             // Update action times after stage change
             $this->updateActionTimes($lead);
@@ -358,12 +358,12 @@ class LeadService extends BaseService
             ->performedOn($lead)
             ->withProperties([
                 'old' => [
-                    'stage_id' => optional($lead->stage)->id ,
-                    'stage_name' => optional($lead->stage)->name ,
+                    'stage_id' => optional($lead->stage)->id,
+                    'stage_name' => optional($lead->stage)->name,
                 ],
                 'attributes' => [
-                    'stage_id' => $stage->id ,
-                    'stage_name' => $stage->name ,
+                    'stage_id' => $stage->id,
+                    'stage_name' => $stage->name,
                 ]
             ])
             ->useLog('lead')
@@ -378,10 +378,12 @@ class LeadService extends BaseService
         activity()
             ->causedBy(user_id()) // optional
             ->performedOn($lead) // optional model
-            ->withProperties(['attributes' => [
-                'call_notes' => $data->call_notes,
-                'call_direction' => $data->call_direction,
-            ]])
+            ->withProperties([
+                'attributes' => [
+                    'call_notes' => $data->call_notes,
+                    'call_direction' => $data->call_direction,
+                ]
+            ])
             ->useLog('lead') // optional log name
             ->log('log_call');
     }
