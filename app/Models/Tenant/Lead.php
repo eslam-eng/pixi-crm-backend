@@ -14,11 +14,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Lead extends Model
+class Lead extends Model implements HasMedia
 {
-
-    use Filterable, LogsActivity;
+    use Filterable, LogsActivity, InteractsWithMedia;
 
     protected $table = 'leads';
     protected $fillable = [

@@ -354,6 +354,7 @@ Route::middleware([
         Route::post('opportunities/{opportunity}/notes', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'store']);
         Route::put('opportunities/notes/{note}', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'update']);
         Route::delete('opportunities/notes/{note}', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'destroy']);
+        Route::post('opportunities/{opportunity}/add-files', [OpportunityController::class, 'addFiles']);
         Route::apiResource('opportunities', OpportunityController::class);
 
         Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);
