@@ -52,11 +52,11 @@ class TeamService extends BaseService
 
     public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
-        $query = $this->queryGet(filters: $filters, withRelations: $withRelations);
+        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)->orderBy('id', 'desc');
         if ($perPage) {
             return $query->paginate($perPage);
         }
-        return $query->orderBy('id', 'desc')->get();
+        return $query->get();
     }
 
     public function store(TeamDTO $teamDTO)
