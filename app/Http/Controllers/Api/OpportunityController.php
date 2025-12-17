@@ -19,8 +19,10 @@ use App\Http\Resources\Opportunity\OpportunityResource;
 use App\Http\Resources\Tenant\Dashboard\ActivityDetailsResource;
 use App\Http\Resources\Tenant\Opportunity\OpportunityDDLResource;
 use App\Http\Resources\Tenant\Stage\StageWithOpportunityResource;
+use App\Http\Resources\Tenant\Tasks\TaskResource;
 use App\Models\Tenant\Lead;
 use App\Services\LeadService;
+use App\Services\Tenant\Tasks\TaskService;
 use DB;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -30,7 +32,7 @@ use Illuminate\Support\Facades\Storage;
 
 class OpportunityController extends Controller
 {
-    public function __construct(public LeadService $leadService)
+    public function __construct(public LeadService $leadService, public TaskService $taskService)
     {
         $this->middleware('permission:view-leads')->only(['index', 'show']);
         $this->middleware('permission:create-leads')->only(['store']);
@@ -197,7 +199,7 @@ class OpportunityController extends Controller
         try {
             $data = ActivityLogDTO::fromRequest($request);
             $this->leadService->addActivityLog($opportunityId, $data);
-            return ApiResponse(message: 'Activity log added successfully', code: 200);
+            return ApiResponse(message: 'Activity log added successfully');
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
@@ -210,7 +212,7 @@ class OpportunityController extends Controller
         try {
             $dto = SendOpportunityItemsDTO::fromRequest($request);
             $this->leadService->sendItems($opportunityId, $dto);
-            return ApiResponse(message: 'Items sent successfully via ' . $dto->channel, code: 200);
+            return ApiResponse(message: 'Items sent successfully via ' . $dto->channel);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
@@ -222,7 +224,20 @@ class OpportunityController extends Controller
     {
         try {
             $opportunity = $this->leadService->findById(id: $opportunityId, withRelations: ['items']);
-            return ApiResponse(message: 'Items retrieved successfully', code: Response::HTTP_OK, data: ItemResource::collection($opportunity->items));
+            return ApiResponse(message: 'Items retrieved successfully', data: ItemResource::collection($opportunity->items));
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+    public function tasks(int $opportunityId)
+    {
+        try {
+            $filters['lead_id'] = $opportunityId;
+            $tasks = $this->taskService->paginate($filters);
+            $data = TaskResource::collection($tasks)->response()->getData(true);
+            return ApiResponse(message: 'Items retrieved successfully', data: $data);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {

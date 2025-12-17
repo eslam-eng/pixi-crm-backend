@@ -9,11 +9,19 @@ use App\Http\Controllers\Api\Integrations\{
 };
 use App\Http\Controllers\Api\IntegrationController;
 use App\Http\Controllers\Api\OpportunityController;
+use App\Http\Controllers\Api\OpportunityNoteController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\FormSubmissionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\TeamsController;
+use App\Http\Controllers\Api\TemplatesController;
+use App\Http\Controllers\Api\PipelineController;
+use App\Http\Controllers\Api\StageController;
+
+
+
 use App\Http\Controllers\Api\Tasks\{
     PriorityController,
     PriorityColorController,
@@ -349,32 +357,35 @@ Route::middleware([
         Route::post('opportunities/{opportunity}/add-activity-log', [OpportunityController::class, 'AddActivityLog']);
         Route::post('opportunities/{opportunity}/send-item-data', [OpportunityController::class, 'sendItemData']);
 
+        // Opportunity Tasks routes
+        Route::get('opportunities/{opportunity}/tasks', [OpportunityController::class, 'tasks']);
+
         // Opportunity Notes routes
-        Route::get('opportunities/{opportunity}/notes', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'index']);
-        Route::post('opportunities/{opportunity}/notes', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'store']);
-        Route::put('opportunities/notes/{note}', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'update']);
-        Route::delete('opportunities/notes/{note}', [\App\Http\Controllers\Api\OpportunityNoteController::class, 'destroy']);
+        Route::get('opportunities/{opportunity}/notes', [OpportunityNoteController::class, 'index']);
+        Route::post('opportunities/{opportunity}/notes', [OpportunityNoteController::class, 'store']);
+        Route::put('opportunities/notes/{note}', [OpportunityNoteController::class, 'update']);
+        Route::delete('opportunities/notes/{note}', [OpportunityNoteController::class, 'destroy']);
         Route::post('opportunities/{opportunity}/add-files', [OpportunityController::class, 'addFiles']);
         Route::apiResource('opportunities', OpportunityController::class);
 
-        Route::get('teams/{team}/with-target', [\App\Http\Controllers\Api\TeamsController::class, 'showWithTarget']);
-        Route::post('teams/team-bulk-assign', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkAssign']);
-        Route::put('teams/{team}/team-bulk-update', [\App\Http\Controllers\Api\TeamsController::class, 'teamBulkUpdate']);
-        Route::apiResource('teams', \App\Http\Controllers\Api\TeamsController::class);
+        Route::get('teams/{team}/with-target', [TeamsController::class, 'showWithTarget']);
+        Route::post('teams/team-bulk-assign', [TeamsController::class, 'teamBulkAssign']);
+        Route::put('teams/{team}/team-bulk-update', [TeamsController::class, 'teamBulkUpdate']);
+        Route::apiResource('teams', TeamsController::class);
 
         // Template routes
-        Route::post('templates/send', [\App\Http\Controllers\Api\TemplatesController::class, 'send']);
-        Route::get('templates/get-contact-variables', [\App\Http\Controllers\Api\TemplatesController::class, 'getContactKeys']);
-        Route::apiResource('templates', \App\Http\Controllers\Api\TemplatesController::class);
+        Route::post('templates/send', [TemplatesController::class, 'send']);
+        Route::get('templates/get-contact-variables', [TemplatesController::class, 'getContactKeys']);
+        Route::apiResource('templates', TemplatesController::class);
 
         // pipeline and stage routes
-        Route::apiResource('pipelines', \App\Http\Controllers\Api\PipelineController::class);
-        Route::patch('pipelines/{pipeline}/update-default', [\App\Http\Controllers\Api\PipelineController::class, 'updateDefault']);
-        Route::get('pipelines/{pipelineId}/stages', [\App\Http\Controllers\Api\StageController::class, 'index']);
-        Route::post('pipelines/{pipelineId}/stages', [\App\Http\Controllers\Api\StageController::class, 'store']);
-        Route::get('stages/{stageId}', [\App\Http\Controllers\Api\StageController::class, 'show']);
-        Route::put('stages/{stageId}', [\App\Http\Controllers\Api\StageController::class, 'update']);
-        Route::delete('stages/{stageId}', [\App\Http\Controllers\Api\StageController::class, 'destroy']);
+        Route::apiResource('pipelines', PipelineController::class);
+        Route::patch('pipelines/{pipeline}/update-default', [PipelineController::class, 'updateDefault']);
+        Route::get('pipelines/{pipelineId}/stages', [StageController::class, 'index']);
+        Route::post('pipelines/{pipelineId}/stages', [StageController::class, 'store']);
+        Route::get('stages/{stageId}', [StageController::class, 'show']);
+        Route::put('stages/{stageId}', [StageController::class, 'update']);
+        Route::delete('stages/{stageId}', [StageController::class, 'destroy']);
 
         // loss reason routes
         Route::get('pipelines/{pipelineId}/loss-reasons', [\App\Http\Controllers\Api\LossReasonController::class, 'index']);
