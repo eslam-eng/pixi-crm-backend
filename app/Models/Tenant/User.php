@@ -3,7 +3,6 @@
 namespace App\Models\Tenant;
 
 use App\Enums\TargetType;
-use App\Models\FcmToken;
 use App\Models\Tenant\Attendance\AttendancePunch;
 use App\Models\Tenant\Team;
 use App\Settings\UsersSettings;
@@ -16,13 +15,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\CausesActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, HasApiTokens, Filterable, LogsActivity, InteractsWithMedia;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens, Filterable, LogsActivity, InteractsWithMedia, CausesActivity;
 
     /**
      * The attributes that are mass assignable.

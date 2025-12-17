@@ -588,4 +588,15 @@ class UserService extends BaseService
             now()->copy()->year($year)->month($month)->addMonths(2)->endOfMonth(),
         ];
     }
+
+    public function getPermissions()
+    {
+        $user = $this->findById(id: user_id(), withRelations: ['roles.permissions']);
+        return $user->roles->first()->permissions;
+    }
+
+    public function getActivities()
+    {
+        return $this->findById(user_id())->actions;
+    }
 }

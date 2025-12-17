@@ -135,6 +135,8 @@ Route::middleware([
             Route::post('/', [\App\Http\Controllers\Api\Users\UserController::class, 'export']);
         });
         Route::get('users/{user}/details', [UserController::class, 'details']);
+        Route::get('users/permissions', [UserController::class, 'getPermissions']);
+        Route::get('users/activities', [UserController::class, 'getActivities']);
         Route::get('users/profile', [UserController::class, 'getProfile']);
         Route::put('users/profile', [UserController::class, 'updateProfile']);
         Route::put('users/update-password', [UserController::class, 'UpdatePassword']);
