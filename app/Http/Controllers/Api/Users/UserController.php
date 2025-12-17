@@ -18,6 +18,8 @@ use App\Http\Requests\Tenant\Users\UserRequest;
 use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
 use App\Http\Requests\Tenant\Users\ChangeLanguageRequest;
 use App\Http\Requests\Tenant\Users\UpdatePasswordRequest;
+use App\Http\Resources\Tenant\Dashboard\ActivityDetailsResource;
+use App\Http\Resources\Tenant\Users\PermissionResource;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
 use App\Http\Resources\Tenant\Users\UserProfileResource;
 use App\Http\Resources\Tenant\Users\UserResource;
@@ -259,5 +261,19 @@ class UserController extends Controller
         $columns = $request->input('columns');
 
         return Excel::download(new UsersExport($columns), 'users.xlsx');
+    }
+
+    public function getPermissions()
+    {
+        $permissions = $this->userService->getPermissions();
+        $data = PermissionResource::collection($permissions);
+        return ApiResponse($data, 'Permissions retrieved successfully');
+    }
+
+    public function getActivities()
+    {
+        $activities = $this->userService->getActivities();
+        $data = ActivityDetailsResource::collection($activities);
+        return ApiResponse($data, 'Activities retrieved successfully');
     }
 }
