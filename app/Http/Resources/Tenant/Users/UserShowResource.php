@@ -26,6 +26,7 @@ class UserShowResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'job_title' => $this->job_title,
+            'lang' => $this->lang,
             'department' => $this->whenLoaded('department', function () {
                 return [
                     'id' => $this->department?->id,
