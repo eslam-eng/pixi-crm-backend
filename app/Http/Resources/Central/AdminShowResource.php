@@ -7,7 +7,7 @@ use App\Http\Resources\Role\RoleResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class AdminResource extends JsonResource
+class AdminShowResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -22,6 +22,7 @@ class AdminResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'department' => $this->department?->name,
+            'department_id' => $this->department_id,
             'job_title' => $this->job_title,
             'is_active' => $this->is_active->value,
             'is_active_text' => $this->is_active->getLabel(),

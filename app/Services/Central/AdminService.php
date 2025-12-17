@@ -14,7 +14,9 @@ use Illuminate\Support\Str;
 
 class AdminService extends BaseService
 {
-    public function __construct(protected readonly RoleService $roleService) {}
+    public function __construct()
+    {
+    }
 
     /**
      * Return the filter class for users.
@@ -34,7 +36,7 @@ class AdminService extends BaseService
 
     public function paginate(?array $filters = [], int $perPage = 15)
     {
-        return $this->getQuery(filters: $filters)
+        return $this->getQuery(filters: $filters)->orderBy('id', 'desc')
             ->with(['roles'])
             ->paginate($perPage);
     }
@@ -42,14 +44,11 @@ class AdminService extends BaseService
     public function create(AdminDTO $adminDTO)
     {
         return DB::connection('landlord')->transaction(function () use ($adminDTO) {
-            $random_password = $this->generateRandomPassword($adminDTO->email);
-            $adminDTO->password = $random_password;
             $adminDTO->email_verified_at = now();
             $admin = $this->baseQuery()
                 ->create($adminDTO->toArray());
 
-            $roles_names = $this->roleService->getRolesNameByIds($adminDTO->role_ids);
-            $admin->syncRoles($roles_names);
+            $admin->roles()->sync([$adminDTO->role_id]);
 
             //            $this->sendCredentialsEmail($admin, $random_password);
 
@@ -66,9 +65,7 @@ class AdminService extends BaseService
 
             $admin->update($adminDTO->toArrayExcept(['password', 'email_verified_at']));
 
-            $roles_names = $this->roleService->getRolesNameByIds($adminDTO->role_ids);
-
-            $admin->syncRoles($roles_names);
+            $admin->roles()->sync([$adminDTO->role_id]);
         });
     }
 

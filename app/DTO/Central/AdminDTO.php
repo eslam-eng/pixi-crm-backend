@@ -15,9 +15,12 @@ class AdminDTO extends BaseDTO
         public ?string $phone = null,
         public ?string $password = null,
         public ?string $email_verified_at = null,
-        public ?array $role_ids = [],
-        public bool $is_active = ActivationStatusEnum::ACTIVE->value,
-    ) {}
+        public ?int $role_id = null,
+        public ?int $department_id = null,
+        public ?string $job_title = null,
+        public bool $is_active = true,
+    ) {
+    }
 
     public static function fromArray(array $data): static
     {
@@ -26,7 +29,9 @@ class AdminDTO extends BaseDTO
             email: Arr::get($data, 'email'),
             phone: Arr::get($data, 'phone'),
             password: Arr::get($data, 'password'),
-            role_ids: Arr::get($data, 'role_ids', []),
+            role_id: Arr::get($data, 'role_id'),
+            department_id: Arr::get($data, 'department_id'),
+            job_title: Arr::get($data, 'job_title'),
             is_active: Arr::get($data, 'is_active', ActivationStatusEnum::ACTIVE->value),
         );
     }
@@ -38,7 +43,9 @@ class AdminDTO extends BaseDTO
             email: $request->email,
             phone: $request->phone,
             password: $request->password,
-            role_ids: $request->role_ids,
+            role_id: $request->role_id,
+            department_id: $request->department_id,
+            job_title: $request->job_title,
             is_active: $request->is_active,
         );
     }
@@ -51,6 +58,10 @@ class AdminDTO extends BaseDTO
             'phone' => $this->phone,
             'password' => $this->password,
             'email_verified_at' => $this->email_verified_at,
+            'role_id' => $this->role_id,
+            'department_id' => $this->department_id,
+            'job_title' => $this->job_title,
+            'is_active' => $this->is_active,
         ];
     }
 }

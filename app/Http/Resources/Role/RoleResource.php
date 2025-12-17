@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Role;
 
+use App\Enums\Landlord\ActivationStatusEnum;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,8 +19,8 @@ class RoleResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'is_active' => $this->is_active->value,
-            'is_active_text' => $this->is_active->getLabel(),
+            'is_active' => $this->is_active,
+            'is_active_text' => ActivationStatusEnum::from($this->is_active)->getLabel(),
             'permissions_count' => $this->whenCounted('permissions'),
             'users_count' => $this->whenCounted('users'),
             'permissions' => $this->whenLoaded('permissions', function () {

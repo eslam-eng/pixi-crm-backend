@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\ChangeLocalRequest;
 use App\Http\Requests\Central\AdminRequest;
 use App\Http\Resources\Central\AdminResource;
+use App\Http\Resources\Central\AdminShowResource;
 use App\Http\Resources\Central\AuthUserResource;
 use App\Models\Admin;
 use App\Services\Central\AdminService;
@@ -16,15 +17,17 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    public function __construct(protected readonly AdminService $adminService) {}
+    public function __construct(protected readonly AdminService $adminService)
+    {
+    }
 
     public function index(Request $request)
     {
         $filters = $request->all();
         $limit = $request->input('limit', 15);
         $admins = $this->adminService->paginate(filters: $filters, perPage: $limit);
-
-        return AdminResource::collection($admins);
+        $data = AdminResource::collection($admins)->response()->getData(true);
+        return ApiResponse::success(data: $data);
     }
 
     public function show(Admin|int $admin)
@@ -32,7 +35,7 @@ class AdminController extends Controller
         $admin_id = $admin instanceof Admin ? $admin->id : $admin;
         $admin = $this->adminService->findById(id: $admin_id);
 
-        return AdminResource::make($admin);
+        return ApiResponse::success(data: AdminShowResource::make($admin));
     }
 
     public function store(AdminRequest $request)
