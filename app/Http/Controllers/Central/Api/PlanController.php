@@ -52,6 +52,7 @@ class PlanController extends Controller
     public function store(PlanRequest $request)
     {
         $planDTO = PlanDTO::fromRequest($request);
+        dd($planDTO);
         $plan = $this->planService->create(planDTO: $planDTO);
 
         return ApiResponse::success(message: __('app.plan_created_successfully'));
