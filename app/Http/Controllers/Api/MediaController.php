@@ -18,7 +18,7 @@ class MediaController extends Controller
 
         $medias = [];
 
-        foreach ($data['images'] as $image) {
+        foreach ($data['images'] ?? [] as $image) {
             $path= $this->convertToWebp($image['file']);
             $medias[] = [
                 'name' => $image['name'],
@@ -26,8 +26,7 @@ class MediaController extends Controller
                 'url'  => Storage::disk('public')->url('tenant' . tenant('id') . '/' .$path),
             ];
         }
-        
-        foreach ($data['documents'] as $document) {
+        foreach ($data['documents'] ?? [] as $document) {
             $fileName = Str::uuid() . '.' . $document['file']->getClientOriginalExtension();
             $path = 'temp/uploads/' . $fileName;
             Storage::disk('public')->put($path, file_get_contents($document['file']));
