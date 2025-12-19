@@ -4,24 +4,15 @@ namespace App\Http\Requests\Central;
 
 use App\Enums\Landlord\ActivationStatusEnum;
 use App\Http\Requests\BaseRequest;
-use App\Rules\ValidCurrencyCode;
 use Illuminate\Validation\Rule;
 
 class PlanRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -29,27 +20,28 @@ class PlanRequest extends BaseRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('plans', 'name')->whereNull('deleted_at')->ignore($this->plan),
+                Rule::unique('plans', 'name')
+                    ->whereNull('deleted_at')
+                    ->ignore($this->plan),
             ],
-            'description' => 'string|nullable',
-            'monthly_price' => 'nullable|numeric|min:1|required_without_all:annual_price,lifetime_price',
-            'annual_price' => 'nullable|numeric|min:1|required_without_all:monthly_price,lifetime_price',
-            'lifetime_price' => 'nullable|numeric|min:1|required_without_all:monthly_price,annual_price',
-            'is_active' => 'required|boolean',
-            'trial_days' => 'nullable|integer|min:0',
-            'currency_code' => ['required', 'string', new ValidCurrencyCode],
-            'refund_days' => 'nullable|integer|min:0',
-            'features' => 'nullable|array|min:1',
-            'limits' => 'nullable|array||min:1',
-            'monthly_credit_tokens' => 'required|integer|min:0',
+            'description'     => 'nullable|string',
+            'price'           => 'required|integer|min:1',
+            'duration_unit'   => 'required|string',
+            'duration'        => 'required|integer|min:1',
+            'is_active'       => 'required|boolean',
+            'refund_period'   => 'nullable|integer|min:0',
+            'features'        => 'nullable|array|min:1',
+            'features.*.id' => 'required|exists:features,id',
+            'features.*.value' => 'required',
         ];
     }
 
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'is_active' => $this->boolean('is_active', ACtivationStatusEnum::ACTIVE->value),
-            'currency_code' => 'USD',
+            'is_active' => $this->has('is_active')
+                ? $this->boolean('is_active')
+                : ActivationStatusEnum::ACTIVE->value,
         ]);
     }
 }

@@ -82,6 +82,7 @@ foreach (config('tenancy.central_domains') as $domain) {
         });
         Route::group(['prefix' => 'core'], function () {
             Route::get('plans', [CoreLandlordController::class, 'plans']);
+            Route::get('features', [CoreLandlordController::class, 'getFeatures']);
             Route::get('departments', [CoreLandlordController::class, 'departments']);
             Route::get('sources', [CoreLandlordController::class, 'sources']);
             Route::get('industries', [CoreLandlordController::class, 'industries']);

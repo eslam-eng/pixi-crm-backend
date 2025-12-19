@@ -55,13 +55,57 @@ class FeatureTableSeeder extends Seeder
             ],
             [
                 'name' => [
-                    'ar' => 'حد الائتمان',
-                    'en' => 'Credit Limit',
-                    'fr' => 'Limite de crédit',
-                    'es' => 'Límite de crédito',
+                    'ar' => 'الحد الأقصى للتوكينات الشهرية',
+                    'en' => 'Max Monthly Tokens',
+                    'fr' => 'Max Tokens max',
+                    'es' => 'Max Tokens máximos',
                 ],
-                'slug' => Str::slug('credit limit'),
+                'slug' => Str::slug('max monthly tokens'),
                 'group' => FeatureGroupEnum::LIMIT->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'ادارة التكرار',
+                    'en' => 'Manage Dublicate',
+                    'fr' => 'Gestion des doublons',
+                    'es' => 'Gestionar duplicados',
+                ],
+                'slug' => Str::slug('manage dublicate'),
+                'group' => FeatureGroupEnum::FEATURE->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'ارسال بيانات المنتج',
+                    'en' => 'Send Item Data',
+                    'fr' => 'Envoyer les données du produit',
+                    'es' => 'Enviar datos del producto',
+                ],
+                'slug' => Str::slug('send item data'),
+                'group' => FeatureGroupEnum::FEATURE->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'تنفيذ التلقيات التلقائية',
+                    'en' => 'Max Automation Excution',
+                    'fr' => 'Max Exécution automatisée',
+                    'es' => 'Max Ejecución de automatización',
+                ],
+                'slug' => Str::slug('max automation excution'),
+                'group' => FeatureGroupEnum::LIMIT->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'النموذج المعطل',
+                    'en' => 'Empeded Form',
+                    'fr' => 'Formulaire intégré',
+                    'es' => 'Formulario incrustado',
+                ],
+                'slug' => Str::slug('empeded form'),
+                'group' => FeatureGroupEnum::FEATURE->value,
                 'is_active' => ActivationStatusEnum::ACTIVE->value,
             ],
         ];

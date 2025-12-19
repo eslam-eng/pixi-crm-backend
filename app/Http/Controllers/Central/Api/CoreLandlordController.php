@@ -7,8 +7,10 @@ use App\Http\Resources\Central\PlanResource;
 use App\Http\Resources\Central\DepartmentResource;
 use App\Http\Resources\Central\SourceResource;
 use App\Http\Resources\Central\IndustryResource;
+use App\Http\Resources\Central\FeatureDDLResource;
 use App\Services\Central\Plan\PlanService;
 use App\Services\Central\DepartmentService;
+use App\Services\Central\FeatureService;
 use App\Services\Central\SourceService;
 use App\Services\Central\IndustryService;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ class CoreLandlordController extends Controller
 {
     public function __construct(
         private readonly PlanService $planService,
+        private readonly FeatureService $featureService,
         private readonly DepartmentService $departmentService,
         private readonly SourceService $sourceService,
         private readonly IndustryService $industryService,
@@ -79,6 +82,20 @@ class CoreLandlordController extends Controller
 
         return apiResponse(
             message: 'Industries retrieved successfully',
+            data: $data
+        );
+    }
+
+    public function getFeatures(Request $request)
+    {
+        $filters = $request->all();
+
+        $features = $this->featureService->getFeatures(filters: $filters);
+
+        $data = FeatureDDLResource::collection($features);
+
+        return apiResponse(
+            message: 'Features retrieved successfully',
             data: $data
         );
     }

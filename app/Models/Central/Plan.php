@@ -19,22 +19,19 @@ class Plan extends Model
     protected $fillable = [
         'name',
         'description',
-        'monthly_price',
-        'annual_price',
-        'lifetime_price',
+        'refund_period',
+        'duration',
+        'duration_unit',
+        'price',
         'is_active',
-        'trial_days',
-        'sort_order',
-        'currency_code',
-        'refund_days',
     ];
 
     public $translatable = ['name', 'description'];
 
     protected $casts = [
-        'monthly_price' => 'decimal:2',
-        'annual_price' => 'decimal:2',
-        'lifetime_price' => 'decimal:2',
+        'price' => 'decimal:2',
+        'duration_unit' => 'string',
+        'duration' => 'integer',
         'is_active' => ActivationStatusEnum::class,
     ];
 
