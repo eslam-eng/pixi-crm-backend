@@ -25,7 +25,7 @@ use Stancl\Tenancy\Database\Concerns\HasDomains;
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     // use Filterable, HasFeatureLimits, HasUuids, SoftDeletes, UsesLandlordConnection;
-    use  Filterable, HasFeatureLimits, HasUuids, HasDatabase, HasDomains;
+    use Filterable, HasFeatureLimits, HasUuids, HasDatabase, HasDomains;
 
     protected $keyType = 'string';
 

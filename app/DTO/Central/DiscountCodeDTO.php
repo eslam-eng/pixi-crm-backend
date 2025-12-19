@@ -2,8 +2,8 @@
 
 namespace App\DTO\Central;
 
-use App\Enums\Landlord\ActivationStatusEnum;
-use App\Enums\Landlord\DiscountTypeEnum;
+use App\Enums\Landlord\ActivationCodeStatusEnum;
+use App\Enums\Landlord\DiscountUsageEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
@@ -14,23 +14,24 @@ class DiscountCodeDTO
         public int $planId,
         public string $discountType,
         public float $discountPercentage,
-        public ?int $usersLimit,
+        public int $usersLimit,
         public ?int $usageLimit,
         public ?string $expires_at = null,
-        public string $status = ActivationStatusEnum::ACTIVE->value,
-    ) {}
+        public string $status = 'available',
+    ) {
+    }
 
     public static function fromArray(array $data): static
     {
         return new self(
             discountCode: Arr::get($data, 'discount_code'),
             planId: Arr::get($data, 'plan_id'),
-            discountType: Arr::get($data, 'discount_type', DiscountTypeEnum::PERCENTAGE->value),
+            discountType: Arr::get($data, 'discount_type', DiscountUsageEnum::SINGLE_USE->value),
             discountPercentage: (float) Arr::get($data, 'discount_percentage'),
-            usersLimit: Arr::get($data, 'users_limit'),
+            usersLimit: (int) Arr::get($data, 'users_limit'),
             usageLimit: Arr::get($data, 'usage_limit'),
             expires_at: Arr::get($data, 'expires_at'),
-            status: Arr::get($data, 'status', ActivationStatusEnum::ACTIVE->value),
+            status: Arr::get($data, 'status', ActivationCodeStatusEnum::AVAILABLE->value),
         );
     }
 
@@ -38,13 +39,13 @@ class DiscountCodeDTO
     {
         return new self(
             discountCode: $request->discount_code,
-            planId: $request->plan_id,
-            discountType: $request->discount_type ?? DiscountTypeEnum::PERCENTAGE->value,
+            planId: (int) $request->plan_id,
+            discountType: $request->discount_type ?? DiscountUsageEnum::SINGLE_USE->value,
             discountPercentage: (float) $request->discount_percentage,
-            usersLimit: $request->users_limit,
-            usageLimit: $request->usage_limit,
+            usersLimit: (int) $request->users_limit,
+            usageLimit: $request->usage_limit ? (int) $request->usage_limit : null,
             expires_at: $request->expires_at,
-            status: $request->status ?? ActivationStatusEnum::ACTIVE->value,
+            status: ($request->status ?? ActivationCodeStatusEnum::AVAILABLE->value),
         );
     }
 
@@ -53,7 +54,7 @@ class DiscountCodeDTO
         return [
             'discount_code' => $this->discountCode,
             'plan_id' => $this->planId,
-            'discount_type' => $this->discountType ?? DiscountTypeEnum::PERCENTAGE->value,
+            'discount_type' => $this->discountType,
             'discount_percentage' => $this->discountPercentage,
             'users_limit' => $this->usersLimit,
             'usage_limit' => $this->usageLimit,

@@ -133,7 +133,7 @@ class AutomationActionSeeder extends Seeder
                     'es' => 'Crear tarea de incorporación'
                 ],
                 'description' => 'Kick off handover to Success/Implementation team',
-                'except_trigger_ids' => json_encode([13])
+                'except_trigger_ids' => [13]
             ],
             [
                 'id' => 14,
@@ -328,7 +328,8 @@ class AutomationActionSeeder extends Seeder
                     'fr' => 'Créer opportunité',
                     'es' => 'Crear oportunidad'
                 ],
-                'description' => 'Create opportunity'
+                'description' => 'Create opportunity',
+                'except_trigger_ids' => [3]
             ],
         ];
 

@@ -8,28 +8,31 @@ use App\DTO\Tenant\Opportunity\ActivityLogDTO;
 use App\DTO\Tenant\Opportunity\SendOpportunityItemsDTO;
 use App\Enums\OpportunityStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Lead\AddFilesRequest;
 use App\Http\Requests\Lead\LogCallRequest;
 use App\Http\Requests\Tenant\Opportunity\ActivityLogReuest;
 use App\Http\Requests\Tenant\Opportunity\OpportunityRequest;
 use App\Http\Requests\Tenant\Opportunity\SendOpportunityItemsRequest;
 use App\Http\Requests\Tenant\Opportunity\StatusRequest;
-use App\Http\Resources\AuditOpportunityResource;
+use App\Http\Resources\ItemResource;
 use App\Http\Resources\Opportunity\OpportunityResource;
-use App\Http\Resources\Tenant\Dashboard\ActivityResource;
+use App\Http\Resources\Tenant\Dashboard\ActivityDetailsResource;
 use App\Http\Resources\Tenant\Opportunity\OpportunityDDLResource;
 use App\Http\Resources\Tenant\Stage\StageWithOpportunityResource;
-use App\Models\Tenant\Activity;
+use App\Http\Resources\Tenant\Tasks\TaskResource;
 use App\Models\Tenant\Lead;
 use App\Services\LeadService;
+use App\Services\Tenant\Tasks\TaskService;
 use DB;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class OpportunityController extends Controller
 {
-    public function __construct(public LeadService $leadService)
+    public function __construct(public LeadService $leadService, public TaskService $taskService)
     {
         $this->middleware('permission:view-leads')->only(['index', 'show']);
         $this->middleware('permission:create-leads')->only(['store']);
@@ -170,7 +173,7 @@ class OpportunityController extends Controller
         try {
             $opportunity = Lead::findOrFail($id);
             $activities = $opportunity->activities()->with('causer')->latest()->get();
-            return ApiResponse(message: 'Opportunity activity list retrieved successfully', code: 200, data: ActivityResource::collection($activities));
+            return ApiResponse(message: 'Opportunity activity list retrieved successfully', code: 200, data: ActivityDetailsResource::collection($activities));
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
@@ -196,7 +199,7 @@ class OpportunityController extends Controller
         try {
             $data = ActivityLogDTO::fromRequest($request);
             $this->leadService->addActivityLog($opportunityId, $data);
-            return ApiResponse(message: 'Activity log added successfully', code: 200);
+            return ApiResponse(message: 'Activity log added successfully');
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
@@ -209,7 +212,85 @@ class OpportunityController extends Controller
         try {
             $dto = SendOpportunityItemsDTO::fromRequest($request);
             $this->leadService->sendItems($opportunityId, $dto);
-            return ApiResponse(message: 'Items sent successfully via ' . $dto->channel, code: 200);
+            return ApiResponse(message: 'Items sent successfully via ' . $dto->channel);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function getItems(int $opportunityId)
+    {
+        try {
+            $opportunity = $this->leadService->findById(id: $opportunityId, withRelations: ['items']);
+            return ApiResponse(message: 'Items retrieved successfully', data: ItemResource::collection($opportunity->items));
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+    public function tasks(int $opportunityId)
+    {
+        try {
+            $filters['lead_id'] = $opportunityId;
+            $tasks = $this->taskService->paginate($filters);
+            $data = TaskResource::collection($tasks)->response()->getData(true);
+            return ApiResponse(message: 'Items retrieved successfully', data: $data);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function addFiles(int $opportunityId, AddFilesRequest $request)
+    {
+        try {
+            $opportunity = $this->leadService->findById(id: $opportunityId);
+
+            if ($request->images != null) {
+                foreach ($request->images as $image) {
+
+                    if (!Storage::disk('public')->exists($image)) {
+                        throw new \Exception('image does not exist');
+                    }
+
+                    $opportunity
+                        ->addMediaFromDisk($image, 'public')
+                        ->withCustomProperties([
+                            'category' => $request->category,
+                            'description' => $request->description
+                        ])
+                        ->usingFileName(basename($image))
+                        ->toMediaCollection('images');
+
+                    Storage::disk('public')->delete($image);
+                }
+            }
+
+            if ($request->documents != null) {
+                foreach ($request->documents as $document) {
+
+                    if (!Storage::disk('public')->exists($document)) {
+                        throw new \Exception('document does not exist');
+                    }
+
+                    $opportunity
+                        ->addMediaFromDisk($document, 'public')
+                        ->withCustomProperties([
+                            'category' => $request->category,
+                            'description' => $request->description
+                        ])
+                        ->usingFileName(basename($document))
+                        ->toMediaCollection('documents');
+
+                    Storage::disk('public')->delete($document);
+                }
+            }
+
+            return ApiResponse(message: 'Files added successfully', code: Response::HTTP_OK);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {

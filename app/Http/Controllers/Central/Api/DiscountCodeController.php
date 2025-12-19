@@ -6,23 +6,32 @@ use App\DTO\Central\DiscountCodeDTO;
 use App\Exceptions\DiscountCodeException;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Central\DiscountCodeIndexRequest;
 use App\Http\Requests\Central\DiscountCodeRequest;
 use App\Http\Resources\Central\DiscountResource;
 use App\Models\Central\DiscountCode;
 use App\Services\Central\Discount\DiscountCodeService;
-use Illuminate\Http\Request;
+use App\Services\Central\ActivationCode\ActivationCodeService;
 
 class DiscountCodeController extends Controller
 {
-    public function __construct(private readonly DiscountCodeService $discountCodeService) {}
+    public function __construct(
+        private readonly DiscountCodeService $discountCodeService,
+        private readonly ActivationCodeService $activationCodeService
+    ) {
+    }
 
-    public function index(Request $request)
+    public function index(DiscountCodeIndexRequest $request)
     {
         $filters = $request->all();
         $limit = $request->input('limit', 15);
         $discounts = $this->discountCodeService->paginate(filters: $filters, perPage: $limit);
 
-        return DiscountResource::collection($discounts);
+        return ApiResponse::success(
+            data: DiscountResource::collection($discounts)->response()->getData(true),
+            message: 'Discount retrieved successfully',
+            code: 200,
+        );
     }
 
     public function store(DiscountCodeRequest $request)
@@ -40,7 +49,11 @@ class DiscountCodeController extends Controller
     {
         $discount = $this->discountCodeService->findById(id: $discount, withRelation: ['plan:id,name']);
 
-        return DiscountResource::make($discount);
+        return ApiResponse::success(
+            data: DiscountResource::make($discount),
+            message: 'Discount retrieved successfully',
+            code: 200
+        );
     }
 
     public function update(DiscountCodeRequest $request, int $discount)
@@ -82,5 +95,11 @@ class DiscountCodeController extends Controller
         } catch (\Exception $exception) {
             return ApiResponse::error(message: 'Something went wrong please try again later');
         }
+    }
+    public function generateCode()
+    {
+        $code = $this->activationCodeService->generateCode();
+
+        return ApiResponse::success(data: $code);
     }
 }

@@ -142,7 +142,7 @@ class LeadService extends BaseService
 
     public function update(int $id, LeadDTO $leadDTO)
     {
-        $lead = $this->findById($id);
+        $lead = $this->findById(id: $id, withRelations: ['contact', 'stage']);
         if ($leadDTO->items) {
             $itemsCol = collect($leadDTO->items ?? [])->map(fn($r) => LeadItemDTO::fromArray($r))
                 ->filter(fn($r) => !empty($r->item_id));
@@ -173,34 +173,38 @@ class LeadService extends BaseService
                 ])
                 ->all();
         }
+
+        activity()->withoutLogs(function () use ($lead, $leadDTO) {
+            if (!empty($variantsPayload)) {
+                $lead->variants()->sync($variantsPayload, true);
+            } else {
+                $lead->variants()->detach();
+            }
+
+            if (!empty($itemsPayload)) {
+                $lead->items()->sync($itemsPayload, true);
+            } else {
+                $lead->items()->detach();
+            }
+
+            if ($lead->wasChanged('assigned_to_id')) {
+                $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
+
+                $currentUser = $lead->user;
+                $managers = $this->userService->getModel()->role('manager')->get();
+                foreach ($managers as $manager) {
+                    $manager->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
+                }
+                if ($currentUser) {
+                    $currentUser->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
+                }
+            } else {
+                $this->updateActionTimes($lead);
+            }
+        });
+
         $lead->update($leadDTO->toArray());
 
-        if (!empty($variantsPayload)) {
-            $lead->variants()->sync($variantsPayload, true);
-        } else {
-            $lead->variants()->detach();
-        }
-
-        if (!empty($itemsPayload)) {
-            $lead->items()->sync($itemsPayload, true);
-        } else {
-            $lead->items()->detach();
-        }
-
-        if ($lead->wasChanged('assigned_to_id')) {
-            $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
-
-            $currentUser = $lead->user;
-            $managers = $this->userService->getModel()->role('manager')->get();
-            foreach ($managers as $manager) {
-                $manager->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
-            }
-            if ($currentUser) {
-                $currentUser->notify(new UpdateAssignOpportunityNotification($lead->load('user')));
-            }
-        } else {
-            $this->updateActionTimes($lead);
-        }
         return $lead->load('variants', 'items');
     }
 
@@ -307,15 +311,29 @@ class LeadService extends BaseService
 
     public function changeStatus(int $id, OpportunityStatus $status): void
     {
-        $lead = $this->findById($id);
-
-        // if ($status === OpportunityStatus::WON) {
-        //     throw new GeneralException('Opportunity cannot be marked as won without a deal');
-        // }
+        $lead = $this->findById(id: $id, withRelations: ['contact']);
+        $old_status = $lead->status;
 
         if ($lead->status !== $status) {
-            $lead->update(['status' => $status]);
-            $this->updateActionTimes($lead);
+            activity()->withoutLogs(function () use ($lead, $status) {
+                $lead->update(['status' => $status]);
+                $this->updateActionTimes($lead);
+            });
+
+            activity()
+                ->causedBy(user_id())
+                ->performedOn($lead)
+                ->withProperties([
+                    'old' => [
+                        'status' => $old_status,
+                    ],
+                    'attributes' => [
+                        'status' => $status,
+                    ]
+                ])
+                ->useLog('lead')
+                ->log('status_changed');
+
         } else {
             throw new GeneralException('Opportunity status is already ' . $status->value);
         }
@@ -326,23 +344,32 @@ class LeadService extends BaseService
      */
     public function changeStage(int $id, int $stageId): Lead
     {
-        $lead = $this->findById($id);
-        $lead->update(['stage_id' => $stageId]);
+        $lead = $this->findById(id: $id, withRelations: ['contact', 'stage']);
+        $stage = $this->stageService->findById($stageId);
 
-        // Update action times after stage change
-        $this->updateActionTimes($lead);
+        activity()->withoutLogs(function () use ($lead, $stageId) {
+            $lead->update(['stage_id' => $stageId]);
+            // Update action times after stage change
+            $this->updateActionTimes($lead);
+        });
 
-        activity()
+        $lead->wasChanged('stage_id') && activity()
             ->causedBy(user_id())
             ->performedOn($lead)
             ->withProperties([
-                'old_stage' => $lead->stage_id,
-                'new_stage' => $stageId
+                'old' => [
+                    'stage_id' => optional($lead->stage)->id,
+                    'stage_name' => optional($lead->stage)->name,
+                ],
+                'attributes' => [
+                    'stage_id' => $stage->id,
+                    'stage_name' => $stage->name,
+                ]
             ])
             ->useLog('lead')
             ->log('stage_changed');
 
-        return $lead;
+        return $lead->load(['stage']);
     }
 
     public function logCall(int $id, LogCallDTO $data): void
@@ -352,8 +379,10 @@ class LeadService extends BaseService
             ->causedBy(user_id()) // optional
             ->performedOn($lead) // optional model
             ->withProperties([
-                'call_notes' => $data->call_notes,
-                'call_direction' => $data->call_direction,
+                'attributes' => [
+                    'call_notes' => $data->call_notes,
+                    'call_direction' => $data->call_direction,
+                ]
             ])
             ->useLog('lead') // optional log name
             ->log('log_call');
@@ -363,9 +392,9 @@ class LeadService extends BaseService
     {
         $opportunity = $this->findById($id);
         activity()
-            ->causedBy(Auth::user()) // optional
+            ->causedBy(user_id()) // optional
             ->performedOn($opportunity)     // optional model
-            ->withProperties($dto->toArray())
+            ->withProperties(['attributes' => $dto->toArray()])
             ->useLog('lead')
             ->log('opportunity_activity_added');
     }

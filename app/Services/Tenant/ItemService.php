@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -88,13 +89,13 @@ class ItemService extends BaseService
                 throw new \Exception('Invalid item type. Must be "product" or "service"');
             }
 
-            if ($itemDTO->hasThumbnailImage()) {
+            if ($itemDTO->thumbnail_image) {
                 $this->uploadThumbnailImage($item, $itemDTO->thumbnail_image);
             }
-            if ($itemDTO->hasImages()) {
+            if ($itemDTO->images) {
                 $this->uploadImages($item, $itemDTO->images);
             }
-            if ($itemDTO->hasDocuments()) {
+            if ($itemDTO->documents) {
                 $this->uploadDocuments($item, $itemDTO->documents);
             }
     
@@ -140,15 +141,15 @@ class ItemService extends BaseService
             }
         }
 
-        if ($itemDTO->hasThumbnailImage()) {
+        if ($itemDTO->thumbnail_image) {
             $item->clearMediaCollection('uploadThumbnailImage');
             $this->uploadThumbnailImage($item, $itemDTO->thumbnail_image);
         }
-        if ($itemDTO->hasImages()) {
+        if ($itemDTO->images) {
             $item->clearMediaCollection('images');
             $this->uploadImages($item, $itemDTO->images);
         }
-        if ($itemDTO->hasDocuments()) {
+        if ($itemDTO->documents) {
             $item->clearMediaCollection('documents');
             $this->uploadDocuments($item, $itemDTO->documents);
         }
@@ -469,13 +470,16 @@ class ItemService extends BaseService
     */
     protected function uploadThumbnailImage(Item $item, $thumbnail_image): void
     {   
-        $image = $this->convertToWebp($thumbnail_image);
+        if (!Storage::disk('public')->exists($thumbnail_image)) {
+            throw new \Exception('Thumbnail image does not exist');
+        }
 
-        $media = $item->addMedia($image)
+        $item
+            ->addMediaFromDisk($thumbnail_image, 'public')
+            ->usingFileName(basename($thumbnail_image))
             ->toMediaCollection('uploadThumbnailImage');
-        @unlink($image);
-        // Track uploaded media for potential rollback
-        $this->uploadedMedia[] = $media;
+
+        Storage::disk('public')->delete($thumbnail_image);
     }
 
     /**
@@ -484,13 +488,17 @@ class ItemService extends BaseService
     protected function uploadImages(Item $item, array $images): void
     {   
         foreach ($images as $image) {
-            $image = $this->convertToWebp($image);   
-            $media = $item->addMedia($image)
+
+            if (!Storage::disk('public')->exists($image)) {
+                throw new \Exception('image does not exist');
+            }
+
+            $item
+                ->addMediaFromDisk($image, 'public')
+                ->usingFileName(basename($image))
                 ->toMediaCollection('images');
 
-            @unlink($image);
-            // Track uploaded media for potential rollback
-            $this->uploadedMedia[] = $media;
+            Storage::disk('public')->delete($image);
         }
     }
 
@@ -500,11 +508,17 @@ class ItemService extends BaseService
     protected function uploadDocuments(Item $item, array $documents): void
     {
         foreach ($documents as $document) {
-            $media = $item->addMedia($document)
+
+            if (!Storage::disk('public')->exists($document)) {
+                throw new \Exception('document does not exist');
+            }
+
+            $item
+                ->addMediaFromDisk($document, 'public')
+                ->usingFileName(basename($document))
                 ->toMediaCollection('documents');
 
-            // Track uploaded media for potential rollback
-            $this->uploadedMedia[] = $media;
+            Storage::disk('public')->delete($document);
         }
     }
 

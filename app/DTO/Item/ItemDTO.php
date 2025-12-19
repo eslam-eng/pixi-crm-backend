@@ -3,26 +3,16 @@
 namespace App\DTO\Item;
 
 use App\DTO\BaseDTO;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 
 class ItemDTO extends BaseDTO
 {
-    /**
-     * @param string $name,
-     * @param ?string $description,
-     * @param float $price,
-     * @param int $category_id,
-     * @param uploadedFile $thumbnail_image
-     * @param ?array $images
-     * @param ?array $documents
-    */
     public function __construct(
         public string $name,
         public ?string $description,
         public float $price,
         public int $category_id,
-        public ?UploadedFile $thumbnail_image = null,
+        public ?string $thumbnail_image = null,
         public ?array $images = null,
         public ?array $documents = null,
     ) {}
@@ -34,9 +24,9 @@ class ItemDTO extends BaseDTO
             description: $request->description,
             price: $request->price,
             category_id: $request->category_id,
-            thumbnail_image: $request->file('thumbnail_image'),
-            images : $request->file('images'), // Multiple images
-            documents : $request->file('documents'),
+            thumbnail_image: $request->thumbnail_image,
+            images : $request->images, // Multiple images
+            documents : $request->documents,
         );
     }
 
@@ -51,6 +41,9 @@ class ItemDTO extends BaseDTO
             description: Arr::get($data, 'description'),
             price: Arr::get($data, 'price'),
             category_id: Arr::get($data, 'category_id'),
+            thumbnail_image: Arr::get($data, 'thumbnail_image'),
+            images: Arr::get($data, 'images'),
+            documents: Arr::get($data, 'documents'),
         );
     }
 
@@ -61,30 +54,9 @@ class ItemDTO extends BaseDTO
             'description' => $this->description,
             'price' => $this->price,
             'category_id' => $this->category_id,
+            'thumbnail_image' => $this->thumbnail_image,
+            'images' => $this->images,
+            'documents' => $this->documents
         ];
-    }
-
-    /**
-    * Check if has avatar file
-    */
-    public function hasThumbnailImage(): bool
-    {
-        return $this->thumbnail_image instanceof UploadedFile;
-    }
-
-    /**
-    * Check if has multiple images
-    */
-    public function hasImages(): bool
-    {
-        return is_array($this->images) && count($this->images) > 0;
-    }
-
-    /**
-    * Check if has documents
-    */
-    public function hasDocuments(): bool
-    {
-        return is_array($this->documents) && count($this->documents) > 0;
     }
 }

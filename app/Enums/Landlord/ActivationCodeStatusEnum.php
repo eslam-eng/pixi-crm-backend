@@ -23,4 +23,13 @@ enum ActivationCodeStatusEnum: string
             self::BLOCKED => __('app.activation_code.status.blocked'),
         };
     }
+
+    public function toggle(): self
+    {
+        return match ($this) {
+            self::AVAILABLE => self::BLOCKED,
+            self::BLOCKED => self::AVAILABLE,
+            default => $this,
+        };
+    }
 }

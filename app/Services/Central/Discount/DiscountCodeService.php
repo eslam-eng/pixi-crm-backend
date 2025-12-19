@@ -3,8 +3,11 @@
 namespace App\Services\Central\Discount;
 
 use App\DTO\Central\DiscountCodeDTO;
+use App\Enums\Landlord\DiscountUsageEnum;
 use App\Exceptions\DiscountCodeException;
 use App\Models\Central\DiscountCode;
+use App\Models\Central\Tenant;
+use App\QueryFilters\DiscountCodeFilters;
 use App\Services\Central\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -13,7 +16,7 @@ class DiscountCodeService extends BaseService
 {
     protected function getFilterClass(): ?string
     {
-        return null; // You can implement filtering later if needed
+        return DiscountCodeFilters::class;
     }
 
     protected function baseQuery(): Builder
@@ -31,7 +34,12 @@ class DiscountCodeService extends BaseService
 
     public function create(DiscountCodeDTO $dto): DiscountCode
     {
-        return $this->getQuery()->create($dto->toArray());
+        $data = $dto->toArray();
+        if ($data['discount_type'] === DiscountUsageEnum::SINGLE_USE->value) {
+            $data['usage_limit'] = 1;
+        }
+
+        return $this->getQuery()->create($data);
     }
 
     public function update(DiscountCode|int $discount, DiscountCodeDTO $dto): bool
@@ -40,7 +48,12 @@ class DiscountCodeService extends BaseService
             $discount = $this->findById($discount);
         }
 
-        return $discount->update($dto->toArray());
+        $data = $dto->toArray();
+        if ($data['discount_type'] === DiscountUsageEnum::SINGLE_USE->value) {
+            $data['usage_limit'] = 1;
+        }
+
+        return $discount->update($data);
     }
 
     public function delete(DiscountCode|int $discount): ?bool
@@ -69,7 +82,7 @@ class DiscountCodeService extends BaseService
             ->where('plan_id', $planId)
             ->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             throw new DiscountCodeException('Invalid discount code.');
         }
         // Check expiry
@@ -80,6 +93,14 @@ class DiscountCodeService extends BaseService
         // Check global usage
         if ($discountCode->usage_limit && $discountCode->usages()->count() >= $discountCode->usage_limit) {
             throw new DiscountCodeException('Discount code has been fully used.');
+        }
+
+        // Check users limit (unique tenants)
+        if ($discountCode->users_limit) {
+            $uniqueTenantsCount = $discountCode->usages()->distinct('tenant_id')->count('tenant_id');
+            if ($uniqueTenantsCount >= $discountCode->users_limit) {
+                throw new DiscountCodeException('Discount code has reached its user limit.');
+            }
         }
 
         return $discountCode;

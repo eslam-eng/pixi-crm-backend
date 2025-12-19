@@ -2,7 +2,8 @@
 
 namespace App\Http\Requests\Central;
 
-use App\Enums\Landlord\ActivationStatusEnum;
+use App\Enums\Landlord\ActivationCodeStatusEnum;
+use App\Enums\Landlord\DiscountUsageEnum;
 use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,28 +25,31 @@ class DiscountCodeRequest extends BaseRequest
                     ->ignore($this->route('discount_code')),
             ],
             'plan_id' => ['required', 'exists:plans,id'],
-            //            'discount_type' => [
-            //                'required',
-            //                Rule::in(array_column(DiscountTypeEnum::cases(), 'value')),
-            //            ],
             'discount_percentage' => [
                 'required',
                 'numeric',
                 'min:0.01',
                 'max:100',
             ],
-            //            'users_limit' => [
-            //                'nullable',
-            //                'integer',
-            //                'min:1',
-            //                Rule::requiredIf(fn () => $this->discount_type == DiscountTypeEnum::MULTI_USE->value),
-            //            ],
-            'usage_limit' => ['nullable', 'integer', 'min:1'],
-            'expires_at' => ['required', 'date', 'date_format:Y-m-d', 'after:today'],
+            'discount_type' => [
+                'required',
+                Rule::in(DiscountUsageEnum::values()),
+            ],
+            'usage_limit' => [
+                'nullable',
+                'integer',
+                'min:1',
+                Rule::requiredIf($this->discount_type === 'multi_use'),
+            ],
+            'users_limit' => ['required', 'integer', 'min:1'],
+            'expires_at' => ['required', 'date', 'after:today'],
             'status' => [
-                'sometimes',
-                'boolean',
-                Rule::in(ActivationStatusEnum::values()),
+                'required',
+                Rule::in(
+                    ActivationCodeStatusEnum::AVAILABLE->value,
+                    ActivationCodeStatusEnum::EXPIRED->value,
+                    ActivationCodeStatusEnum::BLOCKED->value,
+                ),
             ],
         ];
     }
@@ -54,7 +58,6 @@ class DiscountCodeRequest extends BaseRequest
     {
         $this->merge([
             'discount_code' => strtoupper($this->discount_code),
-            'status' => $this->boolean('status', true),
         ]);
     }
 }

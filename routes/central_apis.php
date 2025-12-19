@@ -19,9 +19,12 @@ use App\Http\Controllers\Central\Api\Auth\RegisterController;
 use App\Http\Controllers\Central\Api\AuthController as centralAuthController;
 use App\Http\Controllers\Central\Api\PaymentController;
 use App\Http\Controllers\Central\Api\SettingController;
+use App\Http\Controllers\Central\Api\TenantLookupController;
 
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
+
+        Route::post('tenant/check', [TenantLookupController::class, 'checkTenant']);
 
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
@@ -72,7 +75,12 @@ foreach (config('tenancy.central_domains') as $domain) {
 
             Route::get('permissions', [RoleCentralController::class, 'permissionsList']);
             Route::apiResource('roles', RoleCentralController::class);
+
+            // discount codes routes
             Route::apiResource('discount-codes', DiscountCodeController::class);
+            Route::group(['prefix' => 'discount-codes'], function () {
+                Route::get('generate/code', [DiscountCodeController::class, 'generateCode']);
+            });
 
             //settings
             Route::apiResource('sources', SourceController::class);

@@ -21,7 +21,8 @@ class TeamService extends BaseService
     public function __construct(
         private Team $model,
         private UserService $userService
-    ) {}
+    ) {
+    }
 
     public function getModel(): Model
     {
@@ -51,7 +52,7 @@ class TeamService extends BaseService
 
     public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
-        $query = $this->queryGet(filters: $filters, withRelations: $withRelations);
+        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)->orderBy('id', 'desc');
         if ($perPage) {
             return $query->paginate($perPage);
         }
@@ -90,14 +91,14 @@ class TeamService extends BaseService
             // 1) Normalize input
             $incomingIds = collect($incomingIds)
                 ->filter()                 // remove null/empty
-                ->map(fn($v) => (int)$v)
+                ->map(fn($v) => (int) $v)
                 ->unique()
                 ->values()
                 ->all();
 
             // Ensure leader is included (optional but recommended)
             if ($leaderId) {
-                $incomingIds = collect($incomingIds)->push((int)$leaderId)->unique()->values()->all();
+                $incomingIds = collect($incomingIds)->push((int) $leaderId)->unique()->values()->all();
             }
 
             // 2) Current members for this team
@@ -166,7 +167,7 @@ class TeamService extends BaseService
             $this->userService->getModel()->whereIn('id', $allSales)->update(['team_id' => $team->id]);
         }
 
-        if (! $teamBulkAssignDTO->is_target) {
+        if (!$teamBulkAssignDTO->is_target) {
             return $team->load('chairs.targets', 'leader.roles', 'chairs.user', 'members');
         }
 
@@ -203,12 +204,12 @@ class TeamService extends BaseService
                         'period_type' => "monthly",
                         'year' => $target->year,
                         'period_number' => $target->part,
-                        'effective_from' => now()->copy()->year((int)$target->year)->month((int)$target->part)->startOfMonth()->format('Y-m-d H:i:s'),
-                        'effective_to' => now()->copy()->year((int)$target->year)->month((int)$target->part)->endOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_from' => now()->copy()->year((int) $target->year)->month((int) $target->part)->startOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_to' => now()->copy()->year((int) $target->year)->month((int) $target->part)->endOfMonth()->format('Y-m-d H:i:s'),
                         'target_value' => $target->amount,
                     ]);
                 } else {
-                    $monthName = now()->copy()->year((int)$target->year)->month((int)$target->part);
+                    $monthName = now()->copy()->year((int) $target->year)->month((int) $target->part);
                     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
                 }
             }
@@ -246,7 +247,7 @@ class TeamService extends BaseService
                         'target_value' => $target->amount,
                     ]);
                 } else {
-                    $quarterName = now()->copy()->year((int)$target->year)->setQuarter((int)$target->part);
+                    $quarterName = now()->copy()->year((int) $target->year)->setQuarter((int) $target->part);
                     $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $quarterName->format('F Y'));
                 }
             }
@@ -259,7 +260,7 @@ class TeamService extends BaseService
 
     public function IsAllowMonthlyTarget($month, $year): bool
     {
-        $selectedDate  = now()->copy()->year((int)$year)->month((int)$month)->startOfMonth();
+        $selectedDate = now()->copy()->year((int) $year)->month((int) $month)->startOfMonth();
         $minDateAllowed = now()->copy()->startOfMonth();
         return ($selectedDate >= $minDateAllowed);
     }
@@ -270,7 +271,7 @@ class TeamService extends BaseService
             $validator->errors()->add("quarter", "Quarter must be between 1 and 4");
         }
 
-        $selectedDate  = now()->copy()->year((int)$year)->setQuarter((int)$quarter)->startOfQuarter();
+        $selectedDate = now()->copy()->year((int) $year)->setQuarter((int) $quarter)->startOfQuarter();
         $minDateAllowed = now()->copy()->startOfQuarter();
         return ($selectedDate >= $minDateAllowed);
     }
@@ -297,7 +298,7 @@ class TeamService extends BaseService
         return $this->model->with(['chairs.targets', 'chairs.user', 'leader.roles', 'members'])->findOrFail($id);
     }
 
-    public function teamBulkUpdate(TeamBulkAssignDTO $teamBulkAssignDTO , int $id)
+    public function teamBulkUpdate(TeamBulkAssignDTO $teamBulkAssignDTO, int $id)
     {
         $leader = $this->userService->getModel()
             ->role(['admin', 'manager'])
@@ -334,7 +335,7 @@ class TeamService extends BaseService
             $this->userService->getModel()->whereIn('id', $allSales)->update(['team_id' => $team->id]);
         }
 
-        if (! $teamBulkAssignDTO->is_target) {
+        if (!$teamBulkAssignDTO->is_target) {
             return $team->load('chairs.targets', 'leader.roles', 'chairs.user', 'members');
         }
 
@@ -378,14 +379,14 @@ class TeamService extends BaseService
             foreach ($memberDTO->targets as $index => $target) {
                 $target = TargetMemberDTO::fromArray($target);
                 // if ($this->IsAllowMonthlyTarget($target->part, $target->year)) {
-                    $chair->targets()->create([
-                        'period_type' => "monthly",
-                        'year' => $target->year,
-                        'period_number' => $target->part,
-                        'effective_from' => now()->copy()->year((int)$target->year)->month((int)$target->part)->startOfMonth()->format('Y-m-d H:i:s'),
-                        'effective_to' => now()->copy()->year((int)$target->year)->month((int)$target->part)->endOfMonth()->format('Y-m-d H:i:s'),
-                        'target_value' => $target->amount,
-                    ]);
+                $chair->targets()->create([
+                    'period_type' => "monthly",
+                    'year' => $target->year,
+                    'period_number' => $target->part,
+                    'effective_from' => now()->copy()->year((int) $target->year)->month((int) $target->part)->startOfMonth()->format('Y-m-d H:i:s'),
+                    'effective_to' => now()->copy()->year((int) $target->year)->month((int) $target->part)->endOfMonth()->format('Y-m-d H:i:s'),
+                    'target_value' => $target->amount,
+                ]);
                 // } else {
                 //     $monthName = now()->copy()->year((int)$target->year)->month((int)$target->part);
                 //     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
@@ -404,7 +405,7 @@ class TeamService extends BaseService
         foreach ($members as $member) {
             $memberDTO = TeamMemberDTO::fromArray($member);
             $user = $this->userService->findById($memberDTO->user_id);
-            
+
             $chair = $user->chairs()->where('team_id', $team->id)->first();
             if ($chair) {
                 // Delete existing targets
@@ -412,7 +413,7 @@ class TeamService extends BaseService
                 // Delete chair record
                 $chair->delete();
             }
-            
+
             $chair = $user->chairs()->create([
                 'team_id' => $team->id,
                 'started_at' => now(),
@@ -425,15 +426,15 @@ class TeamService extends BaseService
                 $target = TargetMemberDTO::fromArray($target);
                 // if ($this->IsAllowQuarterlyTarget($target->part, $target->year, $validator)) {
 
-                    [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target->year, $target->part);
-                    $chair->targets()->create([
-                        'period_type' => "quarterly",
-                        'year' => $target->year,
-                        'period_number' => $target->part,
-                        'effective_from' => $startOfQuarter->format('Y-m-d H:i:s'),
-                        'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
-                        'target_value' => $target->amount,
-                    ]);
+                [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target->year, $target->part);
+                $chair->targets()->create([
+                    'period_type' => "quarterly",
+                    'year' => $target->year,
+                    'period_number' => $target->part,
+                    'effective_from' => $startOfQuarter->format('Y-m-d H:i:s'),
+                    'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
+                    'target_value' => $target->amount,
+                ]);
                 // } else {
                 //     $quarterName = now()->copy()->year((int)$target->year)->setQuarter((int)$target->part);
                 //     $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $quarterName->format('F Y'));
@@ -445,5 +446,5 @@ class TeamService extends BaseService
             throw new ValidationException($validator);
         }
     }
-    
+
 }

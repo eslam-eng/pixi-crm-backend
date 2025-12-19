@@ -4,7 +4,9 @@ namespace App\Services\Tenant\Users;
 
 use App\DTO\Tenant\AssignToTeam\AssignToTeamDTO;
 use App\DTO\Tenant\UserDTO;
+use App\DTO\Tenant\UserUpdateProfileDTO;
 use App\Enums\TargetType;
+use App\Models\Central\TenantUser;
 use App\Models\Tenant\Team;
 use App\Models\Tenant\User;
 use App\Notifications\Tenant\WelcomeNewUserNotification;
@@ -19,7 +21,9 @@ use Illuminate\Validation\ValidationException;
 
 class UserService extends BaseService
 {
-    public function __construct(private User $model) {}
+    public function __construct(private User $model)
+    {
+    }
 
     public function getModel(): Model
     {
@@ -92,6 +96,16 @@ class UserService extends BaseService
     {
         $data = $userDTO->toArray();
         $user = $this->getModel()->create($data);
+
+        // Check and add to central tenant_users table
+        if (!TenantUser::where('email', $userDTO->email)->exists()) {
+            TenantUser::create([
+                'tenant_id' => tenant('id'),
+                'email' => $userDTO->email,
+                'name' => $userDTO->first_name . ' ' . $userDTO->last_name,
+            ]);
+        }
+
         // Get role by ID and assign by name
         if ($userDTO->role) {
             $user->assignRole($userDTO->role);
@@ -114,11 +128,11 @@ class UserService extends BaseService
                         'year' => $target['year'],
                         'period_number' => $target['part'],
                         'target_value' => $target['amount'],
-                        'effective_from' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->startOfMonth()->format('Y-m-d H:i:s'),
-                        'effective_to' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->endOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_from' => now()->copy()->year((int) $target['year'])->month((int) $target['part'])->startOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_to' => now()->copy()->year((int) $target['year'])->month((int) $target['part'])->endOfMonth()->format('Y-m-d H:i:s'),
                     ]);
                 } else {
-                    $monthName = now()->copy()->setMonth((int)$target['part']);
+                    $monthName = now()->copy()->setMonth((int) $target['part']);
                     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
                 }
             }
@@ -126,7 +140,7 @@ class UserService extends BaseService
 
         if ($userDTO->period_type == "quarterly") {
             foreach ($userDTO->targets as $index => $target) {
-                if ($this->IsAllowQuarterlyTarget($target['part'], $target['year'])) {    
+                if ($this->IsAllowQuarterlyTarget($target['part'], $target['year'])) {
                     [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target['year'], $target['part']);
                     $chair->targets()->create([
                         'period_type' => $userDTO->period_type,
@@ -159,6 +173,23 @@ class UserService extends BaseService
         $user = $this->findById($id);
         $data = $userDTO->toArray();
 
+
+
+        // Sync email change to central tenant_users
+
+        if (isset($data['email']) && $data['email'] !== $user->getOriginal('email')) {
+            $oldEmail = $user->getOriginal('email');
+            $newEmail = $data['email'];
+
+            // Check if new email not already taken in central by another user (though unique validation should handle this in request usually, but for central logic..)
+            // Actually, just find the record for the OLD email and this tenant, and update it.
+            // Or create if it didn't exist for some reason.
+
+            TenantUser::updateOrCreate(
+                ['email' => $oldEmail], // Find by old email
+                ['email' => $newEmail, 'name' => $user->first_name . ' ' . $user->last_name] // Update to new
+            );
+        }
         if (!isset($data['password'])) {
             $user->update(Arr::except($data, ['password']));
         } else {
@@ -191,15 +222,15 @@ class UserService extends BaseService
         if ($userDTO->period_type == "monthly") {
             foreach ($userDTO->targets as $index => $target) {
                 // if ($this->IsAllowMonthlyTarget($target['part'], $target['year'])) {
-                    $chair->targets()->updateOrCreate([
-                        'period_type' => $userDTO->period_type,
-                        'year' => $target['year'],
-                        'period_number' => $target['part'],
-                        'effective_from' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->startOfMonth()->format('Y-m-d H:i:s'),
-                        'effective_to' => now()->copy()->year((int)$target['year'])->month((int)$target['part'])->endOfMonth()->format('Y-m-d H:i:s'),
-                    ], [
-                        'target_value' => $target['amount'],
-                    ]);
+                $chair->targets()->updateOrCreate([
+                    'period_type' => $userDTO->period_type,
+                    'year' => $target['year'],
+                    'period_number' => $target['part'],
+                    'effective_from' => now()->copy()->year((int) $target['year'])->month((int) $target['part'])->startOfMonth()->format('Y-m-d H:i:s'),
+                    'effective_to' => now()->copy()->year((int) $target['year'])->month((int) $target['part'])->endOfMonth()->format('Y-m-d H:i:s'),
+                ], [
+                    'target_value' => $target['amount'],
+                ]);
                 // } else {
                 //     $monthName = now()->copy()->setMonth((int)$target['part']);
                 //     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
@@ -210,16 +241,16 @@ class UserService extends BaseService
         if ($userDTO->period_type == "quarterly") {
             foreach ($userDTO->targets as $index => $target) {
                 // if ($this->IsAllowQuarterlyTarget($target['part'], $target['year'])) {
-                    [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target['year'], $target['part']);
-                    $chair->targets()->updateOrCreate([
-                        'period_type' => "quarterly",
-                        'year' => $target['year'],
-                        'period_number' => $target['part'],
-                        'effective_from' => $startOfQuarter->format('Y-m-d H:i:s'),
-                        'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
-                    ], [
-                        'target_value' => $target['amount'],
-                    ]);
+                [$startOfQuarter, $endOfQuarter] = $this->getStartAndEndOfQuarter($target['year'], $target['part']);
+                $chair->targets()->updateOrCreate([
+                    'period_type' => "quarterly",
+                    'year' => $target['year'],
+                    'period_number' => $target['part'],
+                    'effective_from' => $startOfQuarter->format('Y-m-d H:i:s'),
+                    'effective_to' => $endOfQuarter->format('Y-m-d H:i:s'),
+                ], [
+                    'target_value' => $target['amount'],
+                ]);
                 // } else {
                 //     $validator->errors()->add($index . ".quarter", "You are not allowed to set target for before quarter " . $target['quarter']);
                 // }
@@ -233,15 +264,22 @@ class UserService extends BaseService
         return $user;
     }
 
-    public function updateProfile($id, array $data = [])
+    public function updateProfile(UserUpdateProfileDTO $userDTO): User
+    {
+        $user = $this->findById(id: user_id(), withRelations: ['roles.permissions']);
+        $user->update($userDTO->toArray());
+        if ($userDTO->hasProfileImage()) {
+            $user->clearMediaCollection('profile_image')->addMedia($userDTO->profile_image)->toMediaCollection('profile_image');
+        }
+        return $user;
+    }
+
+    public function updatePassword($id, array $data = [])
     {
         $user = $this->findById($id);
-        if (!isset($data['password']))
-            $user->update(Arr::except($data, ['password']));
-        else {
-            $data['password'] = bcrypt($data['password']);
-            $user->update($data);
-        }
+        $user->password = bcrypt($data['password']);
+        $user->save();
+        $user->tokens()->delete();
         return true;
     }
 
@@ -249,6 +287,14 @@ class UserService extends BaseService
     {
         $user = $this->findById($id);
         $user->roles()->detach();
+
+        // Delete from central tenant_users
+        if (TenantUser::where('tenant_id', tenant('id'))->where('email', $user->email)->exists()) {
+            TenantUser::where('tenant_id', tenant('id'))
+                ->where('email', $user->email)
+                ->delete();
+        }
+
         $user->delete();
         return true;
     }
@@ -337,12 +383,12 @@ class UserService extends BaseService
                         'period_type' => "monthly",
                         'year' => now()->year,
                         'period_number' => $target['month'],
-                        'effective_from' => now()->setMonth((int)$target['month'])->startOfMonth()->format('Y-m-d H:i:s'),
-                        'effective_to' => now()->setMonth((int)$target['month'])->endOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_from' => now()->setMonth((int) $target['month'])->startOfMonth()->format('Y-m-d H:i:s'),
+                        'effective_to' => now()->setMonth((int) $target['month'])->endOfMonth()->format('Y-m-d H:i:s'),
                         'target_value' => $target['amount'],
                     ]);
                 } else {
-                    $monthName = now()->copy()->setMonth((int)$target['month']);
+                    $monthName = now()->copy()->setMonth((int) $target['month']);
                     $validator->errors()->add($index . ".month", "You are not allowed to set target for before month " . $monthName->format('F Y'));
                 }
             }
@@ -392,7 +438,7 @@ class UserService extends BaseService
 
     public function IsAllowMonthlyTarget($month, $year): bool
     {
-        $selectedDate  = now()->copy()->year((int)$year)->month((int)$month)->startOfMonth();
+        $selectedDate = now()->copy()->year((int) $year)->month((int) $month)->startOfMonth();
         $minDateAllowed = now()->copy()->startOfMonth();
         return ($selectedDate >= $minDateAllowed);
     }
@@ -404,13 +450,13 @@ class UserService extends BaseService
                 'quarter' => 'Quarter must be between 1 and 4',
             ]);
         }
-        $endDateOfQuarter = match ((int)$quarter) {
-            1 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
-            2 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
-            3 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
-            4 => now()->copy()->setYear((int)$year)->setMonth((int)$quarter * 3)->endOfMonth(),
+        $endDateOfQuarter = match ((int) $quarter) {
+            1 => now()->copy()->setYear((int) $year)->setMonth((int) $quarter * 3)->endOfMonth(),
+            2 => now()->copy()->setYear((int) $year)->setMonth((int) $quarter * 3)->endOfMonth(),
+            3 => now()->copy()->setYear((int) $year)->setMonth((int) $quarter * 3)->endOfMonth(),
+            4 => now()->copy()->setYear((int) $year)->setMonth((int) $quarter * 3)->endOfMonth(),
         };
-        $maxDateAllowed  = $endDateOfQuarter;
+        $maxDateAllowed = $endDateOfQuarter;
         return (now() < $maxDateAllowed);
     }
 
@@ -418,7 +464,7 @@ class UserService extends BaseService
     {
         if ($target) {
             $target_amounts = array_column($target, 'amount', 'month');
-            $amount_of_quarter = match ((int)$quarter) {
+            $amount_of_quarter = match ((int) $quarter) {
                 1 => ($target_amounts[1] ?? 0) + ($target_amounts[2] ?? 0) + ($target_amounts[3] ?? 0),
                 2 => ($target_amounts[4] ?? 0) + ($target_amounts[5] ?? 0) + ($target_amounts[6] ?? 0),
                 3 => ($target_amounts[7] ?? 0) + ($target_amounts[8] ?? 0) + ($target_amounts[9] ?? 0),
@@ -448,7 +494,7 @@ class UserService extends BaseService
 
     public function getkeysofmonthlytarget($quarterly_target): array
     {
-        return match ((int)$quarterly_target) {
+        return match ((int) $quarterly_target) {
             1 => [1, 2, 3],
             2 => [4, 5, 6],
             3 => [7, 8, 9],
@@ -541,5 +587,16 @@ class UserService extends BaseService
             now()->copy()->year($year)->month($month)->startOfMonth(),
             now()->copy()->year($year)->month($month)->addMonths(2)->endOfMonth(),
         ];
+    }
+
+    public function getPermissions()
+    {
+        $user = $this->findById(id: user_id(), withRelations: ['roles.permissions']);
+        return $user->roles->first()->permissions;
+    }
+
+    public function getActivities()
+    {
+        return $this->findById(user_id())->actions;
     }
 }

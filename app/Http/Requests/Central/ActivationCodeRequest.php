@@ -39,7 +39,8 @@ class ActivationCodeRequest extends BaseRequest
                 'string',
                 Rule::in(
                     ActivationCodeStatusEnum::AVAILABLE->value,
-                    ActivationCodeStatusEnum::EXPIRED->value
+                    ActivationCodeStatusEnum::EXPIRED->value,
+                    ActivationCodeStatusEnum::BLOCKED->value,
                 )
             ],
         ];

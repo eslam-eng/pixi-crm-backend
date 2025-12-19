@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Users;
 
 use App\DTO\Tenant\AssignToTeam\AssignToTeamDTO;
 use App\DTO\Tenant\UserDTO;
+use App\DTO\Tenant\UserUpdateProfileDTO;
 use App\Exceptions\GeneralException;
 use App\Http\Requests\Tenant\Users\AssignToTeamRequest;
 use Exception;
@@ -16,7 +17,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Users\UserRequest;
 use App\Http\Requests\Tenant\Users\UserUpdateProfileRequest;
 use App\Http\Requests\Tenant\Users\ChangeLanguageRequest;
+use App\Http\Requests\Tenant\Users\UpdatePasswordRequest;
+use App\Http\Resources\Tenant\Dashboard\ActivityDetailsResource;
+use App\Http\Resources\Tenant\Users\PermissionResource;
 use App\Http\Resources\Tenant\Users\UserDDLResource;
+use App\Http\Resources\Tenant\Users\UserProfileResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use App\Http\Resources\Tenant\Users\UserShowResource;
 use App\Http\Resources\Tenant\Users\UserTargetResource;
@@ -111,23 +116,35 @@ class UserController extends Controller
         }
     }
 
-    public function updateProfile(UserUpdateProfileRequest $request, $id)
+    public function getProfile(): JsonResponse
+    {
+        try{
+            $user = $this->userService->findById(id: user_id(), withRelations: ['roles.permissions']);
+            return ApiResponse(UserProfileResource::make($user), 'User profile retrieved successfully');
+        } catch(Exception $e){ 
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function updateProfile(UserUpdateProfileRequest $request)
     {
         try {
-            $this->userService->updateProfile($request->validated(), $id);
-            $toast = [
-                'type' => 'success',
-                'title' => 'success',
-                'message' => trans('app.success_operation')
-            ];
-            return to_route('home')->with('toast', $toast);
+            $dto = UserUpdateProfileDTO::fromRequest($request);
+            $user = $this->userService->updateProfile($dto);
+            return ApiResponse(UserProfileResource::make($user), 'User profile updated successfully');
         } catch (Exception $e) {
-            $toast = [
-                'type' => 'error',
-                'title' => 'error',
-                'message' => trans('app.there_is_an_error')
-            ];
-            return back()->with('toast', $toast);
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+
+    public function UpdatePassword(UpdatePasswordRequest $request)
+    { 
+        try {
+            $this->userService->updatePassword(user_id(), $request->validated());
+            return ApiResponse(message: 'Password updated successfully');
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
         }
     }
 
@@ -244,5 +261,19 @@ class UserController extends Controller
         $columns = $request->input('columns');
 
         return Excel::download(new UsersExport($columns), 'users.xlsx');
+    }
+
+    public function getPermissions()
+    {
+        $permissions = $this->userService->getPermissions();
+        $data = PermissionResource::collection($permissions);
+        return ApiResponse($data, 'Permissions retrieved successfully');
+    }
+
+    public function getActivities()
+    {
+        $activities = $this->userService->getActivities();
+        $data = ActivityDetailsResource::collection($activities);
+        return ApiResponse($data, 'Activities retrieved successfully');
     }
 }

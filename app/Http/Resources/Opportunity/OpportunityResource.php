@@ -3,8 +3,6 @@
 namespace App\Http\Resources\Opportunity;
 
 use App\Http\Resources\ContactResource;
-use App\Http\Resources\Opportunity\ItemInOpportunity;
-use App\Http\Resources\ItemResource;
 use App\Http\Resources\StageResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use Illuminate\Http\Request;
@@ -70,6 +68,19 @@ class OpportunityResource extends JsonResource
             'description' => $this->description,
             'contact' => $this->whenLoaded('contact', fn() => new ContactResource($this->contact)),
             'stage' => $this->whenLoaded('stage', fn() => new StageResource($this->stage)),
+            'images' => $this->getMedia('images')->map(function ($file) {
+                return [
+                    'original_url' => $file->original_url,
+                    'custom_properties' => $file->custom_properties,
+                ];
+            }),
+            'documents' => $this->getMedia('images')->map(function ($file) {
+                return [
+                    'original_url' => $file->original_url,
+                    'custom_properties' => $file->custom_properties,
+                ];
+            }),
+
             // 'items' => $this->whenLoaded('items', fn() => ItemResource::collection($this->items)),
             'items_details' => $mergedItemsDetails,
         ];

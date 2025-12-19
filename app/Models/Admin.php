@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Landlord\ActivationStatusEnum;
 // use App\Enum\SupportedLocalesEnum;
+use App\Models\Tenant\Department;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -33,6 +34,8 @@ class Admin extends Authenticatable implements HasMedia
         'country',
         'is_active',
         'email_verified_at',
+        'department_id',
+        'job_title',
     ];
 
     /**
@@ -58,5 +61,10 @@ class Admin extends Authenticatable implements HasMedia
             'is_active' => ActivationStatusEnum::class,
             // 'locale' => SupportedLocalesEnum::class,
         ];
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 }

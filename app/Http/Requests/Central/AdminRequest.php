@@ -23,14 +23,17 @@ class AdminRequest extends BaseRequest
      */
     public function rules()
     {
+
         return [
             'name' => ['required', 'string'],
             'email' => ['required', 'email', Rule::unique('admins', 'email')->ignore($this->admin)],
             //            'password' => ['required', Password::min(8)->mixedCase()],
             'phone' => 'nullable|string',
             'is_active' => 'required|boolean',
-            'role_ids' => 'required|array|min:1',
-            'role_ids.*' => 'required|exists:roles,id',
+            'role_id' => 'required|exists:roles,id',
+            'department_id' => 'required|exists:departments,id',
+            'job_title' => 'required|string',
+            'password' => ['nullable', 'string', 'min:6', Rule::requiredIf($this->isMethod('POST'))],
         ];
     }
 

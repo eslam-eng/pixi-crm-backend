@@ -19,7 +19,7 @@ class PermissionResource extends JsonResource
             'name' => $this->name,
             'group' => $this->group,
             'description' => $this->description,
-            'guard_name' => $this->guard_name,
+            // 'guard_name' => $this->guard_name,
         ];
     }
 }

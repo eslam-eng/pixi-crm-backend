@@ -403,6 +403,7 @@ return array(
   'updated' => 'Updated',
   'created' => 'Created',
   'deleted' => 'Deleted',
+  'status_changed' => 'Status changed',
   'activation_code' => [
     'status' => [
       'available' => 'Available',

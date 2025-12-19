@@ -3,7 +3,6 @@
 namespace App\Models\Tenant;
 
 use App\Enums\TargetType;
-use App\Models\FcmToken;
 use App\Models\Tenant\Attendance\AttendancePunch;
 use App\Models\Tenant\Team;
 use App\Settings\UsersSettings;
@@ -16,11 +15,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\CausesActivity;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, HasApiTokens, Filterable, LogsActivity;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens, Filterable, LogsActivity, InteractsWithMedia, CausesActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -28,7 +30,6 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'image',
         'first_name',
         'last_name',
         'email',
@@ -95,14 +96,11 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * @param $image
-     * @return string
-     */
-    public function getImageAttribute($image): string
+    public function getImageAttribute(): string
     {
-        if (!empty($image) && file_exists(public_path('storage/users/' . $image))) {
-            return asset('storage') . '/users/' . $image;
+        $path = optional($this->getFirstMedia('profile_image'))->getPath();
+        if (preg_match('/storage\/(?:tenant)?([^\/]+)\/app\/public\/(.+)$/', $path, $matches)) {
+            return url("/storage/tenant{$matches[1]}/{$matches[2]}");
         }
         return asset('defaults/default-user.png');
     }
