@@ -75,7 +75,12 @@ foreach (config('tenancy.central_domains') as $domain) {
 
             Route::get('permissions', [RoleCentralController::class, 'permissionsList']);
             Route::apiResource('roles', RoleCentralController::class);
+
+            // discount codes routes
             Route::apiResource('discount-codes', DiscountCodeController::class);
+            Route::group(['prefix' => 'discount-codes'], function () {
+                Route::get('generate/code', [DiscountCodeController::class, 'generateCode']);
+            });
 
             //settings
             Route::apiResource('sources', SourceController::class);

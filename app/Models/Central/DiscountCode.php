@@ -2,8 +2,9 @@
 
 namespace App\Models\Central;
 
-use App\Enums\Landlord\ActivationStatusEnum;
+use App\Enums\Landlord\ActivationCodeStatusEnum;
 use App\Enums\Landlord\DiscountCodeStatusEnum;
+use App\Enums\Landlord\DiscountUsageEnum;
 use Carbon\Carbon;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,16 +19,17 @@ class DiscountCode extends Model
     protected $fillable = [
         'discount_code',
         'plan_id',
-        //        'discount_type',
+        'discount_type',
         'discount_percentage',
-        //        'users_limit',
+        'users_limit',
         'usage_limit',
         'expires_at',
         'status',
     ];
 
     protected $casts = [
-        'status' => ActivationStatusEnum::class,
+        'status' => ActivationCodeStatusEnum::class,
+        'discount_type' => DiscountUsageEnum::class,
         'discount_percentage' => 'float',
     ];
 
@@ -43,7 +45,7 @@ class DiscountCode extends Model
 
     public function isActive(): bool
     {
-        return $this->status === ActivationStatusEnum::ACTIVE && ! $this->isExpired();
+        return $this->status === ActivationCodeStatusEnum::AVAILABLE && !$this->isExpired();
     }
 
     public function usages(): HasMany
