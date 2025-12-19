@@ -43,8 +43,4 @@ class StoreLeadRequest extends FormRequest
         ];
     }
 
-    public function toLeadDTO(): LeadDTO
-    {
-        return LeadDTO::fromRequest($this);
-    }
 }

@@ -3,7 +3,6 @@
 namespace App\Models\Central;
 
 use App\Enums\Landlord\ActivationCodeStatusEnum;
-use App\Enums\Landlord\DiscountCodeStatusEnum;
 use App\Enums\Landlord\DiscountUsageEnum;
 use Carbon\Carbon;
 use App\Traits\Filterable;
@@ -55,6 +54,6 @@ class DiscountCode extends Model
 
     public function markAsUsed()
     {
-        $this->update(['status' => DiscountCodeStatusEnum::USED->value]);
+        $this->update(['status' => ActivationCodeStatusEnum::USED]);
     }
 }

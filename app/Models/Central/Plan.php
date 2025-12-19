@@ -19,7 +19,7 @@ class Plan extends Model
     protected $fillable = [
         'name',
         'description',
-        'refund_period',
+        'refund_days',
         'duration',
         'duration_unit',
         'price',

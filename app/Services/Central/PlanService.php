@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Services\Central\Plan;
+namespace App\Services\Central;
 
 use App\DTO\Central\PlanDTO;
 use App\Enums\Landlord\FeatureGroupEnum;
 use App\Enums\Landlord\SupportedLocalesEnum;
-use App\Models\Central\Filters\PlanFilters;
 use App\Models\Central\Plan;
+use App\QueryFilters\PlanFilters;
 use App\Services\Central\BaseService;
 use App\Services\Central\FeatureService;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +17,8 @@ class PlanService extends BaseService
 {
     public function __construct(
         public FeatureService $featureService,
-    ) {}
+    ) {
+    }
 
     protected function getFilterClass(): ?string
     {
@@ -49,7 +50,7 @@ class PlanService extends BaseService
     public function paginate(array $filters = [], array $withRelation = [])
     {
         return $this->getQuery(filters: $filters, withRelation: $withRelation)
-            ->orderBy('id')
+            ->orderBy('id','desc')
             ->paginate(per_page());
     }
 
@@ -142,15 +143,15 @@ class PlanService extends BaseService
 
         foreach ($features as $index => $item) {
 
-            $id  = $item['id'];
+            $id = $item['id'];
             $value = $item['value'];
 
             $feature = $definitions->where('id', $id)->first();
 
-            if (! $this->validateType($value, $feature->group)) {
+            if (!$this->validateType($value, $feature->group)) {
                 throw ValidationException::withMessages([
                     "features.$index.value" =>
-                    "Invalid value type for [$id]",
+                        "Invalid value type for [$id]",
                 ]);
             }
         }
@@ -165,7 +166,7 @@ class PlanService extends BaseService
             FeatureGroupEnum::FEATURE->value =>
             in_array($value, [0, 1, '0', '1', true, false], true),
 
-            'string' =>
+            FeatureGroupEnum::STRING->value =>
             is_string($value),
 
             default => false,

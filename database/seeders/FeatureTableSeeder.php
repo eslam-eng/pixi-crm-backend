@@ -15,9 +15,9 @@ class FeatureTableSeeder extends Seeder
      */
     public function run(): void
     {
-        if (Feature::count() > 0) {
-            return;
-        }
+        // if (Feature::count() > 0) {
+        //     return;
+        // }
 
         $features = [
             [
@@ -55,10 +55,10 @@ class FeatureTableSeeder extends Seeder
             ],
             [
                 'name' => [
-                    'ar' => 'الحد الأقصى للتوكينات الشهرية',
-                    'en' => 'Max Monthly Tokens',
-                    'fr' => 'Max Tokens max',
-                    'es' => 'Max Tokens máximos',
+                    'ar' => 'الحد الأقصى للتوكينات الشهرية للذكاء الاصطناعي',
+                    'en' => 'Max Ai Monthly Tokens',
+                    'fr' => 'Max Ai Tokens mensuels',
+                    'es' => 'Max Ai Tokens mensuales',
                 ],
                 'slug' => Str::slug('max monthly tokens'),
                 'group' => FeatureGroupEnum::LIMIT->value,
@@ -99,19 +99,32 @@ class FeatureTableSeeder extends Seeder
             ],
             [
                 'name' => [
-                    'ar' => 'النموذج المعطل',
+                    'ar' => 'النموذج المضمن',
                     'en' => 'Empeded Form',
                     'fr' => 'Formulaire intégré',
-                    'es' => 'Formulario incrustado',
+                    'es' => 'Formulario integrado',
                 ],
                 'slug' => Str::slug('empeded form'),
+                'group' => FeatureGroupEnum::FEATURE->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+             [
+                'name' => [
+                    'ar' => 'النظام المحمول',
+                    'en' => 'Mobile App Access',
+                    'fr' => 'Accès à l\'application mobile',
+                    'es' => 'Acceso a la aplicación móvil',
+                ],
+                'slug' => Str::slug('mobile app access'),
                 'group' => FeatureGroupEnum::FEATURE->value,
                 'is_active' => ActivationStatusEnum::ACTIVE->value,
             ],
         ];
 
         foreach ($features as $feature) {
-            Feature::create($feature);
+            Feature::updateOrCreate([
+                'slug' => $feature['slug'],
+            ], $feature);
         }
     }
 }

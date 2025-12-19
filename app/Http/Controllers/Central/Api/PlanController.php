@@ -7,13 +7,15 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\PlanRequest;
 use App\Http\Resources\Central\PlanResource;
-use App\Services\Central\Plan\PlanService;
+use App\Services\Central\PlanService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Http\Request;
 
 class PlanController extends Controller
 {
-    public function __construct(protected PlanService $planService) {}
+    public function __construct(protected PlanService $planService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -25,13 +27,13 @@ class PlanController extends Controller
         ]);
 
         $withRelations = [
-            'limitFeatures', 
-            'addonFeatures', 
+            'limitFeatures',
+            'addonFeatures',
         ];
 
         $plans = $this->planService->paginate(filters: $filters, withRelation: $withRelations);
-
-        return PlanResource::collection($plans);
+        $data = PlanResource::collection($plans)->response()->getData(true);
+        return ApiResponse::success(data: $data);
     }
 
     public function activePlans(Request $request)
@@ -44,7 +46,8 @@ class PlanController extends Controller
 
         $plans = $this->planService->activePlans(filters: $filters, withRelation: $withRelations);
 
-        return PlanResource::collection($plans);
+         $data = PlanResource::collection($plans)->response()->getData(true);
+        return ApiResponse::success(data: $data);
     }
 
     /**
@@ -55,11 +58,11 @@ class PlanController extends Controller
         try {
             $planDTO = PlanDTO::fromRequest($request);
             $this->planService->create(planDTO: $planDTO);
-            return ApiResponse::success(message: __('app.plan_created_successfully'));    
+            return ApiResponse::success(message: __('app.created'));
         } catch (\Exception $e) {
             return ApiResponse::error(message: $e->getMessage());
         }
-        
+
     }
 
     /**
@@ -67,14 +70,14 @@ class PlanController extends Controller
      */
     public function show(string $id)
     {
-        try{
+        try {
             $withRelations = ['limitFeatures', 'addonFeatures'];
             // dd($withRelations, $id);
             $plan = $this->planService->findById(id: $id, withRelation: $withRelations);
             return ApiResponse::success(data: PlanResource::make($plan));
-        }catch(NotFoundHttpException $e){
+        } catch (NotFoundHttpException $e) {
             return ApiResponse::notFound(message: $e->getMessage());
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return ApiResponse::error(message: $e->getMessage());
         }
     }

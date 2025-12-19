@@ -75,7 +75,7 @@ class DiscountCodeService extends BaseService
     /**
      * @throws DiscountCodeException
      */
-    public function validateDiscountForPlan(string $code, int $planId, Tenant $tenant): DiscountCode
+    public function validateDiscountForPlan(string $code, int $planId, ?Tenant $tenant): DiscountCode
     {
         $discountCode = $this->baseQuery()
             ->where('discount_code', $code)
