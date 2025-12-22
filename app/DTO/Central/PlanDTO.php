@@ -10,32 +10,27 @@ class PlanDTO extends BaseDTO
 {
     public function __construct(
         public string $name,
+        public ?string $description = null,
         public float $monthly_price,
         public float $annual_price,
         public float $lifetime_price,
-        public string $currency_code,
-        public ?string $description = null,
+        public int $refund_days,
         public bool $is_active = true,
-        public int $trial_days = 0,
-        public int $monthly_credit_tokens = 0,
-        public ?int $refund_days = null,
         public ?array $features = [],
         public ?array $limits = []
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): static
     {
         return new self(
             name: Arr::get($data, 'name'),
+            description: Arr::get($data, 'description'),
             monthly_price: Arr::get($data, 'monthly_price'),
             annual_price: Arr::get($data, 'annual_price'),
             lifetime_price: Arr::get($data, 'lifetime_price'),
-            currency_code: Arr::get($data, 'currency_code'),
-            description: Arr::get($data, 'description'),
-            is_active: Arr::get($data, 'is_active', true),
-            trial_days: Arr::get($data, 'trial_days', 0),
-            monthly_credit_tokens: Arr::get($data, 'monthly_credit_tokens', 0),
             refund_days: Arr::get($data, 'refund_days'),
+            is_active: Arr::get($data, 'is_active', true),
             features: Arr::get($data, 'features', []),
             limits: Arr::get($data, 'limits', []),
         );
@@ -45,15 +40,12 @@ class PlanDTO extends BaseDTO
     {
         return new self(
             name: $request->name,
+            description: $request->description,
             monthly_price: $request->monthly_price,
             annual_price: $request->annual_price,
             lifetime_price: $request->lifetime_price,
-            currency_code: $request->currency_code,
-            description: $request->description,
+            refund_days: $request->refund_days,
             is_active: $request->is_active,
-            trial_days: $request->trial_days,
-            monthly_credit_tokens: $request->monthly_credit_tokens ?? 0,
-            refund_days: $request->refund_days ?? 0,
             features: $request->features,
             limits: $request->limits,
         );
@@ -63,15 +55,12 @@ class PlanDTO extends BaseDTO
     {
         return [
             'name' => $this->name,
+            'description' => $this->description,
             'monthly_price' => $this->monthly_price,
             'annual_price' => $this->annual_price,
             'lifetime_price' => $this->lifetime_price,
-            'currency_code' => $this->currency_code,
-            'description' => $this->description,
+            'refund_days' => $this->refund_days,
             'is_active' => $this->is_active,
-            'trial_days' => $this->trial_days,
-            'monthly_credit_tokens' => $this->monthly_credit_tokens,
-            'refund_days' => $this->refund_days ?? 0,
             'features' => $this->features,
             'limits' => $this->limits,
         ];

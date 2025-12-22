@@ -13,13 +13,10 @@ class PlansTableSeeder extends Seeder
     public function run(): void
     {
         // Create two plans without trial
-        $standardPlans = Plan::factory()->create([
-            'trial_days' => 0,
-        ]);
+        $standardPlans = Plan::factory()->create();
 
         // Create one plan with trial days
         $trialPlan = Plan::factory()->create([
-            'trial_days' => 14,
             'name' => 'Starter Plan',  // Give it a distinctive name
             'sort_order' => 1,  // Put it first in the list
         ]);
