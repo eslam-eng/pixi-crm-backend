@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('subscriptions', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->unique();
             $table->string('subscription_number')->unique();
             $table->foreignIdFor(Plan::class)->constrained();
             $table->tinyInteger('status')->comment('active,canceled,expired,..')->default(SubscriptionStatusEnum::PENDING->value);

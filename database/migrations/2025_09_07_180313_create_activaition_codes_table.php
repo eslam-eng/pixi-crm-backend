@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('activation_codes', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->unique();
             $table->string('code')->unique();
             $table->foreignId('source_id')->constrained()->cascadeOnDelete();
             $table->integer('validity_days')->default(1);

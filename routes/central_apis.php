@@ -20,6 +20,7 @@ use App\Http\Controllers\Central\Api\AuthController as centralAuthController;
 use App\Http\Controllers\Central\Api\PaymentController;
 use App\Http\Controllers\Central\Api\SettingController;
 use App\Http\Controllers\Central\Api\TenantLookupController;
+use App\Http\Controllers\Central\Api\ClientController;
 
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
@@ -64,6 +65,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::post('/multi-delete', [ActivationCodeController::class, 'multiDelete']);
             });
 
+            Route::apiResource('clients', ClientController::class);
 
             Route::group(['prefix' => 'source-collections'], function () {
                 Route::get('/', [PayoutSourceController::class, 'index']);
