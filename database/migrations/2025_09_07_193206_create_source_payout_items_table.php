@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('source_payout_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('source_payout_batch_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('activation_code_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('activation_code_id')->constrained()->cascadeOnDelete();
             $table->decimal('payout_amount', 10, 2);
             $table->timestamp('collected_at')->nullable();
             $table->timestamps();

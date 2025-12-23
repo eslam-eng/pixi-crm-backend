@@ -3,6 +3,7 @@
 namespace App\Services\Central\Discount;
 
 use App\DTO\Central\DiscountCodeDTO;
+use App\Enums\Landlord\ActivationCodeStatusEnum;
 use App\Enums\Landlord\DiscountUsageEnum;
 use App\Exceptions\DiscountCodeException;
 use App\Models\Central\DiscountCode;
@@ -104,5 +105,17 @@ class DiscountCodeService extends BaseService
         }
 
         return $discountCode;
+    }
+
+    public function checkDiscountCode($code)
+    {
+        return $this->baseQuery()
+            ->where('discount_code', $code)
+            ->where('status', ActivationCodeStatusEnum::AVAILABLE->value)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->first();
     }
 }

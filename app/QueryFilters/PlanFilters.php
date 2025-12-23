@@ -12,6 +12,11 @@ class PlanFilters extends QueryFilter
         parent::__construct($params);
     }
 
+    public function is_trial($term)
+    {
+        return $this->builder->where('is_trial', $term);
+    }
+
     public function monthly_price()
     {
         return $this->builder->whereNotNull('monthly_price')->where('monthly_price', '>', 0);

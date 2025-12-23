@@ -2,7 +2,9 @@
 
 namespace App\Models\Central;
 
+use App\Enums\Landlord\ActivationMethodEnum;
 use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use App\Enums\Landlord\SubscriptionPaymentStatusEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,11 +41,21 @@ class Subscription extends Model
         'amount',
         'currency',
         'billing_cycle',
+        'activation_code_id',
+        'activation_method',
+        'payment_status',
+        'file',
+        'notes',
     ];
 
     protected $casts = [
         'status' => SubscriptionStatusEnum::class,
         'billing_cycle' => SubscriptionBillingCycleEnum::class,
+        'activation_method' => ActivationMethodEnum::class,
+        'payment_status' => SubscriptionPaymentStatusEnum::class,
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
         'canceled_at' => 'datetime',
         'auto_renew' => 'boolean',
         'plan_snapshot' => 'array',
@@ -57,6 +69,16 @@ class Subscription extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function activationCode(): BelongsTo
+    {
+        return $this->belongsTo(ActivationCode::class, 'activation_code_id');
+    }
+
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(Source::class);
     }
 
     public function featureSubscriptions(): Subscription|HasMany
@@ -76,7 +98,13 @@ class Subscription extends Model
         $locale = app()->getLocale();
 
         return Attribute::make(
-            get: fn() => Arr::get($this->plan_snapshot, 'name.' . $locale, $this->plan_snapshot['name']['en']) ?? null
+            get: function () use ($locale) {
+                $name = $this->plan_snapshot['name'] ?? null;
+                if (is_array($name)) {
+                    return $name[$locale] ?? $name['en'] ?? array_values($name)[0] ?? null;
+                }
+                return $name;
+            }
         );
     }
 
@@ -129,7 +157,7 @@ class Subscription extends Model
     // Get days remaining in trial
     public function getTrialDaysRemaining(): int
     {
-        if (! $this->isOnTrial()) {
+        if (!$this->isOnTrial()) {
             return 0;
         }
 
@@ -147,12 +175,12 @@ class Subscription extends Model
 
     public function isActive(): bool
     {
-        return ! in_array($this->status, SubscriptionStatusEnum::inactive()) &&
+        return !in_array($this->status, SubscriptionStatusEnum::inactive()) &&
             $this->starts_at <= now() &&
             ($this->ends_at == null || $this->ends_at > now());
     }
 
-    public function getFeatureBySlug(string $slug): ?BaseLandlordModel
+    public function getFeatureBySlug(string $slug)
     {
         return $this->featureSubscriptions()->where('slug', $slug)->first();
     }

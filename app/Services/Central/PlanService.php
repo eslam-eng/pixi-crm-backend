@@ -32,7 +32,7 @@ class PlanService extends BaseService
 
     public function getFreePlan()
     {
-        return $this->getQuery()->trial()->first();
+        return $this->getQuery()->where('is_trial', true)->first();
     }
 
     public function statics()
@@ -50,7 +50,7 @@ class PlanService extends BaseService
     public function paginate(array $filters = [], array $withRelation = [])
     {
         return $this->getQuery(filters: $filters, withRelation: $withRelation)
-            ->orderBy('id','desc')
+            ->orderBy('id', 'desc')
             ->paginate(per_page());
     }
 

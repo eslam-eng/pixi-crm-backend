@@ -23,6 +23,8 @@ return new class extends Migration
             $table->date('expired_at')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('redeemed_at')->nullable();
+            $table->foreignId('created_by_id')->nullable()->constrained('admins');
+
             $table->timestamps();
         });
     }

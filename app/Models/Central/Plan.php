@@ -19,20 +19,25 @@ class Plan extends Model
     protected $fillable = [
         'name',
         'description',
-        'refund_days',
-        'duration',
-        'duration_unit',
-        'price',
+        'monthly_price',
+        'annual_price',
+        'lifetime_price',
         'is_active',
+        'is_trial',
+        'trial_days',
+        'sort_order',
+        'refund_days',
     ];
 
     public $translatable = ['name', 'description'];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'duration_unit' => 'string',
-        'duration' => 'integer',
+        'monthly_price' => 'decimal:2',
+        'annual_price' => 'decimal:2',
+        'lifetime_price' => 'decimal:2',
         'is_active' => ActivationStatusEnum::class,
+        'is_trial' => 'boolean',
+        'trial_days' => 'integer',
     ];
 
     public function features()
@@ -57,7 +62,7 @@ class Plan extends Model
 
     public function scopeTrial($query)
     {
-        return $query->where('trial_days', '>', 0);
+        return $query->where('is_trial', true);
     }
 
     /**

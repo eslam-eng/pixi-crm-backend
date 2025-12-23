@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('invoice_number')->unique();
             $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('subscription_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('subscription_id')->nullable()->constrained()->nullOnDelete();
             $table->decimal('subtotal', 10, 2);
             $table->decimal('tax_amount', 10, 2)->default(0);
             $table->decimal('discount_percentage', 10, 2)->default(0);

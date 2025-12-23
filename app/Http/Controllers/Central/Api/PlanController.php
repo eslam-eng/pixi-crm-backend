@@ -24,7 +24,8 @@ class PlanController extends Controller
     {
         $filters = array_filter([
             'is_active' => $request->query('is_active', true),
-        ]);
+            'is_trial' => false,
+        ], fn($v) => !is_null($v));
 
         $withRelations = [
             'limitFeatures',
@@ -40,13 +41,14 @@ class PlanController extends Controller
     {
         $filters = array_filter([
             'is_active' => true,
-        ]);
+            'is_trial' => false,
+        ], fn($v) => !is_null($v));
 
         $withRelations = ['limitFeatures'];
 
         $plans = $this->planService->activePlans(filters: $filters, withRelation: $withRelations);
 
-         $data = PlanResource::collection($plans)->response()->getData(true);
+        $data = PlanResource::collection($plans)->response()->getData(true);
         return ApiResponse::success(data: $data);
     }
 

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('feature_subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignUuid('subscription_id')->constrained('subscriptions')->cascadeOnDelete(); // ->constrained('subscriptions')
+            $table->foreignId('subscription_id')->constrained('subscriptions')->cascadeOnDelete(); // ->constrained('subscriptions')
             $table->integer('feature_id');
             $table->string('slug');
             $table->json('name'); // as it will be translatable

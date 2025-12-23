@@ -6,8 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('subscription_number')->unique();
             $table->foreignIdFor(Plan::class)->constrained();
-            $table->tinyInteger('status')->comment('active,canceled,expired,..')->default(SubscriptionStatusEnum::PENDING->value);
+            $table->enum('status', SubscriptionStatusEnum::values())->default(SubscriptionStatusEnum::PENDING->value);
             $table->timestamp('starts_at'); // When subscription becomes active
             $table->timestamp('ends_at')->nullable(); // When subscription expires
             $table->timestamp('trial_ends_at')->nullable(); // Trial period end
@@ -29,6 +28,11 @@ return new class extends Migration
             $table->json('plan_snapshot');
             $table->integer('monthly_credit_tokens')->default(0);
             $table->foreignUuid('tenant_id')->constrained();
+            $table->string('activation_method')->nullable();
+            $table->string('payment_status')->default('unpaid');
+            $table->string('file')->nullable();
+            $table->longText('notes')->nullable();
+            $table->foreignId('activation_code_id')->nullable()->constrained();
             $table->timestamps();
         });
     }

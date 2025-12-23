@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('locale')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('job_title')->nullable();
+            $table->foreignId('department_id')->nullable()->constrained('departments');
             $table->softDeletes();
             $table->rememberToken();
             $table->timestamps();
