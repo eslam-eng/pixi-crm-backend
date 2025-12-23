@@ -192,16 +192,6 @@ class ContactService extends BaseService
                 'required' => true,
                 'type' => 'email'
             ],
-            'business_phone' => [
-                'label' => 'Business Phone',
-                'required' => false,
-                'type' => 'string'
-            ],
-            'mobile_phone' => [
-                'label' => 'Mobile Phone',
-                'required' => false,
-                'type' => 'string'
-            ],
             'job_title' => [
                 'label' => 'Job Title',
                 'required' => false,

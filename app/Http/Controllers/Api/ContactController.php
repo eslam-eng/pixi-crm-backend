@@ -11,6 +11,7 @@ use App\Exports\ContactsExport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contacts\ContactRequest;
+use App\Http\Requests\Contacts\ExportContactRequest;
 use App\Http\Resources\ContactDDLResource;
 use App\Http\Resources\ContactResource;
 use App\Http\Resources\ContactShowResource;
@@ -173,14 +174,9 @@ class ContactController extends Controller
         }
     }
 
-    public function export(Request $request)
+    public function export(ExportContactRequest $request)
     {
-        $request->validate([
-            'columns' => 'required|array|min:1', // e.g., ['first_name', 'email']
-            'columns.*' => 'string'
-        ]);
-        $columns = $request->input('columns');
-
+        $columns = $request->validated('columns');
         return Excel::download(new ContactsExport($columns), 'contacts.xlsx');
     }
 

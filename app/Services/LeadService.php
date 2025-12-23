@@ -430,4 +430,14 @@ class LeadService extends BaseService
         $count = $this->queryGet($filters)->count();
         return $count;
     }
+
+    public function reassign(int $id, int $userId): Lead
+    {
+        $lead = $this->findById($id);
+        $lead->assigned_to_id = $userId;
+        $this->updateAssignedAt($lead, $userId);
+        $lead->save();
+
+        return $lead;
+    }
 }

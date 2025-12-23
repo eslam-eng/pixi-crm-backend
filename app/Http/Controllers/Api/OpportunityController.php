@@ -10,6 +10,7 @@ use App\Enums\OpportunityStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Lead\AddFilesRequest;
 use App\Http\Requests\Lead\LogCallRequest;
+use App\Http\Requests\Lead\ReassignUserRequest;
 use App\Http\Requests\Tenant\Opportunity\ActivityLogReuest;
 use App\Http\Requests\Tenant\Opportunity\OpportunityRequest;
 use App\Http\Requests\Tenant\Opportunity\SendOpportunityItemsRequest;
@@ -291,6 +292,17 @@ class OpportunityController extends Controller
             }
 
             return ApiResponse(message: 'Files added successfully', code: Response::HTTP_OK);
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse(message: 'Opportunity not found', code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+    public function reassign(int $opportunityId, ReassignUserRequest $request)
+    {
+        try {
+            $this->leadService->reassign($opportunityId, $request->validated('user_id'));
+            return ApiResponse(message: 'Opportunity reassigned successfully', code: 200);
         } catch (ModelNotFoundException $e) {
             return ApiResponse(message: 'Opportunity not found', code: 404);
         } catch (Exception $e) {
