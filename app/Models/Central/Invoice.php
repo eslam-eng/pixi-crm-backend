@@ -4,7 +4,6 @@ namespace App\Models\Central;
 
 use App\Enums\Landlord\InvoiceStatusEnum;
 use App\Enums\Landlord\PaymentMethodEnum;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
@@ -13,11 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Invoice extends Model
 {
-    use HasUuids, Filterable, HasFactory;
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
+    use Filterable, HasFactory;
 
     protected $fillable = [
         'invoice_number',

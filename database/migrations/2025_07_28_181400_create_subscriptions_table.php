@@ -13,7 +13,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('subscriptions', function (Blueprint $table) {
-            $table->uuid('id')->unique();
+            $table->id();
             $table->string('subscription_number')->unique();
             $table->foreignIdFor(Plan::class)->constrained();
             $table->enum('status', SubscriptionStatusEnum::values())->default(SubscriptionStatusEnum::PENDING->value);
