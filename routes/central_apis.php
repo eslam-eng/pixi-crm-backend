@@ -19,6 +19,7 @@ use App\Http\Controllers\Central\Api\Auth\RegisterController;
 use App\Http\Controllers\Central\Api\AuthController as centralAuthController;
 use App\Http\Controllers\Central\Api\PaymentController;
 use App\Http\Controllers\Central\Api\SettingController;
+use App\Http\Controllers\Central\Api\SubscriptionController;
 use App\Http\Controllers\Central\Api\TenantLookupController;
 use App\Http\Controllers\Central\Api\ClientController;
 
@@ -89,12 +90,19 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::apiResource('departments', DepartmentController::class);
             Route::apiResource('industries', IndustryController::class);
 
+            Route::post('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew']);
+            Route::apiResource('subscriptions', SubscriptionController::class);
+
         });
         Route::group(['prefix' => 'core'], function () {
             Route::get('plans', [CoreLandlordController::class, 'plans']);
+            Route::get('features', [CoreLandlordController::class, 'getFeatures']);
             Route::get('departments', [CoreLandlordController::class, 'departments']);
             Route::get('sources', [CoreLandlordController::class, 'sources']);
             Route::get('industries', [CoreLandlordController::class, 'industries']);
+            Route::get('/check-activation-code', [CoreLandlordController::class, 'checkActivationCode']);
+            Route::get('/check-discount-code', [CoreLandlordController::class, 'checkDiscountCode']);
+
         });
     });
 }

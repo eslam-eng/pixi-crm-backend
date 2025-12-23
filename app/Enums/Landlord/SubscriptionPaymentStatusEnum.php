@@ -2,11 +2,10 @@
 
 namespace App\Enums\Landlord;
 
-enum FeatureGroupEnum: int
+enum SubscriptionPaymentStatusEnum: string
 {
-    case LIMIT = 1;
-    case FEATURE = 2;
-    case STRING = 3;
+    case PAID = 'paid';
+    case UNPAID = 'unpaid';
 
     public static function values(): array
     {
@@ -16,9 +15,8 @@ enum FeatureGroupEnum: int
     public function getLabel(): string
     {
         return match ($this) {
-            self::LIMIT => __('app.limit'),
-            self::FEATURE => __('app.feature'),
-            self::STRING => __('app.string'),
+            self::PAID => __('app.payment_status.paid'),
+            self::UNPAID => __('app.payment_status.unpaid'),
         };
     }
 }

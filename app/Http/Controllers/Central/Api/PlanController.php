@@ -7,12 +7,15 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\PlanRequest;
 use App\Http\Resources\Central\PlanResource;
-use App\Services\Central\Plan\PlanService;
+use App\Services\Central\PlanService;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Http\Request;
 
 class PlanController extends Controller
 {
-    public function __construct(protected PlanService $planService) {}
+    public function __construct(protected PlanService $planService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -21,29 +24,32 @@ class PlanController extends Controller
     {
         $filters = array_filter([
             'is_active' => $request->query('is_active', true),
-            'monthly_only' => $request->query('monthly_only'),
-            'annual_only' => $request->query('annual_only'),
-            'lifetime_only' => $request->query('lifetime_only'),
-        ]);
+            'is_trial' => false,
+        ], fn($v) => !is_null($v));
 
-        $withRelations = ['limitFeatures'];
+        $withRelations = [
+            'limitFeatures',
+            'addonFeatures',
+        ];
 
         $plans = $this->planService->paginate(filters: $filters, withRelation: $withRelations);
-
-        return PlanResource::collection($plans);
+        $data = PlanResource::collection($plans)->response()->getData(true);
+        return ApiResponse::success(data: $data);
     }
 
     public function activePlans(Request $request)
     {
         $filters = array_filter([
             'is_active' => true,
-        ]);
+            'is_trial' => false,
+        ], fn($v) => !is_null($v));
 
         $withRelations = ['limitFeatures'];
 
         $plans = $this->planService->activePlans(filters: $filters, withRelation: $withRelations);
 
-        return PlanResource::collection($plans);
+        $data = PlanResource::collection($plans)->response()->getData(true);
+        return ApiResponse::success(data: $data);
     }
 
     /**
@@ -51,10 +57,14 @@ class PlanController extends Controller
      */
     public function store(PlanRequest $request)
     {
-        $planDTO = PlanDTO::fromRequest($request);
-        $plan = $this->planService->create(planDTO: $planDTO);
+        try {
+            $planDTO = PlanDTO::fromRequest($request);
+            $this->planService->create(planDTO: $planDTO);
+            return ApiResponse::success(message: __('app.created'));
+        } catch (\Exception $e) {
+            return ApiResponse::error(message: $e->getMessage());
+        }
 
-        return ApiResponse::success(message: __('app.plan_created_successfully'));
     }
 
     /**
@@ -62,10 +72,16 @@ class PlanController extends Controller
      */
     public function show(string $id)
     {
-        $withRelations = ['limitFeatures', 'addonFeatures'];
-        $plan = $this->planService->findById(id: $id, withRelation: $withRelations);
-
-        return ApiResponse::success(data: PlanResource::make($plan));
+        try {
+            $withRelations = ['limitFeatures', 'addonFeatures'];
+            // dd($withRelations, $id);
+            $plan = $this->planService->findById(id: $id, withRelation: $withRelations);
+            return ApiResponse::success(data: PlanResource::make($plan));
+        } catch (NotFoundHttpException $e) {
+            return ApiResponse::notFound(message: $e->getMessage());
+        } catch (\Exception $e) {
+            return ApiResponse::error(message: $e->getMessage());
+        }
     }
 
     public function statics()
@@ -96,8 +112,11 @@ class PlanController extends Controller
      */
     public function destroy(string $id)
     {
-        $this->planService->delete($id);
-
-        return ApiResponse::success(message: 'Plan deleted successfully');
+        try {
+            $this->planService->delete($id);
+            return ApiResponse::success(message: 'Plan deleted successfully');
+        } catch (NotFoundHttpException $e) {
+            return ApiResponse::notFound(message: $e->getMessage());
+        }
     }
 }

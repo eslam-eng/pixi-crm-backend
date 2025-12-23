@@ -4,6 +4,7 @@ namespace App\Http\Resources\Central;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Termwind\Components\Li;
 
 class PlanResource extends JsonResource
 {
@@ -18,16 +19,12 @@ class PlanResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'currency_code' => $this->currency_code,
-            'monthly_price' => $this->monthly_price,
-            'annual_price' => $this->annual_price,
-            'lifetime_price' => $this->lifetime_price,
-            'is_active' => $this->is_active,
+            'price' => $this->price,
+            'duration_unit' => $this->duration_unit,
+            'duration' => $this->duration,
             'is_active_text' => $this->is_active->getLabel(),
-            'trial_days' => $this->trial_days,
-            'refund_days' => $this->refund_days,
-            'limits' => FeatureResource::collection($this->whenLoaded('limitFeatures')),
             'features' => FeatureResource::collection($this->whenLoaded('addonFeatures')),
+            'limits' => LimitResource::collection($this->whenLoaded('limitFeatures')),
         ];
     }
 }

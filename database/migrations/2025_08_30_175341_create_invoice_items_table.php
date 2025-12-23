@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoice_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignUuid('invoice_id')->constrained()->onDelete('cascade');
+            $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
             $table->string('description')->nullable();
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 10, 2);

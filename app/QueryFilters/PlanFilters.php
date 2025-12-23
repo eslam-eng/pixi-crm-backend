@@ -1,19 +1,38 @@
 <?php
 
-namespace App\Models\Filters;
+namespace App\QueryFilters;
 
 use App\Abstracts\QueryFilter;
-use App\Enums\DurationUnits;
-use Illuminate\Support\Arr;
+use Arr;
 
-class TierFilter extends QueryFilter
+class PlanFilters extends QueryFilter
 {
-
-    public function __construct($params = array())
+    public function __construct($params = [])
     {
         parent::__construct($params);
     }
 
+    public function is_trial($term)
+    {
+        return $this->builder->where('is_trial', $term);
+    }
+
+    public function monthly_price()
+    {
+        return $this->builder->whereNotNull('monthly_price')->where('monthly_price', '>', 0);
+
+    }
+
+    public function annual_price()
+    {
+        return $this->builder->whereNotNull('annual_price')->where('annual_price', '>', 0);
+    }
+
+    public function lifetime_price()
+    {
+        return $this->builder->whereNotNull('lifetime_price')->where('lifetime_price', '>', 0);
+
+    }
     public function ids($term)
     {
         return $this->builder->whereIntegerInRaw('id', Arr::wrap($term));
@@ -29,51 +48,6 @@ class TierFilter extends QueryFilter
         return $this->builder->where('description', 'LIKE', "%$term%");
     }
 
-    public function price($price)
-    {
-        return $this->builder->where('price', '<=', $price);
-    }
-
-    public function min_price($price)
-    {
-        return $this->builder->where('price', '>=', $price);
-    }
-
-    public function max_price($price)
-    {
-        return $this->builder->where('price', '<=', $price);
-    }
-
-    public function price_range($range)
-    {
-        [$min, $max] = explode(',', $range);
-        return $this->builder->whereBetween('price', [$min, $max]);
-    }
-
-    public function duration_unit($term)
-    {
-        $validUnits = DurationUnits::values();
-        if (in_array($term, $validUnits)) {
-            return $this->builder->where('duration_unit', $term);
-        }
-        return $this->builder;
-    }
-
-    public function min_duration($duration)
-    {
-        return $this->builder->where('duration', '>=', $duration);
-    }
-
-    public function max_duration($duration)
-    {
-        return $this->builder->where('duration', '<=', $duration);
-    }
-
-    public function duration_range($range)
-    {
-        [$min, $max] = explode(',', $range);
-        return $this->builder->whereBetween('duration', [$min, $max]);
-    }
 
     public function refund_days($term)
     {
@@ -83,7 +57,7 @@ class TierFilter extends QueryFilter
     {
         return $this->builder->where('max_users', '>=', $users);
     }
-    
+
 
     public function max_users($users)
     {
@@ -199,23 +173,5 @@ class TierFilter extends QueryFilter
     {
         [$start, $end] = explode(',', $range);
         return $this->builder->whereBetween('updated_at', [$start, $end]);
-    }
-
-    public function price_type($type)
-    {
-        switch (strtolower($type)) {
-            case 'free':
-                return $this->builder->where('price', 0);
-            case 'low':
-                return $this->builder->where('price', '<', 50);
-            case 'medium':
-                return $this->builder->whereBetween('price', [50, 200]);
-            case 'high':
-                return $this->builder->whereBetween('price', [200, 500]);
-            case 'premium':
-                return $this->builder->where('price', '>', 500);
-            default:
-                return $this->builder;
-        }
     }
 }

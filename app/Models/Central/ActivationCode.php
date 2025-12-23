@@ -31,8 +31,9 @@ class ActivationCode extends Model
     ];
 
     protected $casts = [
-        // 'status' => ActivationCodeStatusEnum::class,
+        'status' => ActivationCodeStatusEnum::class,
         'expired_at' => 'date',
+
         'redeemed_at' => 'datetime',
         'collected_at' => 'datetime',
     ];

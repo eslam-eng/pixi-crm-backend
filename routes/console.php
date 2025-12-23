@@ -15,3 +15,6 @@ Schedule::command('tasks:escalate')->everyMinute()->withoutOverlapping();
 Schedule::command('tasks:reminders')->everyMinute()->withoutOverlapping();
 
 Schedule::command('test:delay-continuation')->everyMinute()->withoutOverlapping();
+
+Schedule::command('codes:expire')->everyMinute()->withoutOverlapping();
+Schedule::command('subscriptions:auto-renew')->dailyAt('00:01')->withoutOverlapping();

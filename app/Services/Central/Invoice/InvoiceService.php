@@ -130,7 +130,7 @@ class InvoiceService extends BaseService
 
         $invoiceItems = [
             [
-                'description' => "Plan {$plan->name}",
+                'description' => "Plan " . (is_array($plan->name) ? ($plan->name[app()->getLocale()] ?? $plan->name['en'] ?? '') : $plan->name),
                 'unit_price' => $price,
                 'total' => $price,
             ],
@@ -139,8 +139,8 @@ class InvoiceService extends BaseService
         if ($discountCode) {
             $invoiceItems[] = [
                 'description' => "Discount ({$discountCode->discount_code}): {$discountPercentage}% off",
-                'unit_price' => - ($price * $discountPercentage) / 100,
-                'total' => - ($price * $discountPercentage) / 100,
+                'unit_price' => -($price * $discountPercentage) / 100,
+                'total' => -($price * $discountPercentage) / 100,
             ];
         }
 
@@ -162,7 +162,7 @@ class InvoiceService extends BaseService
     {
         $invoiceItems = [
             [
-                'description' => "Plan {$activationCode->plan->name}",
+                'description' => "Plan " . (is_array($activationCode->plan->name) ? ($activationCode->plan->name[app()->getLocale()] ?? $activationCode->plan->name['en'] ?? '') : $activationCode->plan->name),
                 'unit_price' => $activationCode->plan->lifetime_price,
                 'total' => $activationCode->plan->lifetime_price,
             ],
@@ -184,5 +184,30 @@ class InvoiceService extends BaseService
             paid_at: now(),
             invoiceItems: $invoiceItems
         );
+    }
+
+    public function createFromSubscription(Subscription $subscription, ?string $notes = null): Invoice
+    {
+        $invoiceItems = [
+            [
+                'description' => "Subscription for plan: {$subscription->plan_name}",
+                'quantity' => 1,
+                'unit_price' => $subscription->amount,
+                'total' => $subscription->amount,
+            ],
+        ];
+
+        $invoiceDTO = new InvoiceDTO(
+            tenant_id: $subscription->tenant_id,
+            subscription_id: $subscription->id,
+            subtotal: $subscription->amount,
+            total: $subscription->amount,
+            status: InvoiceStatusEnum::PENDING->value,
+            due_date: now()->addDays(7), // Default due date
+            notes: $notes ?? "Subscription renewal/creation for {$subscription->plan_name}",
+            invoiceItems: $invoiceItems,
+        );
+
+        return $this->create($invoiceDTO);
     }
 }

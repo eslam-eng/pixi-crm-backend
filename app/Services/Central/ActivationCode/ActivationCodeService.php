@@ -80,7 +80,7 @@ class ActivationCodeService extends BaseService
 
     public function delete(ActivationCode|string|int $activationCode): ?bool
     {
-        
+
         if (!$activationCode instanceof ActivationCode) {
             $activationCode = $this->findById($activationCode);
         }
@@ -121,5 +121,14 @@ class ActivationCodeService extends BaseService
     public function deleteMulti(array $ids): bool
     {
         return $this->baseQuery()->whereIn('id', $ids)->delete();
+    }
+
+    public function checkActivationCode($code)
+    {
+        return $this->baseQuery()
+            ->where('code', $code)
+            ->where('status', ActivationCodeStatusEnum::AVAILABLE->value)
+            ->whereDate('expired_at', '>', now())
+            ->first();
     }
 }

@@ -22,6 +22,8 @@ class CreateTenantsTable extends Migration
             $table->json('data')->nullable();
             $table->tinyInteger('status')->default(ActivationStatusEnum::ACTIVE->value);
             $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->boolean('has_used_trial')->default(false);
+            $table->string('trial_plan_id')->nullable();
             $table->timestamps();
         });
     }

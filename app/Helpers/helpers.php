@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Http\JsonResponse;
+use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use \App\Models\Central\Plan;
+use \Illuminate\Support\Carbon;
+
 
 if (!function_exists('apiResponse')) {
     function apiResponse($data = null, $message = null, $code = 200): JsonResponse
@@ -81,7 +85,7 @@ if (!function_exists('user_id')) {
 
     function user_id()
     {
-        return  auth('api_tenant')->user()?->id;
+        return auth('api_tenant')->user()?->id;
     }
 }
 
@@ -99,8 +103,37 @@ if (!function_exists('calcChange')) {
         }
 
         return [
-            'current'    => $current,
+            'current' => $current,
             'percentage' => $percentage,
         ];
+    }
+}
+
+if (!function_exists('calculateSubscriptionAmount')) {
+    function calculateSubscriptionAmount(Plan $plan, $duration): float
+    {
+        $duration = $duration instanceof SubscriptionBillingCycleEnum ? $duration->value : $duration;
+
+        return match ($duration) {
+            SubscriptionBillingCycleEnum::MONTHLY->value => $plan->monthly_price,
+            SubscriptionBillingCycleEnum::ANNUAL->value => $plan->annual_price,
+            SubscriptionBillingCycleEnum::LIFETIME->value => $plan->lifetime_price,
+            default => 0,
+        };
+    }
+}
+
+if (!function_exists('calculateSubscriptionEndDate')) {
+    function calculateSubscriptionEndDate($duration, $startDate = null): ?Carbon
+    {
+        $duration = $duration instanceof SubscriptionBillingCycleEnum ? $duration->value : $duration;
+        $date = $startDate ? Carbon::parse($startDate) : now();
+
+        return match ($duration) {
+            SubscriptionBillingCycleEnum::MONTHLY->value => $date->addMonth(),
+            SubscriptionBillingCycleEnum::ANNUAL->value => $date->addYear(),
+            SubscriptionBillingCycleEnum::LIFETIME->value => null,
+            default => $date,
+        };
     }
 }

@@ -15,9 +15,9 @@ class FeatureTableSeeder extends Seeder
      */
     public function run(): void
     {
-        if (Feature::count() > 0) {
-            return;
-        }
+        // if (Feature::count() > 0) {
+        //     return;
+        // }
 
         $features = [
             [
@@ -55,19 +55,76 @@ class FeatureTableSeeder extends Seeder
             ],
             [
                 'name' => [
-                    'ar' => 'حد الائتمان',
-                    'en' => 'Credit Limit',
-                    'fr' => 'Limite de crédit',
-                    'es' => 'Límite de crédito',
+                    'ar' => 'الحد الأقصى للتوكينات الشهرية للذكاء الاصطناعي',
+                    'en' => 'Max Ai Monthly Tokens',
+                    'fr' => 'Max Ai Tokens mensuels',
+                    'es' => 'Max Ai Tokens mensuales',
                 ],
-                'slug' => Str::slug('credit limit'),
+                'slug' => Str::slug('max monthly tokens'),
                 'group' => FeatureGroupEnum::LIMIT->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'ادارة التكرار',
+                    'en' => 'Manage Dublicate',
+                    'fr' => 'Gestion des doublons',
+                    'es' => 'Gestionar duplicados',
+                ],
+                'slug' => Str::slug('manage dublicate'),
+                'group' => FeatureGroupEnum::FEATURE->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'ارسال بيانات المنتج',
+                    'en' => 'Send Item Data',
+                    'fr' => 'Envoyer les données du produit',
+                    'es' => 'Enviar datos del producto',
+                ],
+                'slug' => Str::slug('send item data'),
+                'group' => FeatureGroupEnum::FEATURE->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'تنفيذ التلقيات التلقائية',
+                    'en' => 'Max Automation Excution',
+                    'fr' => 'Max Exécution automatisée',
+                    'es' => 'Max Ejecución de automatización',
+                ],
+                'slug' => Str::slug('max automation excution'),
+                'group' => FeatureGroupEnum::LIMIT->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+            [
+                'name' => [
+                    'ar' => 'النموذج المضمن',
+                    'en' => 'Empeded Form',
+                    'fr' => 'Formulaire intégré',
+                    'es' => 'Formulario integrado',
+                ],
+                'slug' => Str::slug('empeded form'),
+                'group' => FeatureGroupEnum::FEATURE->value,
+                'is_active' => ActivationStatusEnum::ACTIVE->value,
+            ],
+             [
+                'name' => [
+                    'ar' => 'النظام المحمول',
+                    'en' => 'Mobile App Access',
+                    'fr' => 'Accès à l\'application mobile',
+                    'es' => 'Acceso a la aplicación móvil',
+                ],
+                'slug' => Str::slug('mobile app access'),
+                'group' => FeatureGroupEnum::FEATURE->value,
                 'is_active' => ActivationStatusEnum::ACTIVE->value,
             ],
         ];
 
         foreach ($features as $feature) {
-            Feature::create($feature);
+            Feature::updateOrCreate([
+                'slug' => $feature['slug'],
+            ], $feature);
         }
     }
 }

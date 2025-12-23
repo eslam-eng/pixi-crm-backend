@@ -23,9 +23,9 @@ class Plan extends Model
         'annual_price',
         'lifetime_price',
         'is_active',
+        'is_trial',
         'trial_days',
         'sort_order',
-        'currency_code',
         'refund_days',
     ];
 
@@ -36,6 +36,8 @@ class Plan extends Model
         'annual_price' => 'decimal:2',
         'lifetime_price' => 'decimal:2',
         'is_active' => ActivationStatusEnum::class,
+        'is_trial' => 'boolean',
+        'trial_days' => 'integer',
     ];
 
     public function features()
@@ -60,7 +62,7 @@ class Plan extends Model
 
     public function scopeTrial($query)
     {
-        return $query->where('trial_days', '>', 0);
+        return $query->where('is_trial', true);
     }
 
     /**

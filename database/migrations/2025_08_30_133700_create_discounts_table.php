@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Landlord\ActivationCodeStatusEnum;
 use App\Enums\Landlord\ActivationStatusEnum;
 use App\Enums\Landlord\DiscountUsageEnum;
 use App\Models\Central\Plan;
@@ -7,8 +8,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('discount_codes', function (Blueprint $table) {
@@ -20,7 +20,8 @@ return new class extends Migration
             $table->unsignedInteger('users_limit')->nullable();
             $table->unsignedInteger('usage_limit')->nullable();
             $table->dateTime('expires_at')->nullable();
-            $table->tinyInteger('status')->default(ActivationStatusEnum::ACTIVE->value);
+            $table->enum('status', ActivationCodeStatusEnum::values())
+                ->default(ActivationCodeStatusEnum::AVAILABLE->value);
             $table->timestamps();
         });
     }
