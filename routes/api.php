@@ -138,6 +138,8 @@ Route::middleware([
         Route::get('users/permissions', [UserController::class, 'getPermissions']);
         Route::get('users/activities', [UserController::class, 'getActivities']);
         Route::get('users/profile', [UserController::class, 'getProfile']);
+        Route::get('users/{user}/permissions', [UserController::class, 'getPermissionsByUser']);
+        Route::get('users/{user}/activities', [UserController::class, 'getActivitiesByUser']);
         Route::put('users/profile', [UserController::class, 'updateProfile']);
         Route::put('users/update-password', [UserController::class, 'UpdatePassword']);
         Route::apiResource('users', UserController::class);
@@ -358,6 +360,7 @@ Route::middleware([
         Route::post('opportunities/{opportunity}/log-call', [OpportunityController::class, 'logCall']);
         Route::post('opportunities/{opportunity}/add-activity-log', [OpportunityController::class, 'AddActivityLog']);
         Route::post('opportunities/{opportunity}/send-item-data', [OpportunityController::class, 'sendItemData']);
+        Route::patch('opportunities/{opportunity}/re-assign', [OpportunityController::class, 'reassign']);
 
         // Opportunity Tasks routes
         Route::get('opportunities/{opportunity}/tasks', [OpportunityController::class, 'tasks']);

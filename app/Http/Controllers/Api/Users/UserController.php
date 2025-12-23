@@ -265,15 +265,41 @@ class UserController extends Controller
 
     public function getPermissions()
     {
-        $permissions = $this->userService->getPermissions();
+        $permissions = $this->userService->getPermissions(user_id());
         $data = PermissionResource::collection($permissions);
         return ApiResponse($data, 'Permissions retrieved successfully');
     }
 
     public function getActivities()
     {
-        $activities = $this->userService->getActivities();
+        $activities = $this->userService->getActivities(user_id());
         $data = ActivityDetailsResource::collection($activities);
         return ApiResponse($data, 'Activities retrieved successfully');
+    }
+
+    public function getPermissionsByUser($id)
+    {
+        try {
+            $permissions = $this->userService->getPermissions($id ?? user_id());
+            $data = PermissionResource::collection($permissions);
+            return ApiResponse($data, 'User permissions retrieved successfully');
+        } catch (NotFoundException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function getActivitiesByUser($id)
+    {
+        try {
+            $activities = $this->userService->getActivities($id ?? user_id());
+            $data = ActivityDetailsResource::collection($activities);
+            return ApiResponse($data, 'Activities retrieved successfully');
+        } catch (NotFoundException $e) {
+            return ApiResponse(message: $e->getMessage(), code: 404);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
     }
 }

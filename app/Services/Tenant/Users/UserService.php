@@ -589,14 +589,14 @@ class UserService extends BaseService
         ];
     }
 
-    public function getPermissions()
+    public function getPermissions(int $id)
     {
-        $user = $this->findById(id: user_id(), withRelations: ['roles.permissions']);
+        $user = $this->findById(id: $id, withRelations: ['roles.permissions']);
         return $user->roles->first()->permissions;
     }
 
-    public function getActivities()
+    public function getActivities(int $id)
     {
-        return $this->findById(user_id())->actions;
+        return $this->findById($id)->actions;
     }
 }
