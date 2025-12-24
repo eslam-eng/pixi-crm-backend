@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             // SubscriptionSeeder::class,
             FeatureTableSeeder::class,
             DepartmentLandloardSeeder::class,
+            CountriesWithCitiesSeeder::class,
             IndustrySeeder::class,
             PlansTableSeeder::class,
             AdminTableSeeder::class,

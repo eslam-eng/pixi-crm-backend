@@ -14,7 +14,15 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->string('invoice_number')->unique();
-            $table->foreignUuid('tenant_id')->constrained()->cascadeOnDelete();
+
+            // FIX: Change foreignId to foreignIdFor or string to match tenants.id
+            $table->string('tenant_id'); 
+            // Define the foreign key relationship
+            $table->foreign('tenant_id')
+                ->references('id')
+                ->on('tenants')
+                ->cascadeOnDelete();
+
             $table->foreignId('subscription_id')->nullable()->constrained()->nullOnDelete();
             $table->decimal('subtotal', 10, 2);
             $table->decimal('tax_amount', 10, 2)->default(0);

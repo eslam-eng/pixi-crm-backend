@@ -30,7 +30,7 @@ class TenantResource extends JsonResource
             'start_date' => $this->created_at,
             'login url' => $this->domains->first()?->domain ? 'https://' . $this->domains->first()?->domain . "." . env('APP_URL') : null,
             // 'owner' => $this->whenLoaded('user', fn() =>  new LandlordUserResource($this->user)),
-            'business_logo' => $this->getFirstMediaUrl('images'),
+            // 'business_logo' => $this->getFirstMediaUrl('images'),
         ];
     }
 }

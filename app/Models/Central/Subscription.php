@@ -20,11 +20,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Subscription extends Model
 {
-    use HasUuids, Filterable, HasFactory;
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
+    use Filterable, HasFactory;
 
     protected $fillable = [
         'plan_id',

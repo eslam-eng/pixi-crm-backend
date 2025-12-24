@@ -23,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
 
         Relation::enforceMorphMap([
+            'tenant' => \App\Models\Tenant::class,
             'lead' => \App\Models\Tenant\Lead::class,
             'contact' => \App\Models\Tenant\Contact::class,
             'item' => \App\Models\Tenant\Item::class,
