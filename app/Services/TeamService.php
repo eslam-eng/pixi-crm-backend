@@ -287,9 +287,11 @@ class TeamService extends BaseService
 
     public function checkIfPartsValuesAreUnique($targets, $type = 'quarterly'): void
     {
-        $parts = collect($targets)->pluck('part');
-        if ($parts->duplicates()->isNotEmpty()) {
-            throw new GeneralException($parts->duplicates()->implode(', ') . " is duplicate " . $type . " values found");
+        $duplicates = collect($targets)->duplicates(function ($item) {
+            return $item['year'] . '-' . $item['part'];
+        });
+        if ($duplicates->isNotEmpty()) {
+            throw new GeneralException($duplicates->implode(', ') . " is duplicate " . $type . " values found");
         }
     }
 
