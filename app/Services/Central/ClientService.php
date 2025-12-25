@@ -2,20 +2,26 @@
 
 namespace App\Services\Central;
 
-use App\DTO\Central\AdminDTO;
-use App\Mail\UserCredentialsMail;
-use App\Models\Admin;
+use App\DTO\Central\ClientDTO;
+use App\Enums\Landlord\ActivationStatusEnum;
+use App\Enums\Landlord\InvoiceStatusEnum;
+use App\Enums\Landlord\PaymentMethodEnum;
+use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Models\Central\Filters\TenantFilters;
+use App\Models\Central\Subscription;
 use App\Models\Central\Tenant;
 use App\Services\Central\BaseService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class ClientService extends BaseService
 {
-    public function __construct()
+    public function __construct(
+        public UserService $userService,
+        public PlanService $planService
+    )
     {
     }
 
@@ -42,59 +48,96 @@ class ClientService extends BaseService
             ->paginate($perPage);
     }
 
-    public function create(AdminDTO $adminDTO)
+    public function create(ClientDTO $clientDTO)
     {
-        return DB::connection('landlord')->transaction(function () use ($adminDTO) {
-            $adminDTO->email_verified_at = now();
-            $admin = $this->baseQuery()
-                ->create($adminDTO->toArray());
+        // 1. إنشاء المستخدم
+        $user = $this->userService->getQuery()->create([
+            'first_name' => $clientDTO->contact_name,
+            'last_name'  => $clientDTO->contact_name,
+            'email'      => $clientDTO->contact_email,
+            'password'   => bcrypt('123456') // لا تنسى التشفير
+        ]);
 
-            $admin->roles()->sync([$adminDTO->role_id]);
+        // 2. إنشاء المستأجر (Tenant)
+        $tenant = $user->tenant()->create([
+            'id'                      => $clientDTO->subdomain,
+            'name'                    => $clientDTO->subdomain,
+            'tenancy_db_name'         => $clientDTO->subdomain,
+            'tenancy_create_database' => false,
+        ]);
 
-            //            $this->sendCredentialsEmail($admin, $random_password);
+        // 3. إنشاء النطاق (Domain)
+        $tenant->createDomain([
+            'domain' => $clientDTO->subdomain,
+        ]);
 
-            return $admin;
+        return DB::transaction(function () use ($clientDTO, $tenant, $user) { 
+            // 4. حساب السعر والمدة
+            $plan = $this->planService->findById($clientDTO->package_id);
+            
+            $amount = match ($clientDTO->period_type) {
+                SubscriptionBillingCycleEnum::MONTHLY->value => $plan->monthly_price,
+                SubscriptionBillingCycleEnum::ANNUAL->value  => $plan->annual_price,
+                SubscriptionBillingCycleEnum::LIFETIME->value => $plan->lifetime_price,
+                default => 0,
+            };
+
+            $subscriptionStart = Carbon::parse($clientDTO->subscription_start);
+            $ends_at = match ($clientDTO->period_type) {
+                SubscriptionBillingCycleEnum::MONTHLY->value => $subscriptionStart->copy()->addMonth(),
+                SubscriptionBillingCycleEnum::ANNUAL->value  => $subscriptionStart->copy()->addYear(),
+                default => null,
+            };
+            
+            $finalEndsAt = $ends_at ? $ends_at->addSecond()->format('Y-m-d H:i:s') : null;
+            // 5. إنشاء الاشتراك
+            $subscription = Subscription::create([
+                'tenant_id'     => $tenant->id,
+                'plan_id'       => $plan->id,
+                'status'        => SubscriptionStatusEnum::ACTIVE->value,
+                'starts_at'     => $subscriptionStart,
+                'ends_at'       => $finalEndsAt,
+                'trial_ends_at' => $subscriptionStart->copy()->addDays($plan->refund_days),
+                'billing_cycle' => $clientDTO->period_type,
+                'auto_renew'    => ActivationStatusEnum::INACTIVE->value,
+                'plan_snapshot' => json_encode($plan->only($plan->getFillable())),
+                'amount'        => $amount,
+            ]);
+
+            // 6. إنشاء الفاتورة
+            $subscription->invoices()->create([
+                'tenant_id'           => $tenant->id,
+                'subtotal'            => $amount,
+                'tax_amount'          => 0,
+                'discount_percentage' => 0,
+                'total'               => $amount,
+                'status'              => InvoiceStatusEnum::PAID->value,
+                'paid_at'             => now(),
+                'payment_method'      => PaymentMethodEnum::ACTIVATION_CODE->value,
+            ]);
+
+            return $tenant;
         });
     }
 
-    public function update(Admin|int $admin, AdminDTO $adminDTO): void
+    private function creationRollBack(
+        $tenant = null,
+        $user = null, 
+        $subscription = null, 
+        $invoice = null): void
     {
-        DB::connection('landlord')->transaction(function () use ($admin, $adminDTO) {
-            if (is_int($admin)) {
-                $admin = $this->findById($admin);
-            }
-
-            $admin->update($adminDTO->toArrayExcept(['password', 'email_verified_at']));
-
-            $admin->roles()->sync([$adminDTO->role_id]);
-        });
-    }
-
-    public function delete(Admin|int $admin): ?bool
-    {
-        if (is_int($admin)) {
-            $admin = $this->findById($admin);
+        if ($tenant) {
+            // 🔥 stancl handles domains + DB deletion safely
+            $tenant->delete();
         }
-
-        return $admin->delete();
-    }
-
-    private function generateRandomPassword($emailOrName): string
-    {
-        $base = strtolower(preg_replace('/[^a-z]/i', '', $emailOrName));
-        $base = substr($base, 0, 5); // Take first 5 characters max
-        $random_number = substr(preg_replace('/\D/', '', Str::uuid()), 0, 5);
-
-        return $base . $random_number;
-    }
-
-    private function sendCredentialsEmail(Admin $admin, string $random_password): void
-    {
-        // Send email
-        Mail::to($admin->email)->queue(new UserCredentialsMail(
-            user: $admin,
-            password: $random_password,
-            //            loginUrl: config('app.frontend_login_url'), //todo get it from config and env files for react project
-        ));
+        if ($user) {
+            $user->delete();
+        }
+        if ($invoice) {
+            $invoice->delete();
+        }
+        if ($subscription) {
+            $subscription->delete();
+        }
     }
 }

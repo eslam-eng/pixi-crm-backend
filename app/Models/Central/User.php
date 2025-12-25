@@ -7,7 +7,7 @@ use App\Enums\Landlord\SupportedLocalesEnum;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-// use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -44,9 +44,9 @@ class User extends Authenticatable implements HasMedia
     ];
 
     // current tenant
-    public function tenant(): BelongsTo
+    public function tenant(): HasOne
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->hasOne(Tenant::class, 'owner_id');
     }
 
     public function tenants()
