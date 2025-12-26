@@ -117,7 +117,7 @@ class ItemService extends BaseService
 
     public function show(int $id)
     {
-        $item = $this->findById($id, withRelations: ['itemable']);
+        $item = $this->findById($id, withRelations: ['itemable','category']);
 
         return $item;
     }

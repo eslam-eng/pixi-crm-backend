@@ -2,6 +2,7 @@
 
 namespace Database\Seeders\Tenant;
 
+use App\Models\Central\TenantUser;
 use App\Models\Tenant\Team;
 use App\Models\Tenant\User;
 use Hash;
@@ -141,5 +142,22 @@ class UserSeeder extends Seeder
                 'team_id' => $team2->id,
             ]
         )->syncRoles('agent');
+
+        $this->syncToLandlord();
+    }
+
+    private function syncToLandlord(): void
+    {
+        User::all()->each(function ($user) {
+            TenantUser::updateOrCreate(
+                [
+                    'email' => $user->email,
+                    'tenant_id' => tenant('id'),
+                ],
+                [
+                    'name' => $user->name,
+                ]
+            );
+        });
     }
 }

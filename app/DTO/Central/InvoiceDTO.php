@@ -19,7 +19,7 @@ class InvoiceDTO extends BaseDTO
         public ?float $discount_percentage = 0,
         public ?float $total = 0,
         public ?string $currency = 'USD',
-        public ?string $status = InvoiceStatusEnum::PENDING->value,
+        public ?string $status = 1,
         public ?string $due_date = null,
         public ?string $notes = null,
         public ?string $payment_method = null,
