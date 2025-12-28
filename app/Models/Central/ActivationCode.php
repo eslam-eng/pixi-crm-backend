@@ -6,7 +6,6 @@ use App\Enums\Landlord\ActivationCodeStatusEnum;
 use App\Models\Admin;
 use App\Traits\Filterable;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ActivationCode extends Model
 {
-    use HasUuids, Filterable, HasFactory;
+    use Filterable, HasFactory;
 
     protected $fillable = [
         'code',

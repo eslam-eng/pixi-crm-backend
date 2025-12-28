@@ -6,8 +6,6 @@ use App\DTO\Central\ClientDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\ClientRequest;
 use App\Http\Resources\Central\ClientResource;
-use App\Http\Resources\Tenant\TenantResource;
-use Illuminate\Support\Facades\DB;
 use App\Services\Central\ClientService;
 use Exception;
 

@@ -21,9 +21,7 @@ class ClientService extends BaseService
     public function __construct(
         public UserService $userService,
         public PlanService $planService
-    )
-    {
-    }
+    ) {}
 
     /**
      * Return the filter class for users.
@@ -52,29 +50,37 @@ class ClientService extends BaseService
     {
         // 1. إنشاء المستخدم
         $user = $this->userService->getQuery()->create([
-            'first_name' => $clientDTO->contact_name,
-            'last_name'  => $clientDTO->contact_name,
-            'email'      => $clientDTO->contact_email,
-            'password'   => bcrypt('123456') // لا تنسى التشفير
+            'first_name' => $clientDTO->first_name,
+            'last_name'  => $clientDTO->last_name,
+            'email'      => $clientDTO->email,
+            'password'   => '123456',
+            'job_title'  => $clientDTO->job_title,
+            'website'    => $clientDTO->website,
+            'city_id'    => $clientDTO->city_id,
+            'company_size' => $clientDTO->company_size,
+            'industry'   => $clientDTO->industry,
+            'postal_code' => $clientDTO->postal_code,
+            'address'    => $clientDTO->address,
+            'phone'      => $clientDTO->phone,
         ]);
 
         // 2. إنشاء المستأجر (Tenant)
         $tenant = $user->tenant()->create([
-            'id'                      => $clientDTO->subdomain,
-            'name'                    => $clientDTO->subdomain,
-            'tenancy_db_name'         => $clientDTO->subdomain,
+            'id'                      => $clientDTO->domain,
+            'name'                    => $clientDTO->domain,
+            'tenancy_db_name'         => $clientDTO->domain,
             'tenancy_create_database' => false,
         ]);
 
         // 3. إنشاء النطاق (Domain)
         $tenant->createDomain([
-            'domain' => $clientDTO->subdomain,
+            'domain' => $clientDTO->domain,
         ]);
 
-        return DB::transaction(function () use ($clientDTO, $tenant, $user) { 
+        return DB::transaction(function () use ($clientDTO, $tenant) {
             // 4. حساب السعر والمدة
-            $plan = $this->planService->findById($clientDTO->package_id);
-            
+            $plan = $this->planService->findById($clientDTO->plan_id);
+
             $amount = match ($clientDTO->period_type) {
                 SubscriptionBillingCycleEnum::MONTHLY->value => $plan->monthly_price,
                 SubscriptionBillingCycleEnum::ANNUAL->value  => $plan->annual_price,
@@ -88,7 +94,7 @@ class ClientService extends BaseService
                 SubscriptionBillingCycleEnum::ANNUAL->value  => $subscriptionStart->copy()->addYear(),
                 default => null,
             };
-            
+
             $finalEndsAt = $ends_at ? $ends_at->addSecond()->format('Y-m-d H:i:s') : null;
             // 5. إنشاء الاشتراك
             $subscription = Subscription::create([
@@ -97,7 +103,7 @@ class ClientService extends BaseService
                 'status'        => SubscriptionStatusEnum::ACTIVE->value,
                 'starts_at'     => $subscriptionStart,
                 'ends_at'       => $finalEndsAt,
-                'trial_ends_at' => $subscriptionStart->copy()->addDays($plan->refund_days),
+                'trial_ends_at' => $plan->trial_days ? $subscriptionStart->copy()->addDays($plan->trial_days) : null,
                 'billing_cycle' => $clientDTO->period_type,
                 'auto_renew'    => ActivationStatusEnum::INACTIVE->value,
                 'plan_snapshot' => json_encode($plan->only($plan->getFillable())),
@@ -118,26 +124,5 @@ class ClientService extends BaseService
 
             return $tenant;
         });
-    }
-
-    private function creationRollBack(
-        $tenant = null,
-        $user = null, 
-        $subscription = null, 
-        $invoice = null): void
-    {
-        if ($tenant) {
-            // 🔥 stancl handles domains + DB deletion safely
-            $tenant->delete();
-        }
-        if ($user) {
-            $user->delete();
-        }
-        if ($invoice) {
-            $invoice->delete();
-        }
-        if ($subscription) {
-            $subscription->delete();
-        }
     }
 }

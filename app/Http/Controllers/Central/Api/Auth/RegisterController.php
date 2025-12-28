@@ -17,18 +17,11 @@ class RegisterController extends Controller
      */
     public function __invoke(RegisterRequest $request, RegisterService $registerService)
     {
-        $inputs = $request->validated();
         try {
-
             $userDTO = UserDTO::fromRequest($request);
             $userDTO->create_free_trial = $request->free_trial ?? false;
-            $result = $registerService->handle(registerDTO: $userDTO);
-            $data = [
-                'token' => $result['token'],
-                'user' => AuthUserResource::make($result['user']),
-            ];
-
-            return ApiResponse::success(data: $data);
+            $registerService->handle(registerDTO: $userDTO);
+            return ApiResponse::success();
         } catch (\Exception $e) {
             return ApiResponse::error(message: 'there is an error please try again later or contact with support for fast response' . $e->getMessage());
         }
