@@ -5,7 +5,8 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\Automation\AutomationConditionController;
 use App\Http\Controllers\Api\Integrations\{
     FacebookController,
-    IntegratedFormController
+    IntegratedFormController,
+    ZapierController
 };
 use App\Http\Controllers\Api\IntegrationController;
 use App\Http\Controllers\Api\OpportunityController;
@@ -19,8 +20,6 @@ use App\Http\Controllers\Api\TeamsController;
 use App\Http\Controllers\Api\TemplatesController;
 use App\Http\Controllers\Api\PipelineController;
 use App\Http\Controllers\Api\StageController;
-
-
 
 use App\Http\Controllers\Api\Tasks\{
     PriorityController,
@@ -131,8 +130,8 @@ Route::middleware([
         Route::patch('/users/{user}/end-assignment', [UserController::class, 'endAssignment']);
         Route::get('users/{user}/targets', [UserController::class, 'getTargets']);
         Route::prefix('users/export')->group(function () {
-            Route::get('/columns', [\App\Http\Controllers\Api\Users\UserController::class, 'getColumns']);
-            Route::post('/', [\App\Http\Controllers\Api\Users\UserController::class, 'export']);
+            Route::get('/columns', [UserController::class, 'getColumns']);
+            Route::post('/', [UserController::class, 'export']);
         });
         Route::get('users/{user}/details', [UserController::class, 'details']);
         Route::get('users/permissions', [UserController::class, 'getPermissions']);
@@ -241,6 +240,13 @@ Route::middleware([
         Route::get('/integrations/statistics', [IntegrationController::class, 'statistics']);
         Route::apiResource('integrations', IntegrationController::class);
         Route::patch('/integrations/{integration}/toggle-status', [IntegrationController::class, 'toggleStatus']);
+
+        // Zapier Configuration
+        Route::prefix('integrations/zapier')->group(function () {
+            Route::get('/list', [ZapierController::class, 'index']);
+            Route::post('/settings', [ZapierController::class, 'updateSettings']);
+            Route::post('/regenerate-key', [ZapierController::class, 'regenerateApiKey']);
+        });
 
         // Integrated Forms API routes
         Route::prefix('integrated-forms')->group(function () {
@@ -553,6 +559,13 @@ Route::middleware([
             Route::get('/', [AutomationActionController::class, 'index']);
         });
     });
+
+    // Zapier Webhooks (Incoming) - Protected by API Key
+    Route::prefix('zapier')
+        ->middleware(\App\Http\Middleware\ZapierAuthentication::class)
+        ->group(function () {
+            Route::post('/create-contact', [ZapierController::class, 'createContact']);
+        });
 
 
 });

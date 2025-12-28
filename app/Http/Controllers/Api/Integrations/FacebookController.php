@@ -32,8 +32,8 @@ class FacebookController extends Controller
         //     return apiResponse(message: 'Facebook token expired', code: 401);
         // }
 
-        // Get user's business accounts
-        $response = Http::get('https://graph.facebook.com/v20.0/me/businesses', [
+        // Get user's business accounts - should have (business_management) perission .
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') . '/me/businesses', [
             'access_token' => $integration->access_token,
             'fields' => 'id,name,verification_status,profile_picture_uri,primary_page,timezone_offset_hours_utc,created_time,updated_time'
         ]);
@@ -74,7 +74,7 @@ class FacebookController extends Controller
         // }
 
         // Get ad accounts from business
-        $response = Http::get("https://graph.facebook.com/v20.0/{$request->business_id}/owned_ad_accounts", [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL')."/{$request->business_id}/owned_ad_accounts", [
             'access_token' => $integration->access_token,
             'fields' => 'id,name,account_id,account_status,currency,timezone_name,business_name,amount_spent,balance,owner'
         ]);
@@ -161,7 +161,7 @@ class FacebookController extends Controller
         // }
 
         // First, get the page access token
-        $pageTokenResponse = Http::get("https://graph.facebook.com/v20.0/{$request->page_id}", [
+        $pageTokenResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$request->page_id}", [
             'access_token' => $integration->access_token,
             'fields' => 'access_token'
         ]);
@@ -178,7 +178,7 @@ class FacebookController extends Controller
         }
 
         // Get forms from page using page access token
-        $response = Http::get("https://graph.facebook.com/v20.0/{$request->page_id}/leadgen_forms", [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$request->page_id}/leadgen_forms", [
             'access_token' => $pageAccessToken,
             'fields' => 'id,name,status,leads_count,created_time,updated_time,privacy_policy_url,legal_content_url'
         ]);
@@ -682,7 +682,7 @@ class FacebookController extends Controller
         // }
 
         // Get form fields - using only confirmed supported fields
-        $response = Http::get("https://graph.facebook.com/v20.0/{$request->form_id}", [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$request->form_id}", [
             'access_token' => $integration->access_token,
             'fields' => 'id,name,status,leads_count,questions'
         ]);
@@ -743,7 +743,7 @@ class FacebookController extends Controller
         // }
 
         // Get leads from form
-        $response = Http::get("https://graph.facebook.com/v20.0/{$request->form_id}/leads", [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$request->form_id}/leads", [
             'access_token' => $integration->access_token,
             'fields' => 'id,created_time,field_data',
             'limit' => $request->get('limit', 25)
@@ -781,13 +781,13 @@ class FacebookController extends Controller
             'public_profile',
             'email',
             'business_management',      // Access to Business Manager
-            'ads_management',            // Manage ad accounts
-            'ads_read',                  // Read ad account data
-            'leads_retrieval',           // Access lead forms and leads
-            'pages_show_list',           // List pages
-            'pages_read_engagement',     // Read page engagement
-            'pages_manage_ads',          // Manage page ads and lead forms
-            'pages_read_user_content',   // Read page content
+            // 'ads_management',            // Manage ad accounts
+            // 'ads_read',                  // Read ad account data
+            'leads_retrieval',           // Access lead forms and leads => For get Forms
+            'pages_show_list',           // List pages  => to list pages by account id .
+            'pages_read_engagement',     // Read page engagement  => For get Forms - Required to read Page data (mandatory even just to list pages in v19+)
+            // 'pages_manage_ads',          // Manage page ads and lead forms
+            // 'pages_read_user_content',   // Read page content
         ]);
 
         // Include tenant ID in state parameter for callback identification
@@ -825,7 +825,7 @@ class FacebookController extends Controller
         $code = $request->get('code');
         $error = $request->get('error');
         $state = $request->get('state');
-        
+
         // Extract tenant ID from state parameter
         $tenantId = null;
         if ($state) {
@@ -872,7 +872,7 @@ class FacebookController extends Controller
         // Exchange code for access token
         $redirectUri = $this->getTenantRedirectUri();
 
-        $response = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') .'/oauth/access_token', [
             'client_id' => env('FACEBOOK_CLIENT_ID'),
             'redirect_uri' => $redirectUri,
             'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
@@ -906,7 +906,7 @@ class FacebookController extends Controller
         }
 
         // Get user information
-        $userResponse = Http::get('https://graph.facebook.com/v20.0/me', [
+        $userResponse = Http::get(env('FACEBOOK_GRAPH_URL') .'/me', [
             'access_token' => $accessToken,
             'fields' => 'id,name,email',
         ]);
@@ -917,7 +917,7 @@ class FacebookController extends Controller
         $integrationData = DB::table('integrations')
             ->where('id', $integration->id)
             ->first();
-        
+
         $successPayload = [
             'status' => true,
             'message' => 'Facebook OAuth successful',
@@ -955,7 +955,7 @@ class FacebookController extends Controller
         // }
 
         // Validate token with Facebook
-        $response = Http::get('https://graph.facebook.com/v20.0/me', [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') .'/me', [
             'access_token' => $integration->access_token,
             'fields' => 'id,name'
         ]);
@@ -1006,7 +1006,7 @@ class FacebookController extends Controller
         }
 
         // Revoke token with Facebook
-        $response = Http::delete('https://graph.facebook.com/v20.0/me/permissions', [
+        $response = Http::delete(env('FACEBOOK_GRAPH_URL') .'/me/permissions', [
             'access_token' => $integration->access_token
         ]);
 
@@ -1122,7 +1122,7 @@ class FacebookController extends Controller
 
         try {
             // Method 1: Get campaigns and extract page info
-            $campaignsResponse = Http::get("https://graph.facebook.com/v20.0/{$request->ad_account_id}/campaigns", [
+            $campaignsResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$request->ad_account_id}/campaigns", [
                 'access_token' => $integration->access_token,
                 'fields' => 'id,name,status,objective',
                 'limit' => 50
@@ -1133,7 +1133,7 @@ class FacebookController extends Controller
 
                 foreach ($campaigns as $campaign) {
                     // Get adsets for each campaign
-                    $adsetsResponse = Http::get("https://graph.facebook.com/v20.0/{$campaign['id']}/adsets", [
+                    $adsetsResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$campaign['id']}/adsets", [
                         'access_token' => $integration->access_token,
                         'fields' => 'id,name,status,promoted_object',
                         'limit' => 10
@@ -1149,7 +1149,7 @@ class FacebookController extends Controller
                                     $pageIds[] = $pageId;
 
                                     // Get page details
-                                    $pageResponse = Http::get("https://graph.facebook.com/v20.0/{$pageId}", [
+                                    $pageResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$pageId}", [
                                         'access_token' => $integration->access_token,
                                         'fields' => 'id,name,category'
                                     ]);
@@ -1170,7 +1170,7 @@ class FacebookController extends Controller
 
             // Method 2: If no pages found via campaigns, try ads directly
             if (empty($allPages)) {
-                $adsResponse = Http::get("https://graph.facebook.com/v20.0/{$request->ad_account_id}/ads", [
+                $adsResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$request->ad_account_id}/ads", [
                     'access_token' => $integration->access_token,
                     'fields' => 'id,name,status,creative',
                     'limit' => 50
@@ -1186,7 +1186,7 @@ class FacebookController extends Controller
                                 $pageIds[] = $pageId;
 
                                 // Get page details
-                                $pageResponse = Http::get("https://graph.facebook.com/v20.0/{$pageId}", [
+                                $pageResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$pageId}", [
                                     'access_token' => $integration->access_token,
                                     'fields' => 'id,name,category'
                                 ]);
@@ -1226,7 +1226,7 @@ class FacebookController extends Controller
 
         try {
             // Get campaigns
-            $campaignsResponse = Http::get("https://graph.facebook.com/v20.0/{$adAccountId}/campaigns", [
+            $campaignsResponse = Http::get(env('FACEBOOK_GRAPH_URL') . "/{$adAccountId}/campaigns", [
                 'access_token' => $accessToken,
                 'fields' => 'id,name,status',
                 'limit' => 20
@@ -1237,7 +1237,7 @@ class FacebookController extends Controller
 
                 foreach ($campaigns as $campaign) {
                     // Get adsets for each campaign
-                    $adsetsResponse = Http::get("https://graph.facebook.com/v20.0/{$campaign['id']}/adsets", [
+                    $adsetsResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$campaign['id']}/adsets", [
                         'access_token' => $accessToken,
                         'fields' => 'id,name,promoted_object',
                         'limit' => 5
@@ -1253,7 +1253,7 @@ class FacebookController extends Controller
                                     $pageIds[] = $pageId;
 
                                     // Get page details
-                                    $pageResponse = Http::get("https://graph.facebook.com/v20.0/{$pageId}", [
+                                    $pageResponse = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$pageId}", [
                                         'access_token' => $accessToken,
                                         'fields' => 'id,name,category'
                                     ]);
@@ -1296,7 +1296,7 @@ class FacebookController extends Controller
 
         try {
             // Use me/accounts endpoint to get pages
-            $response = Http::get('https://graph.facebook.com/v20.0/me/accounts', [
+            $response = Http::get(env('FACEBOOK_GRAPH_URL') .'/me/accounts', [
                 'access_token' => $integration->access_token,
                 'fields' => 'id,name,category,tasks'
             ]);
@@ -1334,7 +1334,7 @@ class FacebookController extends Controller
 
         try {
             // Get current permissions
-            $response = Http::get('https://graph.facebook.com/v20.0/me/permissions', [
+            $response = Http::get(env('FACEBOOK_GRAPH_URL') .'/me/permissions', [
                 'access_token' => $integration->access_token
             ]);
 

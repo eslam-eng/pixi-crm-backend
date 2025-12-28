@@ -17,6 +17,7 @@ class Integration extends Model
         'last_sync',
         'status',
         'is_active',
+        'settings',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class Integration extends Model
         'status' => IntegrationStatusEnum::class,
         'platform' => PlatformEnum::class,
         'is_active' => 'boolean',
+        'settings' => 'array',
     ];
 
     protected $hidden = [

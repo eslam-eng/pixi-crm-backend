@@ -37,7 +37,8 @@ class ItemService extends BaseService
         public UserService $userService,
         public ProductVariantService $productVariantService,
 
-    ) {}
+    ) {
+    }
 
     public function getModel(): Item
     {
@@ -69,7 +70,8 @@ class ItemService extends BaseService
 
     public function index(array $filters = [], array $withRelations = [], ?int $perPage = null)
     {
-        $query = $this->queryGet(filters: $filters, withRelations: $withRelations);
+        $query = $this->queryGet(filters: $filters, withRelations: $withRelations)
+            ->orderBy('id', 'desc');
         if ($perPage) {
             return $query->paginate($perPage);
         }
@@ -98,7 +100,7 @@ class ItemService extends BaseService
             if ($itemDTO->documents) {
                 $this->uploadDocuments($item, $itemDTO->documents);
             }
-    
+
             $admins = $this->userService->getModel()->role('admin')->get();
             foreach ($admins as $admin) {
                 $admin->notify(new CreateNewItemNotification($item));
@@ -117,12 +119,12 @@ class ItemService extends BaseService
 
     public function show(int $id)
     {
-        $item = $this->findById($id, withRelations: ['itemable','category']);
+        $item = $this->findById($id, withRelations: ['itemable', 'category']);
 
         return $item;
     }
 
-    public function update(int $id,ItemUpdateRequest $request,ItemDTO $itemDTO): Item
+    public function update(int $id, ItemUpdateRequest $request, ItemDTO $itemDTO): Item
     {
         $item = $this->findById($id, withRelations: ['itemable']);
         $requestedType = $request->input('type');
@@ -441,8 +443,8 @@ class ItemService extends BaseService
     }
 
     /**
-    * Rollback uploaded files if transaction fails
-    */
+     * Rollback uploaded files if transaction fails
+     */
     protected function rollbackFiles(): void
     {
         if (empty($this->uploadedMedia)) {
@@ -466,10 +468,10 @@ class ItemService extends BaseService
     }
 
     /**
-    * Upload Thumbnail Image
-    */
+     * Upload Thumbnail Image
+     */
     protected function uploadThumbnailImage(Item $item, $thumbnail_image): void
-    {   
+    {
         if (!Storage::disk('public')->exists($thumbnail_image)) {
             throw new \Exception('Thumbnail image does not exist');
         }
@@ -483,10 +485,10 @@ class ItemService extends BaseService
     }
 
     /**
-    * Upload multiple images
-    */
+     * Upload multiple images
+     */
     protected function uploadImages(Item $item, array $images): void
-    {   
+    {
         foreach ($images as $image) {
 
             if (!Storage::disk('public')->exists($image)) {
@@ -503,8 +505,8 @@ class ItemService extends BaseService
     }
 
     /**
-    * Upload documents
-    */
+     * Upload documents
+     */
     protected function uploadDocuments(Item $item, array $documents): void
     {
         foreach ($documents as $document) {

@@ -7,6 +7,7 @@ enum PlatformEnum: string
     case META = 'meta';
     case GOOGLE = 'google';
     case TIKTOK = 'tiktok';
+    case ZAPIER = 'zapier';
 
     /**
      * Get the label for the platform
@@ -17,6 +18,7 @@ enum PlatformEnum: string
             static::META => 'Meta',
             static::GOOGLE => 'Google',
             static::TIKTOK => 'TikTok',
+            static::ZAPIER => 'Zapier',
         };
     }
 

@@ -24,7 +24,7 @@ class FacebookController extends Controller
         // الخطوة 2: طلب Access Token من Facebook
         $redirectUri = $this->getTenantRedirectUri();
         
-        $response = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') .'/oauth/access_token', [
             'client_id' => env('FACEBOOK_CLIENT_ID'),
             'redirect_uri' => $redirectUri,
             'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
@@ -51,7 +51,7 @@ class FacebookController extends Controller
         }
 
         // الخطوة 4: جلب بيانات المستخدم كمثال
-        $userResponse = Http::get('https://graph.facebook.com/me', [
+        $userResponse = Http::get(env('FACEBOOK_GRAPH_URL') .'/me', [
             'access_token' => $accessToken,
             'fields' => 'id,name,email',
         ]);
@@ -205,7 +205,7 @@ class FacebookController extends Controller
         }
 
         // Validate token with Facebook
-        $response = Http::get('https://graph.facebook.com/me', [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') .'/me', [
             'access_token' => $integration->access_token,
             'fields' => 'id,name,email'
         ]);
@@ -233,7 +233,7 @@ class FacebookController extends Controller
             return response()->json(['error' => 'No access token found'], 404);
         }
 
-        $response = Http::get('https://graph.facebook.com/me/permissions', [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') .'/me/permissions', [
             'access_token' => $integration->access_token
         ]);
 
@@ -257,7 +257,7 @@ class FacebookController extends Controller
         }
 
         // Revoke token with Facebook
-        $response = Http::delete('https://graph.facebook.com/me/permissions', [
+        $response = Http::delete(env('FACEBOOK_GRAPH_URL') .'/me/permissions', [
             'access_token' => $integration->access_token
         ]);
 

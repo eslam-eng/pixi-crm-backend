@@ -12,6 +12,7 @@ use App\Notifications\Tenant\UpdateAssignContactNotification;
 use App\Services\Tenant\Users\UserService;
 use Excel;
 use Illuminate\Validation\ValidationException;
+use App\Services\Integrations\ZapierService;
 
 class ContactService extends BaseService
 {
@@ -19,7 +20,9 @@ class ContactService extends BaseService
         public Contact $model,
         public ContactPhoneService $contactPhoneService,
         public UserService $userService,
-    ) {}
+        protected ZapierService $zapierService,
+    ) {
+    }
 
     public function getModel(): Contact
     {
@@ -69,6 +72,10 @@ class ContactService extends BaseService
                 }
             }
         }
+
+        // Trigger Zapier Webhook
+        $this->zapierService->sendEvent('contact.created', $contact->load('contactPhones')->toArray());
+
         $admins = $this->userService->getModel()->role('admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new CreateNewContactNotification($contact));
@@ -86,10 +93,10 @@ class ContactService extends BaseService
     public function update(int $id, ContactDTO $contactDTO)
     {
         $contact = $this->findById($id);
-        
+
         // Get changed fields before update
         $originalData = $contact->toArray();
-        
+
         $validator = validator([], []); // Create empty validator
         if ($contactDTO->contact_phones && count($contactDTO->contact_phones) > 0) {
             $contact->contactPhones()->delete();
@@ -110,29 +117,29 @@ class ContactService extends BaseService
         }
 
         $contact->update($contactDTO->toArray());
-        
+
         // Get changed fields after update
         $changedFields = [];
         $addedTags = [];
-        
+
         foreach ($contactDTO->toArray() as $key => $value) {
             if (isset($originalData[$key]) && $originalData[$key] != $value) {
                 $changedFields[$key] = [
                     'old' => $originalData[$key],
                     'new' => $value
                 ];
-                
+
                 // Check for tag additions
                 if ($key === 'tags') {
                     $oldTags = $originalData[$key] ?? [];
                     $newTags = $value ?? [];
-                    
+
                     // Find newly added tags
                     $addedTags = array_diff($newTags, $oldTags);
                 }
             }
         }
-        
+
         if ($contact->wasChanged('user_id')) {
             $oldUser = $contact->user;
             $admins = $this->userService->getModel()->role('admin')->get();

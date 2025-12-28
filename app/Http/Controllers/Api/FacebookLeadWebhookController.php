@@ -192,7 +192,7 @@ class FacebookLeadWebhookController extends Controller
             return null;
         }
 
-        $response = Http::get("https://graph.facebook.com/v20.0/{$leadId}", [
+        $response = Http::get(env('FACEBOOK_GRAPH_URL') ."/{$leadId}", [
             'access_token' => $token,
             'fields' => 'created_time,field_data,ad_id,form_id,platform'
         ]);
