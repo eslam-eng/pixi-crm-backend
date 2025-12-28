@@ -230,7 +230,7 @@ class CoreController extends Controller
             return ($value !== null && $value !== false && $value !== '');
         });
 
-        $teams = $itemService->queryGet(filters: $filters)->select('id', 'name')->get();
+        $teams = $itemService->queryGet(filters: $filters)->select('id', 'name','price')->get();
         $data = ItemDDLResource::collection($teams);
         return apiResponse(
             $data,

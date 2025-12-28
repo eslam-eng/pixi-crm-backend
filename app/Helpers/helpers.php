@@ -103,7 +103,7 @@ if (!function_exists('calcChange')) {
         }
 
         return [
-            'current' => $current,
+            'current' =>  round($current, 2),
             'percentage' => $percentage,
         ];
     }

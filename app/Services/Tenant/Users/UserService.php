@@ -213,9 +213,11 @@ class UserService extends BaseService
                 ]);
             }
         } else {
-            $user->activeChairs()->first()->update([
-                'ended_at' => now(),
-            ]);
+            if ($activeChair = $user->activeChairs()->first()) {
+                $activeChair->update([
+                    'ended_at' => now(),
+                ]);
+            }
         }
 
         $validator = validator([], []); // Create empty validator
