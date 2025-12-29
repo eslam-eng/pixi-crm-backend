@@ -41,7 +41,6 @@ class ActivationCodeService extends BaseService
         $codesData = collect(range(1, $dto->count))
             ->map(function () use ($dto, $validUntil) {
                 return [
-                    'id' => Str::uuid(),
                     'code' => $dto->code ?? $this->generateSingleCode($dto->parts, $dto->partLength),
                     'plan_id' => $dto->planId,
                     'validity_days' => $dto->validityDays,

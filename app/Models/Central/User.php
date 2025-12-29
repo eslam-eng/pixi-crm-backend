@@ -4,10 +4,11 @@ namespace App\Models\Central;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Landlord\SupportedLocalesEnum;
+use App\Models\City;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-// use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -30,6 +31,14 @@ class User extends Authenticatable implements HasMedia
         'email_verified_at',
         'email',
         'password',
+        'job_title',
+        'website',
+        'city_id',
+        'company_size',
+        'industry_id',
+        'postal_code',
+        'address',
+        'phone',
         'owner_id',
     ];
 
@@ -44,9 +53,19 @@ class User extends Authenticatable implements HasMedia
     ];
 
     // current tenant
-    public function tenant(): BelongsTo
+    public function tenant(): HasOne
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->hasOne(Tenant::class, 'owner_id');
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function industry(): BelongsTo
+    {
+        return $this->belongsTo(Industry::class);
     }
 
     public function tenants()

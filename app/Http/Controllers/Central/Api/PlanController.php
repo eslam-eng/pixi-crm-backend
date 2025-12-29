@@ -24,7 +24,7 @@ class PlanController extends Controller
     {
         $filters = array_filter([
             'is_active' => $request->query('is_active', true),
-            'is_trial' => false,
+            // 'is_trial' => false,
         ], fn($v) => !is_null($v));
 
         $withRelations = [

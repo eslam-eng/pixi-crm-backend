@@ -12,13 +12,15 @@ use App\Services\Central\FeatureService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Enums\Landlord\ActivationCodeStatusEnum;
+use App\Models\Central\ActivationCode;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PlanService extends BaseService
 {
     public function __construct(
         public FeatureService $featureService,
-    ) {
-    }
+    ) {}
 
     protected function getFilterClass(): ?string
     {
@@ -33,6 +35,25 @@ class PlanService extends BaseService
     public function getFreePlan()
     {
         return $this->getQuery()->where('is_trial', true)->first();
+    }
+
+    public function findByActivationCode(string $code)
+    {
+        $activationCode = ActivationCode::where('code', $code)->first();
+
+        if (! $activationCode) {
+            throw new NotFoundHttpException('Invalid activation code.');
+        }
+
+        if ($activationCode->status !== ActivationCodeStatusEnum::AVAILABLE || $activationCode->isExpired()) {
+            throw ValidationException::withMessages(['activation_code' => 'Activation code is invalid or expired.']);
+        }
+
+        $activationCode->update([
+            'status' => ActivationCodeStatusEnum::USED->value,
+        ]);
+
+        return $activationCode->plan;
     }
 
     public function statics()
@@ -151,7 +172,7 @@ class PlanService extends BaseService
             if (!$this->validateType($value, $feature->group)) {
                 throw ValidationException::withMessages([
                     "features.$index.value" =>
-                        "Invalid value type for [$id]",
+                    "Invalid value type for [$id]",
                 ]);
             }
         }
