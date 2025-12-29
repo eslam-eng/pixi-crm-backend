@@ -51,8 +51,8 @@ class OpportunityController extends Controller
         $opportunities_win_probability = Lead::avg('win_probability');
         return ApiResponse(message: 'Opportunities statistics retrieved successfully', code: 200, data: [
             'opportunities' => $opportunities,
-            'opportunities_deals_value' => $opportunities_deals_value,
-            'opportunities_win_probability' => $opportunities_win_probability,
+            'opportunities_deals_value' => (String)round($opportunities_deals_value, 2) ,
+            'opportunities_win_probability' => (String)round($opportunities_win_probability, 2),
         ]);
     }
 
