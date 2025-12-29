@@ -42,7 +42,7 @@ class RegisterService
                 'website'    => $registerDTO->website,
                 'city_id'    => $registerDTO->city_id,
                 'company_size' => $registerDTO->company_size,
-                'industry'   => $registerDTO->industry,
+                'industry_id'   => $registerDTO->industry_id,
                 'postal_code' => $registerDTO->postal_code,
                 'address'    => $registerDTO->address,
                 'phone'      => $registerDTO->phone,

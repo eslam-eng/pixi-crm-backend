@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Central;
 
-use App\Enums\Landlord\IndustryEnum;
 use App\Enums\CompanySizes;
 use App\Enums\Landlord\SubscriptionBillingCycleEnum;
 use App\Http\Requests\BaseRequest;
@@ -20,7 +19,7 @@ class ClientRequest extends BaseRequest
             'job_title' => 'nullable|string',
             'website' => 'nullable|string',
             'company_size' => ['nullable', Rule::enum(CompanySizes::class)],
-            'industry' => ['nullable', Rule::enum(IndustryEnum::class)],
+            'industry_id' => ['nullable', 'integer', 'exists:industries,id'],
             'city_id' => ['nullable', 'integer', 'exists:cities,id'],
             'postal_code' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],

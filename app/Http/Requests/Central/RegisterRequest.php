@@ -30,6 +30,7 @@ class RegisterRequest extends BaseRequest
             'email' => 'required|email|unique:users,email',
             'free_trial' => 'nullable|boolean',
             'plan_id' => 'nullable|integer|exists:plans,id',
+            'activation_code' => 'nullable|string',
         ];
     }
 }

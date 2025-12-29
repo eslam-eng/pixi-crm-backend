@@ -58,7 +58,7 @@ class ClientService extends BaseService
             'website'    => $clientDTO->website,
             'city_id'    => $clientDTO->city_id,
             'company_size' => $clientDTO->company_size,
-            'industry'   => $clientDTO->industry,
+            'industry_id'   => $clientDTO->industry_id,
             'postal_code' => $clientDTO->postal_code,
             'address'    => $clientDTO->address,
             'phone'      => $clientDTO->phone,

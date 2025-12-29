@@ -6,7 +6,6 @@ use App\DTO\Central\UserDTO;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\RegisterRequest;
-use App\Http\Resources\Central\AuthUserResource;
 use App\Services\Central\RegisterService;
 
 

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('job_title')->nullable();
             $table->string('website')->nullable();
             $table->string('company_size')->nullable();
-            $table->string('industry')->nullable();
+            $table->foreignId('industry_id')->nullable()->constrained('industries');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('address')->nullable();
