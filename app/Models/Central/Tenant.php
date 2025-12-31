@@ -36,7 +36,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'owner_id',
         'has_used_trial',
         'trial_plan_id',
-
+        'zapier_api_key'
     ];
 
 

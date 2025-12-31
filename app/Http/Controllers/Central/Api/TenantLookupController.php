@@ -10,6 +10,14 @@ use Illuminate\Http\Request;
 class TenantLookupController extends Controller
 {
 
+    public function checkMail(Request $request)
+    {
+        return view("emails.central.welcome_mail");
+    }
+    public function activeMail(Request $request)
+    {
+        return view("emails.central.active_client_mail");
+    }
     public function checkTenant(Request $request)
     {
         $request->validate([

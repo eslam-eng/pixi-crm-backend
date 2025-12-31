@@ -22,16 +22,25 @@ use App\Http\Controllers\Central\Api\SettingController;
 use App\Http\Controllers\Central\Api\SubscriptionController;
 use App\Http\Controllers\Central\Api\TenantLookupController;
 use App\Http\Controllers\Central\Api\ClientController;
+use App\Http\Controllers\Central\Api\ZapierController;
+use App\Http\Middleware\CheckZapierApiKey;
 
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->name('central.')->group(function () {
 
+        Route::get('tenant/check/mail', [TenantLookupController::class, 'checkMail']);
+        Route::get('tenant/active/mail', [TenantLookupController::class, 'activeMail']);
         Route::post('tenant/check', [TenantLookupController::class, 'checkTenant']);
 
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             Route::post('admin/login', AdminAuthController::class);
             Route::post('register', RegisterController::class)->name('landlord.auth.register');
+        });
+
+        // Zapier Integration Routes
+        Route::group(['prefix' => 'zapier', 'middleware' => CheckZapierApiKey::class], function () {
+            Route::get('auth/me', [ZapierController::class, 'me']);
         });
 
         Route::get('active-plans', [PlanController::class, 'activePlans']);
