@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0061968bb80a93198542352417fc14b3",
+    "content-hash": "a34f1d1e3beeb4b7f498bf707a82e597",
     "packages": [
         {
             "name": "brick/math",
@@ -6704,6 +6704,57 @@
                 "source": "https://github.com/symfony/routing/tree/v7.3.6"
             },
             "time": "2025-11-05T07:57:47+00:00"
+        },
+        {
+            "name": "symfony/sendgrid-mailer",
+            "version": "v7.4.0",
+            "dist": {
+                "type": "zip",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/sendgrid-mailer/v7.4.0/symfony-sendgrid-mailer-v7.4.0.zip",
+                "reference": "48e81fdbeb443a8094b7d5322d4c1a2023c40a57",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "symfony/mailer": "^7.2|^8.0"
+            },
+            "conflict": {
+                "symfony/http-foundation": "<6.4",
+                "symfony/mime": "<6.4",
+                "symfony/webhook": "<7.2"
+            },
+            "require-dev": {
+                "symfony/http-client": "^6.4|^7.0|^8.0",
+                "symfony/webhook": "^7.2|^8.0"
+            },
+            "type": "symfony-mailer-bridge",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Mailer\\Bridge\\Sendgrid\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Sendgrid Mailer Bridge",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/sendgrid-mailer/tree/v7.4.0"
+            },
+            "time": "2025-09-16T14:23:56+00:00"
         },
         {
             "name": "symfony/service-contracts",

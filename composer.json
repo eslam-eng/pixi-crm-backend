@@ -26,6 +26,7 @@
         "spatie/laravel-settings": "^3.4",
         "spatie/laravel-translatable": "*",
         "stancl/tenancy": "^3.8",
+        "symfony/sendgrid-mailer": "^7.4",
         "yajra/laravel-datatables": "^11.0"
     },
     "require-dev": {

@@ -13,7 +13,7 @@ class FeatureDTO extends BaseDTO
         public array $name,
         public string $group,
         public ?array $description = null,
-        public ?bool $is_active = 1,
+        public ?int $is_active = 1,
     ) {}
 
     public static function fromArray(array $data): static

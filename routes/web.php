@@ -1,9 +1,19 @@
 <?php
 
 use App\Http\Controllers\Web\FacebookController;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('test-route', function () {
     return 'test route';
+});
+
+Route::get('/test-email', function () {
+    Mail::raw('This is a test email from Laravel + SendGrid!', function ($message) {
+        $message->to('mohamedengnasser20@gmail.com')
+            ->subject('SendGrid Test');
+    });
+
+    return 'Email sent!';
 });
 
 Route::get('/', function () {
