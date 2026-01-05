@@ -35,6 +35,7 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             Route::post('admin/login', AdminAuthController::class);
+            Route::post('register/verify',[ RegisterController::class,'verifyRegisterData']);
             Route::post('register', RegisterController::class)->name('landlord.auth.register');
         });
 

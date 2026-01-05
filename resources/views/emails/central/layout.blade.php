@@ -137,14 +137,8 @@
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                    style="display:inline-block; vertical-align: middle; margin-right: 8px;">
-                    <path d="M4 4H10V10H4V4Z" fill="#2563EB" />
-                    <path d="M14 4H20V10H14V4Z" fill="#2563EB" fill-opacity="0.5" />
-                    <path d="M4 14H10V20H4V14Z" fill="#2563EB" fill-opacity="0.5" />
-                    <path d="M14 14H20V20H14V14Z" fill="#2563EB" />
-                </svg>
-                <span style="display:inline-block; vertical-align: middle;">MAZAL CRM</span>
+                <img src="{{ asset('img/mazal-crm-mail-logo.png') }}" alt="Mazal CRM"
+                    style="display:inline-block; vertical-align: middle; max-height: 40px;">
             </div>
             <p>@yield('sub-header', 'Your Business Growth Partner')</p>
         </div>

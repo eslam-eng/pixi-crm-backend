@@ -17,7 +17,7 @@ Route::get('/test-email', function () {
 });
 
 Route::get('/', function () {
-    return '<h1>Hello on pixi CRM</h1>';
+    return View('emails.central.verification_code', ['code' => 123456]);
 });
 
 Route::get('/mailtrap-test', function () {

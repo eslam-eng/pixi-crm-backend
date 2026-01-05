@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Central\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\Subscription\StoreSubscriptionRequest;
+use App\Mail\Central\SubscriptionActivated;
 use App\Services\Central\SubscriptionService;
 use App\Http\Resources\Central\SubscriptionResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class SubscriptionController extends Controller
 {
@@ -33,6 +35,11 @@ class SubscriptionController extends Controller
             $request->validated(),
             $request->file('file')
         );
+
+        if ($subscription->tenant && $subscription->tenant->owner) {
+            Mail::to($subscription->tenant->owner->email)
+                ->send(new SubscriptionActivated($subscription));
+        }
 
         return apiResponse(
             message: 'Subscription created successfully',

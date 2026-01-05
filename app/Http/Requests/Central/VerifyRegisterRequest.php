@@ -3,11 +3,12 @@
 namespace App\Http\Requests\Central;
 
 use App\Enums\Landlord\ActivationCodeStatusEnum;
+use App\Enums\Landlord\ActivationStatusEnum;
 use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
 
-class RegisterRequest extends BaseRequest
+class VerifyRegisterRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,7 +30,6 @@ class RegisterRequest extends BaseRequest
             'last_name' => 'required|string|max:255',
             'domain' => ['required', 'string', 'max:255', Rule::unique('tenants', 'name')],
             'email' => 'required|email|unique:users,email',
-            'free_trial' => 'nullable|boolean',
             'plan_id' => 'nullable|integer|exists:plans,id',
             'activation_code' => [
                 'nullable',
@@ -38,7 +38,6 @@ class RegisterRequest extends BaseRequest
                     $query->where('status', ActivationCodeStatusEnum::AVAILABLE->value());
                 }),
             ],
-            'code' => 'required|integer'
         ];
     }
 }
