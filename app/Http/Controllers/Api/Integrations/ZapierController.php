@@ -103,6 +103,26 @@ class ZapierController extends Controller
      * Zapier Action: Create Contact
      * This endpoint is called by Zapier to create a contact in this tenant.
      */
+    /**
+     * Zapier Trigger: New Contact
+     * Polling endpoint to get recent contacts.
+     */
+    public function getContacts(Request $request)
+    {
+        $query = \App\Models\Tenant\Contact::query();
+
+        if ($request->has('created_after')) {
+            $query->where('created_at', '>', \Carbon\Carbon::parse($request->created_after));
+        }
+
+        $contacts = $query->orderBy('created_at', 'asc')
+            ->limit(50)
+            ->get();
+
+        // Return flat array as expected by Zapier
+        return response()->json($contacts);
+    }
+
     public function createContact(Request $request)
     {
         try {

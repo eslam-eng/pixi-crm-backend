@@ -560,12 +560,7 @@ Route::middleware([
         });
     });
 
-    // Zapier Webhooks (Incoming) - Protected by API Key
-    Route::prefix('zapier')
-        ->middleware(\App\Http\Middleware\ZapierAuthentication::class)
-        ->group(function () {
-            Route::post('/create-contact', [ZapierController::class, 'createContact']);
-        });
+
 
 
 });

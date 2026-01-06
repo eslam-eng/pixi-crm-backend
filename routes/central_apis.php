@@ -35,13 +35,15 @@ foreach (config('tenancy.central_domains') as $domain) {
 
         Route::group(['middleware' => 'guest', 'prefix' => 'auth'], function () {
             Route::post('admin/login', AdminAuthController::class);
-            Route::post('register/verify',[ RegisterController::class,'verifyRegisterData']);
+            Route::post('register/verify', [RegisterController::class, 'verifyRegisterData']);
             Route::post('register', RegisterController::class)->name('landlord.auth.register');
         });
 
         // Zapier Integration Routes
         Route::group(['prefix' => 'zapier', 'middleware' => CheckZapierApiKey::class], function () {
             Route::get('auth/me', [ZapierController::class, 'me']);
+            Route::get('contacts', [ZapierController::class, 'getContacts']);
+            Route::post('create-contact', [ZapierController::class, 'createContact']);
         });
 
         Route::get('active-plans', [PlanController::class, 'activePlans']);
