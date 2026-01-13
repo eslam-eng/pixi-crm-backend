@@ -9,6 +9,8 @@ use App\Http\Resources\Central\ClientResource;
 use App\Services\Central\ClientService;
 use Exception;
 
+use Illuminate\Http\Request;
+
 class ClientController extends Controller
 {
     public function __construct(private readonly ClientService $clientServie)
@@ -16,10 +18,10 @@ class ClientController extends Controller
 
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $client = $this->clientServie->paginate();
+            $client = $this->clientServie->paginate($request->all());
             $data = ClientResource::collection($client)->response()->getData(true);
             return ApiResponse($data, 'Clients retrieved successfully');
         } catch (\Exception $e) {

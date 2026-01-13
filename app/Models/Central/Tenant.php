@@ -2,7 +2,7 @@
 
 namespace App\Models\Central;
 
-use App\Enums\Landlord\ActivationStatusEnum;
+use App\Enums\Landlord\TenantStatusEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Traits\Filterable;
 use App\Traits\HasFeatureLimits;
@@ -51,7 +51,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     }
 
     protected $casts = [
-        'status' => ActivationStatusEnum::class,
+        'status' => TenantStatusEnum::class,
     ];
 
     // public function users()

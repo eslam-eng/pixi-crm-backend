@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers\Central\Api;
 
+use App\Enums\CompanySizes;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Central\PlanResource;
 use App\Http\Resources\Central\DepartmentResource;
 use App\Http\Resources\Central\SourceResource;
 use App\Http\Resources\Central\IndustryResource;
 use App\Http\Resources\Central\FeatureDDLResource;
+use App\Http\Resources\landloardLocation\CityResource;
+use App\Http\Resources\landloardLocation\CountryResource;
 use App\Services\Central\ActivationCode\ActivationCodeService;
+use App\Services\Central\CityService;
+use App\Services\Central\CountryService;
 use App\Services\Central\DepartmentService;
 use App\Services\Central\Discount\DiscountCodeService;
 use App\Services\Central\FeatureService;
@@ -26,7 +31,9 @@ class CoreLandlordController extends Controller
         private readonly SourceService $sourceService,
         private readonly IndustryService $industryService,
         private readonly ActivationCodeService $activationCodeService,
-        private readonly DiscountCodeService $discountCodeService
+        private readonly DiscountCodeService $discountCodeService,
+        private readonly CountryService $countryService,
+        private readonly CityService $cityService
     ) {
     }
 
@@ -38,6 +45,36 @@ class CoreLandlordController extends Controller
         $plans = $this->planService->activePlans(filters: $filters);
 
         $data = PlanResource::collection($plans);
+
+        return apiResponse(
+            message: 'success',
+            data: $data
+        );
+    }
+
+    public function countries(Request $request)
+    {
+        $data = $this->countryService->getAll();
+        $data = CountryResource::collection($data);
+        return apiResponse(
+            message: 'success',
+            data: $data
+        );
+    }
+    public function cities(Request $request)
+    {
+        $filters['country_id'] = $request->country_id;
+        $data = $this->cityService->getAll(filters: $filters);
+        $data = CityResource::collection($data);
+        return apiResponse(
+            message: 'success',
+            data: $data
+        );
+    }
+
+    public function companySizes(Request $request)
+    {
+        $data = CompanySizes::values();
 
         return apiResponse(
             message: 'success',

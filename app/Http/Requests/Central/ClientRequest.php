@@ -13,9 +13,10 @@ class ClientRequest extends BaseRequest
     {
         return [
             'company_name' => ['required', 'string'],
-            'contact_name' => ['required', 'string'],
-            'contact_email' => 'required|email|unique:users,email',
-            'contact_phone' => 'nullable|string',
+            'first_name' => ['required', 'string'],
+            'last_name' => ['required', 'string'],
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string',
             'job_title' => 'nullable|string',
             'website' => 'nullable|string',
             'company_size' => ['nullable', Rule::enum(CompanySizes::class)],
@@ -23,11 +24,11 @@ class ClientRequest extends BaseRequest
             'city_id' => ['nullable', 'integer', 'exists:cities,id'],
             'postal_code' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
-            'subdomain' => ['required', 'string', 'unique:tenants,name'],
-            'package_id' => ['required', 'integer', 'exists:plans,id'],
+            'domain' => ['required', 'string', 'unique:tenants,name'],
+            'plan_id' => ['required', 'integer', 'exists:plans,id'],
             'period_type' => ['required', Rule::enum(SubscriptionBillingCycleEnum::class)],
             'subscription_start' => ['required', 'date'],
-            'send_password_email' => ['nullable', 'boolean'],
+            'send_password_setup_email' => ['nullable', 'boolean'],
             'status' => ['nullable', 'boolean'],
             'note' => ['nullable', 'text'],
         ];

@@ -93,7 +93,6 @@ return array(
 
   'leads_title' => 'Leads',
   'leads' => 'Leads',
-  'lead' => 'Lead',
   'all_leads' => 'All Leads',
   'create_new_lead_title' => 'Create Lead',
   'edit_lead_title' => 'Edit Lead',
@@ -403,6 +402,14 @@ return array(
       'used' => 'Usado',
       'expired' => 'Caducado',
       'blocked' => 'Bloqueado',
+    ],
+  ],
+  'tenant' => [
+    'status' => [
+      'inactive' => 'Inactivo',
+      'active' => 'Activo',
+      'trial' => 'Prueba',
+      'expired' => 'Expirado',
     ],
   ],
 );

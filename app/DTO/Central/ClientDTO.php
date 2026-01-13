@@ -28,6 +28,8 @@ class ClientDTO extends BaseDTO
         public ?string $subscription_start = null,
         public ?string $activation_code = null,
         public ?bool $create_free_trial = false,
+        public ?bool $send_password_setup_email = false,
+        public ?int $status = null,
     ) {
     }
 
@@ -51,6 +53,10 @@ class ClientDTO extends BaseDTO
             plan_id: Arr::get($data, 'plan_id'),
             period_type: Arr::get($data, 'period_type'),
             subscription_start: Arr::get($data, 'subscription_start'),
+            activation_code: Arr::get($data, 'activation_code'),
+            create_free_trial: Arr::get($data, 'create_free_trial'),
+            send_password_setup_email: Arr::get($data, 'send_password_setup_email'),
+            status: Arr::get($data, 'status'),
         );
     }
 
@@ -74,6 +80,10 @@ class ClientDTO extends BaseDTO
             plan_id: $request->plan_id,
             period_type: $request->period_type,
             subscription_start: $request->subscription_start,
+            activation_code: $request->activation_code,
+            create_free_trial: $request->create_free_trial,
+            send_password_setup_email: $request->send_password_setup_email,
+            status: $request->status,
         );
     }
 
@@ -97,6 +107,10 @@ class ClientDTO extends BaseDTO
             'plan_id' => $this->plan_id,
             'period_type' => $this->period_type,
             'subscription_start' => $this->subscription_start,
+            'activation_code' => $this->activation_code,
+            'create_free_trial' => $this->create_free_trial,
+            'send_password_setup_email' => $this->send_password_setup_email,
+            'status' => $this->status,
         ];
     }
 

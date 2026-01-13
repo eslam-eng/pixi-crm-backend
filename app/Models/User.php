@@ -78,7 +78,7 @@ class User extends Authenticatable
 
     public function tenant()
     {
-        return $this->hasOne(Tenant::class);
+        return $this->hasOne(Tenant::class, 'owner_id');
     }
 
     /**

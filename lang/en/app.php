@@ -417,4 +417,12 @@ return array(
   'follow_up' => 'Follow-up',
   'concern' => 'Concern',
   'decision' => 'Decision',
+  'tenant' => [
+    'status' => [
+      'inactive' => 'Inactive',
+      'active' => 'Active',
+      'trial' => 'Trial',
+      'expired' => 'Expired',
+    ],
+  ],
 );

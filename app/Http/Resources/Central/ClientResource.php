@@ -9,11 +9,29 @@ class ClientResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $activeSubscription = $this->activeSubscription;
+        $owner = $this->owner;
+
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
-            'is_active' => $this->is_active,
+            'company_details' => [
+                'name' => $owner?->company_name ?? $this->name,
+                'domain' => $this->name . '.' . config('tenancy.central_domains')[0], // assuming typical setup
+            ],
+            'contact' => [
+                'name' => $owner?->first_name . ' ' . $owner?->last_name,
+                'email' => $owner?->email,
+            ],
+            'package' => [
+                'name' => $activeSubscription?->plan_snapshot['name'] ?? $activeSubscription?->plan?->name ?? 'N/A',
+                'price' => isset($activeSubscription?->amount) ? $activeSubscription->amount . '/' . ($activeSubscription->billing_cycle?->value ?? 'month') : 'N/A',
+            ],
+            'status' => [
+                'value' => $this->status,
+                'label' => $this->status?->getLabel() ?? 'No Status',
+            ],
+            'subscription' => $activeSubscription ? 'Active' : 'No subscription',
+            'created_at' => $this->created_at?->format('Y-m-d'),
         ];
     }
 }

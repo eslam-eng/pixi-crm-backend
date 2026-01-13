@@ -17,6 +17,7 @@ use App\Http\Controllers\Central\Api\SourceController;
 use App\Http\Controllers\Central\Api\TimeZoneController;
 use App\Http\Controllers\Central\Api\Auth\RegisterController;
 use App\Http\Controllers\Central\Api\AuthController as centralAuthController;
+use App\Http\Controllers\Central\Api\Auth\PasswordSetupController;
 use App\Http\Controllers\Central\Api\PaymentController;
 use App\Http\Controllers\Central\Api\SettingController;
 use App\Http\Controllers\Central\Api\SubscriptionController;
@@ -37,6 +38,7 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::post('admin/login', AdminAuthController::class);
             Route::post('register/verify', [RegisterController::class, 'verifyRegisterData']);
             Route::post('register', RegisterController::class)->name('landlord.auth.register');
+            Route::post('setup-password', [PasswordSetupController::class, 'setup'])->name('password.setup');
         });
 
         // Zapier Integration Routes
@@ -108,6 +110,9 @@ foreach (config('tenancy.central_domains') as $domain) {
         });
         Route::group(['prefix' => 'core'], function () {
             Route::get('plans', [CoreLandlordController::class, 'plans']);
+            Route::get('company-sizes', [CoreLandlordController::class, 'companySizes']);
+            Route::get('countries', [CoreLandlordController::class, 'countries']);
+            Route::get('cities', [CoreLandlordController::class, 'cities']);
             Route::get('features', [CoreLandlordController::class, 'getFeatures']);
             Route::get('departments', [CoreLandlordController::class, 'departments']);
             Route::get('sources', [CoreLandlordController::class, 'sources']);

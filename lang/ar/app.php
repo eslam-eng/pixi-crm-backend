@@ -96,4 +96,12 @@ return array(
     ],
   ],
 
+  'tenant' => [
+    'status' => [
+      'inactive' => 'غير نشط',
+      'active' => 'نشط',
+      'trial' => 'تجريبي',
+      'expired' => 'منتهي',
+    ],
+  ],
 );
