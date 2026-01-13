@@ -19,7 +19,7 @@ class ActivationCodeDetailResource extends JsonResource
             'id' => $this->id,
             'code' => $this->code,
             'status' => $this->status,
-            'status_text' => ActivationCodeStatusEnum::from($this->status)->getLabel(),
+            'status_text' => $this->status?->getLabel(),
             'validity_days' => $this->validity_days,
             'plan_id' => $this->plan_id,
             'plan' => $this->whenLoaded('plan', fn() => [

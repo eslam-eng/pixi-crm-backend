@@ -25,8 +25,8 @@ class FeatureResource extends JsonResource
             'description' => $this->getTranslatedFallback('description'),
             // 'group' => $this->group,
             'group_text' => FeatureGroupEnum::from($this->group)->getLabel(),
-            // 'is_active' => $this->is_active,
-            'is_active_text' => ActivationStatusEnum::from($this->is_active)->getLabel(),
+            'is_active' => $this->is_active,
+            // 'is_active_text' => ActivationStatusEnum::from($this->is_active)->getLabel(),
             // 'value' => $feature_subscription_pivot_loaded || $feature_plan_pivot_loaded ? $this->pivot->value : null,
             // 'usage' => $feature_subscription_pivot_loaded ? $this->pivot->usage : null,
         ];

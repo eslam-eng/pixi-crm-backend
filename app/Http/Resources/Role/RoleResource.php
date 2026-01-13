@@ -20,7 +20,6 @@ class RoleResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'is_active' => $this->is_active,
-            'is_active_text' => ActivationStatusEnum::from($this->is_active)->getLabel(),
             'permissions_count' => $this->whenCounted('permissions'),
             'users_count' => $this->whenCounted('users'),
             'permissions' => $this->whenLoaded('permissions', function () {

@@ -64,7 +64,7 @@ class RegisterService
                 'domain' => $registerDTO->domain,
             ]);
 
-            return DB::transaction(function () use ($registerDTO, $tenant, $plan) {
+            return DB::transaction(function () use ($registerDTO, $tenant, $plan, $user) {
                 // 4. حساب السعر والمدة
 
                 $amount = match ($registerDTO->period_type) {
@@ -107,6 +107,34 @@ class RegisterService
                     'status' => InvoiceStatusEnum::PAID->value,
                     'paid_at' => now(),
                     'payment_method' => $registerDTO->activation_code ? PaymentMethodEnum::ACTIVATION_CODE->value : PaymentMethodEnum::CARD->value,
+                ]);
+
+                // 7. إنشاء مستخدم الأدمن في قاعدة بيانات المستأجر
+                $tenant->run(function () use ($registerDTO, $user) {
+                    $tenantUser = \App\Models\Tenant\User::create([
+                        'first_name' => $registerDTO->first_name,
+                        'last_name' => $registerDTO->last_name,
+                        'email' => $registerDTO->email,
+                        'password' => bcrypt("123456"),
+                        'phone' => $registerDTO->phone,
+                        'job_title' => $registerDTO->job_title,
+                        'landlord_user_id' => $user->id,
+                        'is_active' => true,
+                    ]);
+
+                    // إعطاء صلاحية الأدمن
+                    try {
+                        $tenantUser->assignRole('admin');
+                    } catch (\Throwable $e) {
+                        // Role might not exist if seeding hasn't run
+                    }
+                });
+
+                // 8. إضافة المستخدم إلى جدول tenant_users في قاعدة بيانات اللاندلورد
+                \App\Models\Central\TenantUser::create([
+                    'tenant_id' => $tenant->id,
+                    'email' => $registerDTO->email,
+                    'name' => $registerDTO->first_name . ' ' . $registerDTO->last_name,
                 ]);
 
                 return $tenant;
