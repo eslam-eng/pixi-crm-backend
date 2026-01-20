@@ -82,6 +82,9 @@ foreach (config('tenancy.central_domains') as $domain) {
 
             Route::apiResource('clients', ClientController::class);
 
+            Route::group(['prefix' => 'clients/actions'], function () {
+                Route::post('/add-trial-days', [ClientController::class, 'addTrialDays']);
+            });
             Route::group(['prefix' => 'source-collections'], function () {
                 Route::get('/', [PayoutSourceController::class, 'index']);
                 Route::post('/', [PayoutSourceController::class, 'createCollection']);
