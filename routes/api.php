@@ -57,6 +57,12 @@ use App\Http\Controllers\Api\SettingController as TenantSettingController;
 // //////////// landlord routes
 require_once(__DIR__ . '/central_apis.php');
 
+Route::get('/cors-test', function () {
+    return response()->json([
+        'status' => 'CORS OK',
+    ]);
+});
+
 // //////////// tenant routes
 Route::middleware([
     \Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain::class,
