@@ -18,3 +18,4 @@ Schedule::command('test:delay-continuation')->everyMinute()->withoutOverlapping(
 
 Schedule::command('codes:expire')->everyMinute()->withoutOverlapping();
 Schedule::command('subscriptions:auto-renew')->dailyAt('00:01')->withoutOverlapping();
+Schedule::command('subscriptions:expire')->dailyAt('00:05')->withoutOverlapping();

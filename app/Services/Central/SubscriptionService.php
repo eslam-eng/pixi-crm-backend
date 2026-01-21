@@ -4,7 +4,9 @@ namespace App\Services\Central;
 
 use App\Enums\Landlord\ActivationMethodEnum;
 use App\Enums\Landlord\SubscriptionBillingCycleEnum;
+use App\Enums\Landlord\SubscriptionPaymentStatusEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Enums\Landlord\TenantStatusEnum;
 use App\Models\Central\ActivationCode;
 use App\Models\Central\Tenant;
 use App\Models\Central\Plan;
@@ -15,6 +17,7 @@ use App\Services\Central\Discount\DiscountCodeService;
 use App\Services\Central\Invoice\InvoiceService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -26,6 +29,11 @@ class SubscriptionService extends BaseService
         protected DiscountCodeService $discountCodeService,
         protected InvoiceService $invoiceService
     ) {
+    }
+
+    public function getModel()
+    {
+        return Subscription::class;
     }
 
     protected function getFilterClass(): ?string
@@ -78,6 +86,10 @@ class SubscriptionService extends BaseService
 
         // Create subscription
         $subscription = DB::transaction(function () use ($data, $plan) {
+
+            $data['status'] = SubscriptionStatusEnum::ACTIVE->value;
+            $data['payment_status'] = SubscriptionPaymentStatusEnum::PAID->value;
+
             $subscription = Subscription::create($data);
 
             // Create feature subscriptions
@@ -136,6 +148,9 @@ class SubscriptionService extends BaseService
 
             // Create renewal invoice
             $this->invoiceService->createFromSubscription($subscription, "Manual renewal for {$subscription->plan_name}");
+
+            // Activate tenant
+            $subscription->tenant->update(['status' => TenantStatusEnum::ACTIVE]);
 
             return $subscription;
         });

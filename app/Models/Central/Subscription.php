@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Subscription extends Model
 {
-    use Filterable, HasFactory;
+    use Filterable, HasFactory, HasUuids;
 
     protected $fillable = [
         'plan_id',

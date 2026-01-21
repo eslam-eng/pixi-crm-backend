@@ -52,6 +52,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     protected $casts = [
         'status' => TenantStatusEnum::class,
+        'ends_at' => 'datetime',
     ];
 
     // public function users()
@@ -184,7 +185,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     public function latestSubscription()
     {
-        return $this->hasOne(Subscription::class)->latestOfMany(); // latest active
+        return $this->hasOne(Subscription::class)->latestOfMany('created_at'); // latest active
     }
 
     public function activeSubscriptions(): Builder|HasMany

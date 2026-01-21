@@ -10,6 +10,7 @@ class ClientResource extends JsonResource
     public function toArray(Request $request): array
     {
         $activeSubscription = $this->activeSubscription;
+        $latestSubscription = $this->latestSubscription;
         $owner = $this->owner;
 
         return [
@@ -23,8 +24,9 @@ class ClientResource extends JsonResource
                 'email' => $owner?->email,
             ],
             'package' => [
-                'name' => $activeSubscription?->plan_snapshot['name'] ?? $activeSubscription?->plan?->name ?? 'N/A',
-                'price' => isset($activeSubscription?->amount) ? $activeSubscription->amount . '/' . ($activeSubscription->billing_cycle?->value ?? 'month') : 'N/A',
+                'name' => $latestSubscription?->plan?->name ?? 'N/A',
+                'end_at' => $latestSubscription?->ends_at?->format('Y-m-d') ?? 'N/A',
+                'price' => isset($latestSubscription?->amount) ? $latestSubscription->amount . '/' . ($latestSubscription->billing_cycle?->value ?? 'month') : 'N/A',
             ],
             'status' => [
                 'value' => $this->status,
