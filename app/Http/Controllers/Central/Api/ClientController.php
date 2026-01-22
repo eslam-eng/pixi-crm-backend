@@ -9,6 +9,7 @@ use App\Enums\Landlord\TenantStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\ClientRequest;
 use App\Http\Resources\Central\ClientResource;
+use App\Models\Central\ActivationCode;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Services\Central\ClientService;
@@ -21,7 +22,8 @@ class ClientController extends Controller
 {
     public function __construct(
         private readonly ClientService $clientServie,
-        private readonly SubscriptionService $subscriptionService
+        private readonly SubscriptionService $subscriptionService,
+        private readonly \App\Services\Central\ActivationCode\ActivationCodeService $activationCodeService
     ) {
 
     }
@@ -57,6 +59,46 @@ class ClientController extends Controller
             $tenant = $this->clientServie->findById($id);
             $data = new ClientResource($tenant);
             return ApiResponse(data: $data, message: 'Tenant retrieved successfully');
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+    public function addActivationCode(Request $request)
+    {
+        $request->validate([
+            'tenant_id' => 'required|exists:tenants,id',
+            'activation_code' => 'required|string|exists:activation_codes,code'
+        ]);
+
+        try {
+            // Check if code is active, not used (AVAILABLE), and not expired
+            $activationCode = $this->activationCodeService->checkActivationCode($request->activation_code);
+
+            if (!$activationCode) {
+                return ApiResponse(message: 'Invalid, used, or expired activation code.', code: 422);
+            }
+
+            $plan = Plan::findOrFail($activationCode->plan_id);
+            $data = [
+                'tenant_id' => $request->tenant_id,
+                'activation_code' => $request->activation_code,
+                'activation_method' => \App\Enums\Landlord\ActivationMethodEnum::ACTIVATION_CODE->value,
+                'plan_id' => $plan->id,
+                'billing_cycle' => $activationCode->billing_cycle ?? SubscriptionBillingCycleEnum::LIFETIME->value
+            ];
+
+
+            $this->subscriptionService->store($data);
+
+            // Mark Activation Code as Used
+            $activationCode->update(['status' => \App\Enums\Landlord\ActivationCodeStatusEnum::USED->value]);
+
+            // Update tenant status to Active
+            $tenant = Tenant::findOrFail($request->tenant_id);
+            $tenant->update(['status' => TenantStatusEnum::ACTIVE->value]);
+
+            return ApiResponse(message: 'Activation code applied successfully.');
+
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }

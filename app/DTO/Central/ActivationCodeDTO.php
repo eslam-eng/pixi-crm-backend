@@ -21,6 +21,7 @@ class ActivationCodeDTO extends BaseDTO
         public int $partLength = 3,   // Length of each part
         public ActivationCodeStatusEnum $status = ActivationCodeStatusEnum::AVAILABLE,
         public ?string $expire_at = null,
+        public ?string $billingCycle = null,
     ) {
     }
 
@@ -38,6 +39,7 @@ class ActivationCodeDTO extends BaseDTO
             partLength: Arr::get($data, 'part_length', 3),
             status: isset($data['status']) ? ActivationCodeStatusEnum::from($data['status']) : ActivationCodeStatusEnum::AVAILABLE,
             expire_at: Arr::get($data, 'expire_at'),
+            billingCycle: Arr::get($data, 'billing_cycle'),
         );
     }
 
@@ -55,6 +57,7 @@ class ActivationCodeDTO extends BaseDTO
             partLength: $request->partLength ?? 3,
             status: isset($request->status) ? ActivationCodeStatusEnum::from($request->status) : ActivationCodeStatusEnum::AVAILABLE,
             expire_at: $request->expire_at,
+            billingCycle: $request->billing_cycle,
         );
     }
 
@@ -62,13 +65,14 @@ class ActivationCodeDTO extends BaseDTO
     {
         return [
             'plan_id' => $this->planId,
-            'source_id' => $this->source_id,    
+            'source_id' => $this->source_id,
             'user_id' => $this->user_id,
             'code' => $this->code,
             'created_by_id' => $this->created_by_id,
             'validity_days' => $this->validityDays,
             'status' => $this->status->value,
             'expire_at' => $this->expire_at,
+            'billing_cycle' => $this->billingCycle,
         ];
     }
 }

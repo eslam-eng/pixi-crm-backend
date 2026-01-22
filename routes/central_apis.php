@@ -83,6 +83,7 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::apiResource('clients', ClientController::class);
 
             Route::group(['prefix' => 'clients/actions'], function () {
+                Route::post('/add-activation-code', [ClientController::class, 'addActivationCode']);
                 Route::post('/add-trial-days', [ClientController::class, 'addTrialDays']);
                 Route::post('/renew-subscribtion', [ClientController::class, 'renewSubscription']);
                 Route::post('/change-status', [ClientController::class, 'changeStatus']);

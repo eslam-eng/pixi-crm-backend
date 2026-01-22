@@ -43,6 +43,7 @@ class ActivationCodeRequest extends BaseRequest
                     ActivationCodeStatusEnum::BLOCKED->value,
                 )
             ],
+            'billing_cycle' => 'required|string|in:month,year,lifetime',
         ];
     }
 

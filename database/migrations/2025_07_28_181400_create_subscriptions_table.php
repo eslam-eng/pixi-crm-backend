@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Landlord\SubscriptionBillingCycleEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Models\Central\Plan;
 use Illuminate\Database\Migrations\Migration;
@@ -24,7 +25,7 @@ return new class extends Migration {
             $table->decimal('amount', 10, 2); // Amount for this billing period
             $table->string('currency', 10)->default('USD');
             $table->boolean('auto_renew')->default(false);
-            $table->string('billing_cycle')->nullable();
+            $table->enum('billing_cycle', SubscriptionBillingCycleEnum::values())->default(SubscriptionBillingCycleEnum::MONTHLY->value);
             $table->json('plan_snapshot');
             $table->integer('monthly_credit_tokens')->default(0);
             $table->foreignUuid('tenant_id')->constrained();

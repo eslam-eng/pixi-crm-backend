@@ -48,6 +48,7 @@ class ActivationCodeService extends BaseService
                     'created_by_id' => $dto->created_by_id,
                     'expired_at' => $validUntil,
                     'status' => $dto->status,
+                    'billing_cycle' => $dto->billingCycle ?? 'lifetime',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

@@ -90,6 +90,16 @@ class SubscriptionService extends BaseService
             $data['status'] = SubscriptionStatusEnum::ACTIVE->value;
             $data['payment_status'] = SubscriptionPaymentStatusEnum::PAID->value;
 
+            // Ensure starts_at is set if not provided
+            if (!isset($data['starts_at'])) {
+                $data['starts_at'] = now();
+            }
+
+            // Calculate ends_at based on billing_cycle
+            if (!isset($data['ends_at'])) {
+                $data['ends_at'] = calculateSubscriptionEndDate($data['billing_cycle'], $data['starts_at']);
+            }
+
             $subscription = Subscription::create($data);
 
             // Create feature subscriptions

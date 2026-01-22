@@ -26,7 +26,8 @@ class ActivationCode extends Model
         'user_id',
         'redeemed_at',
         'collected_at',
-        'created_by_id'
+        'created_by_id',
+        'billing_cycle'
     ];
 
     protected $casts = [
