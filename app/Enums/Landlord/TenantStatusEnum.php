@@ -2,12 +2,12 @@
 
 namespace App\Enums\Landlord;
 
-enum TenantStatusEnum: int
+enum TenantStatusEnum: string
 {
-    case INACTIVE = 0;
-    case ACTIVE = 1;
-    case TRIAL = 3;
-    case EXPIRED = 4;
+    case INACTIVE = '0';
+    case ACTIVE = '1';
+    case TRIAL = '3';
+    case EXPIRED = '4';
 
     public function getLabel(): string
     {

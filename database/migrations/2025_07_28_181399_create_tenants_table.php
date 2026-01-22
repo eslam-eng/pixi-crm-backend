@@ -20,7 +20,7 @@ class CreateTenantsTable extends Migration
             $table->string('id')->primary();
             $table->string('name')->unique();
             $table->json('data')->nullable();
-            $table->enum('status', TenantStatusEnum::cases())->default(TenantStatusEnum::ACTIVE->value);
+            $table->enum('status', array_column(TenantStatusEnum::cases(), 'value'))->default(TenantStatusEnum::ACTIVE->value);
             $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
             $table->boolean('has_used_trial')->default(false);
             $table->string('trial_plan_id')->nullable();
