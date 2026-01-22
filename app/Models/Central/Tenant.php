@@ -191,7 +191,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function activeSubscriptions(): Builder|HasMany
     {
         return $this->subscriptions()
-            ->where('status', 'active')
+            ->where('status', SubscriptionStatusEnum::ACTIVE->value)
             ->where('starts_at', '<=', now())
             ->where(function ($query) {
                 $query->whereNull('ends_at')

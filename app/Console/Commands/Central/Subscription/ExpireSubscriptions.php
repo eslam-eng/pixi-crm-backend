@@ -30,50 +30,44 @@ class ExpireSubscriptions extends Command
      */
     public function handle()
     {
-        $this->info('Starting subscription expiration check...');
+        Log::info('Starting subscription expiration check...');
 
         // Part 1: Mark passed subscriptions as expired
         // Find active or trial subscriptions where ends_at is in the past
         $expiredSubscriptions = Subscription::query()
-            ->whereIn('status', [SubscriptionStatusEnum::ACTIVE, SubscriptionStatusEnum::TRIAL])
+            ->whereIn('status', [SubscriptionStatusEnum::ACTIVE->value, SubscriptionStatusEnum::TRIAL->value])
             ->where('ends_at', '<', now())
             ->get();
 
         foreach ($expiredSubscriptions as $subscription) {
-            $this->info("Expiring subscription ID: {$subscription->id}");
-            $subscription->update(['status' => SubscriptionStatusEnum::EXPIRED]);
+            $statusValue = SubscriptionStatusEnum::EXPIRED->value;
+            Log::info("Expiring subscription ID: {$subscription->id}. Old Status: {$subscription->status->value}. Setting to: {$statusValue}");
+
+            // Explicitly update using value
+            $subscription->update(['status' => $statusValue]);
         }
 
-        $this->info('Finished expiring subscriptions.');
+        Log::info('Finished expiring subscriptions.');
 
         // Part 2: Mark tenants as expired if they have no active subscription
-        $this->info('Starting tenant expiration check...');
+        Log::info('Starting tenant expiration check...');
 
-        // Optimize: Get all tenants that are currently ACTIVE or TRIAL
+        // Optimize: Get all tenants that are currently ACTIVE or TRIAL but have NO matching active subscription
         Tenant::query()
-            ->whereIn('status', [TenantStatusEnum::ACTIVE, TenantStatusEnum::TRIAL])
-            ->chunk(100, function ($tenants) {
-                foreach ($tenants as $tenant) {
-                    // Check if tenant has any active subscription
-                    // We can reuse the logic from Tenant::activeSubscription() or similar
-                    // But here we want to know if *any* valid subscription exists.
-    
-                    // Logic: count subscriptions that are active/trial AND (ends_at is null OR ends_at > now)
-                    $hasActiveSubscription = $tenant->subscriptions()
-                        ->whereIn('status', [SubscriptionStatusEnum::ACTIVE, SubscriptionStatusEnum::TRIAL])
-                        ->where(function ($query) {
-                        $query->whereNull('ends_at')
+            ->where('status','!=', TenantStatusEnum::EXPIRED->value)
+            ->whereDoesntHave('subscriptions', function ($query) {
+                $query->whereIn('status', [SubscriptionStatusEnum::ACTIVE->value, SubscriptionStatusEnum::TRIAL->value])
+                    ->where(function ($q) {
+                        $q->whereNull('ends_at')
                             ->orWhere('ends_at', '>', now());
-                    })
-                        ->exists();
-
-                    if (!$hasActiveSubscription) {
-                        $this->info("Expiring tenant ID: {$tenant->id} (Name: {$tenant->name})");
-                        $tenant->update(['status' => TenantStatusEnum::EXPIRED]);
-                    }
-                }
+                    });
+            })
+            ->get()
+            ->each(function ($tenant) {
+                Log::info("Expiring tenant ID: {$tenant->id} (Name: {$tenant->name}).");
+                $tenant->update(['status' => TenantStatusEnum::EXPIRED->value]);
             });
 
-        $this->info('Finished expiring tenants.');
+        Log::info('Finished expiring tenants.');
     }
 }

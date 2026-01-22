@@ -80,17 +80,18 @@ class ClientController extends Controller
             // Create trial subscription
             $tenant->subscriptions()->create([
                 'plan_id' => $plan->id,
-                'status' => SubscriptionStatusEnum::TRIAL,
+                'status' => SubscriptionStatusEnum::TRIAL->value,
                 'starts_at' => now(),
                 'ends_at' => now()->addDays((int) $request->days),
                 'trial_ends_at' => now()->addDays((int) $request->days),
-                'billing_cycle' => SubscriptionBillingCycleEnum::MONTHLY,
+                'billing_cycle' => SubscriptionBillingCycleEnum::MONTHLY->value,
                 'plan_snapshot' => $plan->toArray(),
                 'amount' => 0,
             ]);
 
+
             // Update client status
-            $tenant->update(['status' => TenantStatusEnum::TRIAL]);
+            $tenant->update(['status' => TenantStatusEnum::TRIAL->value]);
 
             return ApiResponse(message: 'Trial days added successfully.');
 
@@ -117,6 +118,46 @@ class ClientController extends Controller
             $this->subscriptionService->renewManual($subscription);
 
             return ApiResponse(message: 'Subscription renewed successfully.');
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+
+    public function changeStatus(Request $request)
+    {
+        $request->validate([
+            'tenant_id' => 'required|exists:tenants,id',
+        ]);
+
+        try {
+            $tenant = Tenant::findOrFail($request->tenant_id);
+
+            // If currently Active (1) or Trial (3), make Inactive (0)
+            if (in_array($tenant->status->value, [TenantStatusEnum::ACTIVE->value, TenantStatusEnum::TRIAL->value])) {
+                $tenant->update(['status' => TenantStatusEnum::INACTIVE->value]);
+                $message = 'Client deactivated successfully.';
+            } else {
+                // Otherwise (Inactive 0, Expired 4), switch to Active/Trial
+                $targetStatus = TenantStatusEnum::ACTIVE->value;
+
+                // Check for valid trial subscription
+                $hasActiveTrial = $tenant->subscriptions()
+                    ->where('status', SubscriptionStatusEnum::TRIAL->value)
+                    ->where(function ($query) {
+                        $query->whereNull('ends_at')
+                            ->orWhere('ends_at', '>', now());
+                    })
+                    ->exists();
+
+                if ($hasActiveTrial) {
+                    $targetStatus = TenantStatusEnum::TRIAL->value;
+                }
+
+                $tenant->update(['status' => $targetStatus]);
+                $message = 'Client activated successfully.';
+            }
+
+            return ApiResponse(message: $message);
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }

@@ -17,7 +17,7 @@ class ClientResource extends JsonResource
             'id' => $this->id,
             'company_details' => [
                 'name' => $owner?->company_name ?? $this->name,
-                'domain' => $this->name . '.' . config('tenancy.central_domains')[0], // assuming typical setup
+                'domain' => $this->name . '.' . config('app.frontend_domain'),
             ],
             'contact' => [
                 'name' => $owner?->first_name . ' ' . $owner?->last_name,
@@ -29,7 +29,7 @@ class ClientResource extends JsonResource
                 'price' => isset($latestSubscription?->amount) ? $latestSubscription->amount . '/' . ($latestSubscription->billing_cycle?->value ?? 'month') : 'N/A',
             ],
             'status' => [
-                'value' => $this->status,
+                'value' => $this->status->value,
                 'label' => $this->status?->getLabel() ?? 'No Status',
             ],
             'subscription' => $activeSubscription ? 'Active' : 'No subscription',

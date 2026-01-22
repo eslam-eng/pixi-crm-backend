@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Subscription extends Model
 {
-    use Filterable, HasFactory, HasUuids;
+    use Filterable, HasFactory;
 
     protected $fillable = [
         'plan_id',
@@ -174,6 +174,11 @@ class Subscription extends Model
         return !in_array($this->status, SubscriptionStatusEnum::inactive()) &&
             $this->starts_at <= now() &&
             ($this->ends_at == null || $this->ends_at > now());
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === SubscriptionStatusEnum::EXPIRED;
     }
 
     public function getFeatureBySlug(string $slug)

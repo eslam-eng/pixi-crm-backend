@@ -2,16 +2,16 @@
 
 namespace App\Enums\Landlord;
 
-enum SubscriptionStatusEnum: int
+enum SubscriptionStatusEnum: string
 {
-    case PENDING = 0;
+    case PENDING = '0';
 
-    case ACTIVE = 1;
-    case TRIAL = 2;
-    case CANCELED = 3;
-    case EXPIRED = 4;
-    case SUSPENDED = 5;
-    case PAST_DUE = 6;
+    case ACTIVE = '1';
+    case TRIAL = '2';
+    case CANCELED = '3';
+    case EXPIRED = '4';
+    case SUSPENDED = '5';
+    case PAST_DUE = '6';
 
     public static function values(): array
     {
