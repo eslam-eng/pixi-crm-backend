@@ -229,6 +229,7 @@ return array(
   'login_failed' => 'Login failed email/phone and password incorrect',
   'login_successfully' => 'Login successfully',
   'account_deactivated' => 'Your account has been deactivated. Please contact administrator.',
+  'tenant_not_active' => 'Your subscription is inactive or expired. Please contact support.',
   'map_url' => 'Map Url',
   'menu' => 'Menu',
   'name' => 'Name',

@@ -6,6 +6,7 @@ use App\Exceptions\NotFoundException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\SignupRequest;
+use App\Enums\Landlord\TenantStatusEnum;
 use App\Http\Resources\Tenant\Users\UserResource;
 use App\Services\AuthService;
 use App\Services\Tenant\Users\UserService;
@@ -16,7 +17,9 @@ use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
-    public function __construct(private AuthService $authService, private UserService $userService) {}
+    public function __construct(private AuthService $authService, private UserService $userService)
+    {
+    }
 
     /**
      * Handle user signup.
@@ -46,6 +49,12 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         try {
+            // Check tenant status
+            $tenant = tenant();
+            if (!$tenant || !in_array($tenant->status, [TenantStatusEnum::ACTIVE, TenantStatusEnum::TRIAL])) {
+                return apiResponse(null, trans('app.tenant_not_active'), 403);
+            }
+
             // Authenticate user
             $user = $this->authService->loginWithEmailOrPhone(
                 identifier: $request->identifier,

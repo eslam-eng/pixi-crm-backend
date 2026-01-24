@@ -49,6 +49,7 @@ return array(
   'not_found' => 'غير موجود',
   'data not found' => 'البيانات غير موجوده',
   'account_deactivated' => 'تم إلغاء تفعيل حسابك. يرجى الاتصال بالمدير.',
+  'tenant_not_active' => 'اشتراكك غير نشط أو منتهي الصلاحية. يرجى التواصل مع الدعم.',
 
   // Task Escalation Notifications
   'task_escalation_subject' => 'تصعيد المهمة',
