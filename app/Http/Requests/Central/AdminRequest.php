@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Central;
 
 use App\Http\Requests\BaseRequest;
-use App\Enums\Landlord\CustomerStatusEnum;
 use Illuminate\Validation\Rule;
 
 class AdminRequest extends BaseRequest
@@ -27,7 +26,6 @@ class AdminRequest extends BaseRequest
         return [
             'name' => ['required', 'string'],
             'email' => ['required', 'email', Rule::unique('admins', 'email')->ignore($this->admin)],
-            //            'password' => ['required', Password::min(8)->mixedCase()],
             'phone' => 'nullable|string',
             'is_active' => 'required|boolean',
             'role_id' => 'required|exists:roles,id',
@@ -37,10 +35,4 @@ class AdminRequest extends BaseRequest
         ];
     }
 
-    protected function prepareForValidation()
-    {
-        $this->merge([
-            'is_active' => $this->get('status', CustomerStatusEnum::ACTIVE->value),
-        ]);
-    }
 }
