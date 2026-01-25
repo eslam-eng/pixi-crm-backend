@@ -186,7 +186,7 @@ class InvoiceService extends BaseService
         );
     }
 
-    public function createFromSubscription(Subscription $subscription, ?string $notes = null): Invoice
+    public function createFromSubscription(Subscription $subscription, ?string $notes = null, ?int $status = null, ?string $paymentMethod = null): Invoice
     {
         $invoiceItems = [
             [
@@ -202,9 +202,11 @@ class InvoiceService extends BaseService
             subscription_id: $subscription->id,
             subtotal: $subscription->amount,
             total: $subscription->amount,
-            status: InvoiceStatusEnum::PENDING->value,
+            status: $status ?? InvoiceStatusEnum::PENDING->value,
             due_date: now()->addDays(7), // Default due date
             notes: $notes ?? "Subscription renewal/creation for {$subscription->plan_name}",
+            payment_method: $paymentMethod,
+            paid_at: ($status === InvoiceStatusEnum::PAID->value) ? now() : null,
             invoiceItems: $invoiceItems,
         );
 

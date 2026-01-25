@@ -3,6 +3,7 @@
 namespace App\Services\Central;
 
 use App\DTO\Central\UserDTO;
+use App\Enums\Landlord\ActivationMethodEnum;
 use App\Enums\Landlord\ActivationStatusEnum;
 use App\Enums\Landlord\InvoiceStatusEnum;
 use App\Enums\Landlord\PaymentMethodEnum;
@@ -10,6 +11,7 @@ use App\Enums\Landlord\SubscriptionBillingCycleEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Models\Central\Subscription;
 use App\Services\Central\UserService;
+use App\Services\Central\SubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use \Illuminate\Support\Str;
@@ -19,6 +21,7 @@ class RegisterService
     public function __construct(
         protected UserService $userService,
         protected PlanService $planService,
+        protected SubscriptionService $subscriptionService
     ) {
     }
 
@@ -64,48 +67,20 @@ class RegisterService
                 'domain' => $registerDTO->domain,
             ]);
 
-            return DB::transaction(function () use ($registerDTO, $tenant, $plan, $user) {
-                // 4. حساب السعر والمدة
-
-                $amount = match ($registerDTO->period_type) {
-                    SubscriptionBillingCycleEnum::MONTHLY->value => $plan->monthly_price,
-                    SubscriptionBillingCycleEnum::ANNUAL->value => $plan->annual_price,
-                    SubscriptionBillingCycleEnum::LIFETIME->value => $plan->lifetime_price,
-                    default => 0,
-                };
-
+            return DB::connection('landlord')->transaction(function () use ($registerDTO, $tenant, $plan, $user) {
+                // 4. حساب بداية الاشتراك
                 $subscriptionStart = Carbon::parse($registerDTO->subscription_start);
-                $ends_at = match ($registerDTO->period_type) {
-                    SubscriptionBillingCycleEnum::MONTHLY->value => $subscriptionStart->copy()->addMonth(),
-                    SubscriptionBillingCycleEnum::ANNUAL->value => $subscriptionStart->copy()->addYear(),
-                    default => null,
-                };
 
-                $finalEndsAt = $ends_at ? $ends_at->addSecond()->format('Y-m-d H:i:s') : null;
-                // 5. إنشاء الاشتراك
-                $subscription = Subscription::create([
+                // 5. إنشاء الاشتراك والفاتورة والمميزات عبر SubscriptionService
+                $subscription = $this->subscriptionService->store([
                     'tenant_id' => $tenant->id,
                     'plan_id' => $plan->id,
-                    'status' => SubscriptionStatusEnum::ACTIVE->value,
-                    'starts_at' => $subscriptionStart,
-                    'ends_at' => $finalEndsAt,
-                    'trial_ends_at' => $plan->trial_days ? $subscriptionStart->copy()->addDays($plan->trial_days) : null,
                     'billing_cycle' => $registerDTO->period_type,
+                    'starts_at' => $subscriptionStart,
                     'auto_renew' => ActivationStatusEnum::INACTIVE->value,
-                    'plan_snapshot' => json_encode($plan->only($plan->getFillable())),
-                    'amount' => $amount,
-                    'payment_method' => PaymentMethodEnum::ACTIVATION_CODE->value,
-                ]);
-
-                // 6. إنشاء الفاتورة
-                $subscription->invoices()->create([
-                    'tenant_id' => $tenant->id,
-                    'subtotal' => $amount,
-                    'tax_amount' => 0,
-                    'discount_percentage' => 0,
-                    'total' => $amount,
-                    'status' => InvoiceStatusEnum::PAID->value,
-                    'paid_at' => now(),
+                    'activation_method' => $registerDTO->activation_code ? ActivationMethodEnum::ACTIVATION_CODE->value : 'manual',
+                    'activation_code' => $registerDTO->activation_code,
+                    'invoice_status' => InvoiceStatusEnum::PAID->value,
                     'payment_method' => $registerDTO->activation_code ? PaymentMethodEnum::ACTIVATION_CODE->value : PaymentMethodEnum::CARD->value,
                 ]);
 

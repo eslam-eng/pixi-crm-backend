@@ -3,15 +3,24 @@
 namespace App\Models\Central;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Model;
 
-class FeatureSubscription extends Pivot
+class FeatureSubscription extends Model
 {
     protected $table = 'feature_subscriptions';
 
     protected $fillable = [
-        'subscription_id', 'feature_id', 'value',
-        'usage', 'slug', 'name', 'group',
+        'subscription_id',
+        'feature_id',
+        'value',
+        'usage',
+        'slug',
+        'name',
+        'group',
+    ];
+
+    protected $casts = [
+        'name' => 'array',
     ];
 
     public function subscription(): BelongsTo

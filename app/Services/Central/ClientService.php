@@ -3,6 +3,8 @@
 namespace App\Services\Central;
 
 use App\DTO\Central\ClientDTO;
+use App\DTO\Central\UserDTO;
+use App\Enums\Landlord\ActivationMethodEnum;
 use App\Notifications\Central\SetupPasswordNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -15,7 +17,9 @@ use App\Enums\Landlord\SubscriptionStatusEnum;
 use App\Models\Central\Filters\TenantFilters;
 use App\Models\Central\Subscription;
 use App\Models\Central\Tenant;
+use App\Models\Central\TenantUser;
 use App\Services\Central\BaseService;
+use App\Services\Central\SubscriptionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +28,8 @@ class ClientService extends BaseService
 {
     public function __construct(
         public UserService $userService,
-        public PlanService $planService
+        public PlanService $planService,
+        public SubscriptionService $subscriptionService
     ) {
     }
 
@@ -53,79 +58,55 @@ class ClientService extends BaseService
 
     public function create(ClientDTO $clientDTO)
     {
-        // 1. إنشاء المستخدم
-        $user = $this->userService->getQuery()->create([
-            'first_name' => $clientDTO->first_name,
-            'last_name' => $clientDTO->last_name,
-            'company_name' => $clientDTO->company_name,
-            'email' => $clientDTO->email,
-            'password' => '123456',
-            'job_title' => $clientDTO->job_title,
-            'website' => $clientDTO->website,
-            'city_id' => $clientDTO->city_id,
-            'company_size' => $clientDTO->company_size,
-            'industry_id' => $clientDTO->industry_id,
-            'postal_code' => $clientDTO->postal_code,
-            'address' => $clientDTO->address,
-            'phone' => $clientDTO->phone,
-        ]);
+        return DB::connection('landlord')->transaction(function () use ($clientDTO) {
+            // 1. إنشاء المستخدم
+            $user = $this->userService->create(UserDTO::fromArray([
+                'first_name' => $clientDTO->first_name,
+                'last_name' => $clientDTO->last_name,
+                'company_name' => $clientDTO->company_name,
+                'email' => $clientDTO->email,
+                'password' => '123456',
+                'job_title' => $clientDTO->job_title,
+                'website' => $clientDTO->website,
+                'city_id' => $clientDTO->city_id,
+                'company_size' => $clientDTO->company_size,
+                'industry_id' => $clientDTO->industry_id,
+                'postal_code' => $clientDTO->postal_code,
+                'address' => $clientDTO->address,
+                'phone' => $clientDTO->phone,
+                'domain' => $clientDTO->domain,
+            ]));
 
-        // 2. إنشاء المستأجر (Tenant)
-        $tenant = $user->tenant()->create([
-            'id' => $clientDTO->domain,
-            'name' => $clientDTO->domain,
-            'status' => $clientDTO->status ?? TenantStatusEnum::ACTIVE->value,
-            'tenancy_db_name' => $clientDTO->domain,
-            'tenancy_create_database' => false,
-        ]);
-
-        // 3. إنشاء النطاق (Domain)
-        $tenant->createDomain([
-            'domain' => $clientDTO->domain,
-        ]);
-
-        return DB::transaction(function () use ($clientDTO, $tenant, $user) {
-            // 4. حساب السعر والمدة
-            $plan = $this->planService->findById($clientDTO->plan_id);
-
-            $amount = match ($clientDTO->period_type) {
-                SubscriptionBillingCycleEnum::MONTHLY->value => $plan->monthly_price,
-                SubscriptionBillingCycleEnum::ANNUAL->value => $plan->annual_price,
-                SubscriptionBillingCycleEnum::LIFETIME->value => $plan->lifetime_price,
-                default => 0,
-            };
-
-            $subscriptionStart = Carbon::parse($clientDTO->subscription_start);
-            $ends_at = match ($clientDTO->period_type) {
-                SubscriptionBillingCycleEnum::MONTHLY->value => $subscriptionStart->copy()->addMonth(),
-                SubscriptionBillingCycleEnum::ANNUAL->value => $subscriptionStart->copy()->addYear(),
-                default => null,
-            };
-
-            $finalEndsAt = $ends_at ? $ends_at->addSecond()->format('Y-m-d H:i:s') : null;
-            // 5. إنشاء الاشتراك
-            $subscription = Subscription::create([
-                'tenant_id' => $tenant->id,
-                'plan_id' => $plan->id,
-                'status' => SubscriptionStatusEnum::ACTIVE->value,
-                'starts_at' => $subscriptionStart,
-                'ends_at' => $finalEndsAt,
-                'trial_ends_at' => $plan->trial_days ? $subscriptionStart->copy()->addDays($plan->trial_days) : null,
-                'billing_cycle' => $clientDTO->period_type,
-                'auto_renew' => ActivationStatusEnum::INACTIVE->value,
-                'plan_snapshot' => json_encode($plan->only($plan->getFillable())),
-                'amount' => $amount,
+            // 2. إنشاء المستأجر (Tenant)
+            $tenant = $user->tenant()->create([
+                'id' => $clientDTO->domain,
+                'name' => $clientDTO->domain,
+                'status' => $clientDTO->status ?? TenantStatusEnum::ACTIVE->value,
+                'tenancy_db_name' => $clientDTO->domain,
+                'tenancy_create_database' => false,
             ]);
 
-            // 6. إنشاء الفاتورة
-            $subscription->invoices()->create([
+            // 3. إنشاء النطاق (Domain)
+            $tenant->createDomain([
+                'domain' => $clientDTO->domain,
+            ]);
+
+            // 4. إضافة المستخدم إلى جدول tenant_users
+            TenantUser::create([
                 'tenant_id' => $tenant->id,
-                'subtotal' => $amount,
-                'tax_amount' => 0,
-                'discount_percentage' => 0,
-                'total' => $amount,
-                'status' => InvoiceStatusEnum::PAID->value,
-                'paid_at' => now(),
+                'email' => $user->email,
+                'name' => $user->first_name . ' ' . $user->last_name,
+            ]);
+
+            // 4. إنشاء الاشتراك والفاتورة والمميزات عبر SubscriptionService
+            $this->subscriptionService->store([
+                'tenant_id' => $tenant->id,
+                'plan_id' => $clientDTO->plan_id,
+                'billing_cycle' => $clientDTO->period_type,
+                'starts_at' => $clientDTO->subscription_start,
+                'auto_renew' => ActivationStatusEnum::INACTIVE->value,
+                'activation_method' => ActivationMethodEnum::MANUAL_ACTIVATION->value,
+                'invoice_status' => InvoiceStatusEnum::PAID->value,
                 'payment_method' => PaymentMethodEnum::ACTIVATION_CODE->value,
             ]);
 

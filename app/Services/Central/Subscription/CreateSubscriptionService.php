@@ -7,13 +7,19 @@ use App\Exceptions\TrialException;
 use App\Models\Central\Invoice;
 use App\Models\Central\Plan;
 use App\Models\Central\Subscription;
+use App\DTO\Central\FeatureSubscriptionDTO;
+use App\Services\Central\FeatureSubscriptionService;
 use App\Services\Central\Invoice\InvoiceService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class CreateSubscriptionService
 {
-    public function __construct(private readonly InvoiceService $invoiceService) {}
+    public function __construct(
+        private readonly InvoiceService $invoiceService,
+        private readonly FeatureSubscriptionService $featureSubscriptionService
+    ) {
+    }
 
     protected function getFilterClass(): ?string
     {
@@ -55,8 +61,8 @@ class CreateSubscriptionService
     {
         $subscriptionData = $subscriptionDTO->toArray();
 
-        if (! empty($subscriptionPlanDTO->plan_snapshot)) {
-            $subscriptionData['plan_snapshot'] = json_encode($subscriptionPlanDTO->plan_snapshot);
+        if (!empty($subscriptionDTO->plan_snapshot)) {
+            $subscriptionData['plan_snapshot'] = json_encode($subscriptionDTO->plan_snapshot);
         } else {
             $planSnapshot = $plan->only($plan->getFillable());
             $planSnapshot['name'] = $plan->getTranslations('name');
@@ -69,21 +75,19 @@ class CreateSubscriptionService
     protected function createFeatureSubscriptions(Plan $plan, Subscription $subscription): void
     {
         $featureSubscriptions = $plan->features->map(function ($feature) use ($subscription) {
-            return [
-                'subscription_id' => $subscription->id,
-                'feature_id' => $feature->id,
-                'slug' => $feature->slug,
-                'name' => json_encode($feature->getTranslations('name')),
-                'group' => $feature->group,
-                'value' => $feature->pivot->value,
-                'usage' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            return new FeatureSubscriptionDTO(
+                subscription_id: $subscription->id,
+                feature_id: $feature->id,
+                slug: $feature->slug,
+                name: $feature->getTranslations('name'),
+                group: $feature->group,
+                value: $feature->pivot->value,
+                usage: 0,
+            );
         })->toArray();
 
-        if (! empty($featureSubscriptions)) {
-            DB::connection('landlord')->table('feature_subscriptions')->insert($featureSubscriptions);
+        if (!empty($featureSubscriptions)) {
+            $this->featureSubscriptionService->createMany($featureSubscriptions);
         }
     }
 }

@@ -28,7 +28,8 @@ class UserDTO extends BaseDTO
         public ?string $subscription_start = null,
         public ?string $activation_code = null,
         public ?bool $create_free_trial = false,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): static
     {
@@ -37,6 +38,13 @@ class UserDTO extends BaseDTO
             last_name: Arr::get($data, 'last_name'),
             company_name: Arr::get($data, 'company_name'),
             email: Arr::get($data, 'email'),
+            job_title: Arr::get($data, 'job_title'),
+            website: Arr::get($data, 'website'),
+            city_id: Arr::get($data, 'city_id'),
+            company_size: Arr::get($data, 'company_size'),
+            industry_id: Arr::get($data, 'industry_id'),
+            postal_code: Arr::get($data, 'postal_code'),
+            address: Arr::get($data, 'address'),
             password: Arr::get($data, 'password'),
             phone: Arr::get($data, 'phone'),
             domain: Arr::get($data, 'domain'),
@@ -80,7 +88,14 @@ class UserDTO extends BaseDTO
             'last_name' => $this->last_name,
             'company_name' => $this->company_name,
             'email' => $this->email,
-            'password' => bcrypt($this->password),
+            'password' => $this->password ? bcrypt($this->password) : null,
+            'job_title' => $this->job_title,
+            'website' => $this->website,
+            'city_id' => $this->city_id,
+            'company_size' => $this->company_size,
+            'industry_id' => $this->industry_id,
+            'postal_code' => $this->postal_code,
+            'address' => $this->address,
             'phone' => $this->phone,
             'domain' => $this->domain,
             'plan_id' => $this->plan_id,
