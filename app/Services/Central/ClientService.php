@@ -65,7 +65,7 @@ class ClientService extends BaseService
                 'last_name' => $clientDTO->last_name,
                 'company_name' => $clientDTO->company_name,
                 'email' => $clientDTO->email,
-                'password' => '123456',
+                'password' => $clientDTO->password ?? '123456',
                 'job_title' => $clientDTO->job_title,
                 'website' => $clientDTO->website,
                 'city_id' => $clientDTO->city_id,
@@ -98,7 +98,28 @@ class ClientService extends BaseService
                 'name' => $user->first_name . ' ' . $user->last_name,
             ]);
 
-            // 4. إنشاء الاشتراك والفاتورة والمميزات عبر SubscriptionService
+            // 5. إنشاء مستخدم الأدمن في قاعدة بيانات المستأجر
+            $tenant->run(function () use ($clientDTO, $user) {
+                $tenantUser = \App\Models\Tenant\User::create([
+                    'first_name' => $clientDTO->first_name,
+                    'last_name' => $clientDTO->last_name,
+                    'email' => $clientDTO->email,
+                    'password' => bcrypt($clientDTO->password ?? "123456"),
+                    'phone' => $clientDTO->phone,
+                    'job_title' => $clientDTO->job_title,
+                    'landlord_user_id' => $user->id,
+                    'is_active' => true,
+                ]);
+
+                // إعطاء صلاحية الأدمن
+                try {
+                    $tenantUser->assignRole('admin');
+                } catch (\Throwable $e) {
+                    // Role might not exist if seeding hasn't run
+                }
+            });
+
+            // 6. إنشاء الاشتراك والفاتورة والمميزات عبر SubscriptionService
             $this->subscriptionService->store([
                 'tenant_id' => $tenant->id,
                 'plan_id' => $clientDTO->plan_id,
