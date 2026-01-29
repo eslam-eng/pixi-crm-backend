@@ -7,6 +7,7 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\PlanRequest;
 use App\Http\Resources\Central\PlanResource;
+use App\Http\Resources\Central\PlanShowResource;
 use App\Services\Central\PlanService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Http\Request;
@@ -75,7 +76,7 @@ class PlanController extends Controller
             $withRelations = ['limitFeatures', 'addonFeatures'];
             // dd($withRelations, $id);
             $plan = $this->planService->findById(id: $id, withRelation: $withRelations);
-            return ApiResponse::success(data: PlanResource::make($plan));
+            return ApiResponse::success(data: PlanShowResource::make($plan));
         } catch (NotFoundHttpException $e) {
             return ApiResponse::notFound(message: $e->getMessage());
         } catch (\Exception $e) {
