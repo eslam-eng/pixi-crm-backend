@@ -82,8 +82,9 @@ class ClientService extends BaseService
                 'id' => $clientDTO->domain,
                 'name' => $clientDTO->domain,
                 'status' => $clientDTO->status ?? TenantStatusEnum::ACTIVE->value,
-                'tenancy_db_name' => $clientDTO->domain,
-                'tenancy_create_database' => false,
+                'tenancy_db_name' => 'crm_' . str_replace('.', '_', $clientDTO->domain) . '_' . mt_rand(1000, 9999),
+                'tenancy_create_database' => true,
+                'zapier_api_key' => 'zapier_' . Str::random(40),
             ]);
 
             // 3. إنشاء النطاق (Domain)

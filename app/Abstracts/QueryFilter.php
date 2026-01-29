@@ -32,16 +32,16 @@ abstract class QueryFilter
         $this->builder = $builder;
 
         foreach ($this->filters() as $name => $value) {
-            if (! method_exists($this, $name)) {
+            if (!method_exists($this, $name)) {
                 continue;
             }
 
             if (is_array($value)) {
                 $this->$name($value);
             } else {
-                if (strlen($value)) {
+                if ($value !== '' && $value !== null) {
                     $this->$name($value);
-                }else{
+                } else {
                     $this->$name();
                 }
             }

@@ -23,15 +23,14 @@ class PlanController extends Controller
     public function index(Request $request)
     {
         $filters = array_filter([
-            'is_active' => $request->query('is_active', true),
-            // 'is_trial' => false,
+            // 'is_active' => $request->query('is_active', true),
+            'is_trial' => false,
         ], fn($v) => !is_null($v));
 
         $withRelations = [
             'limitFeatures',
             'addonFeatures',
         ];
-
         $plans = $this->planService->paginate(filters: $filters, withRelation: $withRelations);
         $data = PlanResource::collection($plans)->response()->getData(true);
         return ApiResponse::success(data: $data);

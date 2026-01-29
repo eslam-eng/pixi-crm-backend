@@ -57,8 +57,8 @@ class RegisterService
             $tenant = $user->tenant()->create([
                 'id' => $registerDTO->domain,
                 'name' => $registerDTO->domain,
-                'tenancy_db_name' => $registerDTO->domain,
-                'tenancy_create_database' => false,
+                'tenancy_db_name' => 'crm_' . str_replace('.', '_', $registerDTO->domain) . '_' . mt_rand(1000, 9999),
+                'tenancy_create_database' => true,
                 'zapier_api_key' => 'zapier_' . Str::random(40),
             ]);
 
