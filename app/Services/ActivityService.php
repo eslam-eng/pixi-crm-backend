@@ -11,12 +11,13 @@ class ActivityService
      */
     public function getUserRecentActivities(int $userId, int $limit = 5)
     {
-        return Activity::where('causer_id', null)
+        $result = Activity::where('causer_id', null)
             ->orWhere('causer_id', $userId)
-            ->with(['subject','causer'])
+            ->with(['subject', 'causer'])
             ->latest()
             ->limit($limit)
             ->get();
+        return $result;
     }
 
 

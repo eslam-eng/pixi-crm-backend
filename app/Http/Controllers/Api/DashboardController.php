@@ -83,7 +83,7 @@ class DashboardController extends Controller
         $activities = $this->dashboardService->getUserRecentActivities(
             $request->user_id ?? user_id(),
             5
-        );
+        ); 
         $activities = ActivityResource::collection($activities);
         return apiResponse(data: $activities);
     }

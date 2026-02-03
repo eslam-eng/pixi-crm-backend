@@ -46,7 +46,7 @@ class WelcomeNewUserNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'message' => 'A new user has been created: ' . $notifiable->name,
+            'message' => 'A new items: ' . $notifiable->name,
             'user_id' => $notifiable->id,
             'user_name' => $notifiable->name,
             'user_email' => $notifiable->email,

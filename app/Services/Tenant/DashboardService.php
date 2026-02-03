@@ -83,6 +83,9 @@ class DashboardService
 
     public function getSaleFunnel(array $filters)
     {
+        $qualifyingPrecentage = 0;
+
+        $wonPrecentage = 0;
         $settings = app(ChartsSettings::class);
         $third_phase_type_id = $settings->third_phase_type;
         $opportunities = $this->leadService->index($filters, ['tasks.taskType']);
@@ -100,6 +103,8 @@ class DashboardService
             $qualifyingPrecentage = $qualifyingOpportunities->count();
             $thirdPhase = $thirdPhase->count();
             $wonPrecentage = $wonOpportunities->count();
+        } else {
+            $thirdPhase = 0;
         }
 
         return [

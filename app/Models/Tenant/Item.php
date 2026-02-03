@@ -11,14 +11,14 @@ class Item extends Model implements HasMedia
 {
     use Filterable, HasTenantMedia;
     protected $fillable =
-    [
-        'name',
-        'description',
-        'price',
-        'category_id',
-        'itemable_type',
-        'itemable_id',
-    ];
+        [
+            'name',
+            'description',
+            'price',
+            'category_id',
+            'itemable_type',
+            'itemable_id',
+        ];
 
     protected $casts = [
         'price' => 'float',

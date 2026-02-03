@@ -19,6 +19,7 @@ class Admin extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\Landlord\UserFactory> */
     use Filterable, HasApiTokens, HasFactory, HasRoles, InteractsWithMedia, Notifiable;
+    protected $connection = 'landlord';
 
     /**
      * The attributes that are mass assignable.
