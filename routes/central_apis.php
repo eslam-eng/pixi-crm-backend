@@ -111,6 +111,7 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::apiResource('industries', IndustryController::class);
 
             Route::post('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew']);
+            Route::get('subscriptions/statics', [SubscriptionController::class, 'statics']);
             Route::apiResource('subscriptions', SubscriptionController::class);
 
         });

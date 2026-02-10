@@ -16,6 +16,8 @@ class Plan extends Model
 {
     use Filterable, HasFactory, HasTranslatedFallback, HasTranslations, SoftDeletes;
 
+    protected $connection = 'landlord';
+
     protected $fillable = [
         'name',
         'description',

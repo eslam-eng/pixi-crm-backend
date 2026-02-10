@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Central\Subscription;
 
-use App\Enums\Landlord\ActivationCodeStatusEnum;
 use App\Enums\Landlord\ActivationMethodEnum;
 use App\Enums\Landlord\SubscriptionBillingCycleEnum;
 use App\Enums\Landlord\SubscriptionPaymentStatusEnum;
 use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Models\Central\Plan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +26,10 @@ class StoreSubscriptionRequest extends FormRequest
             'activation_code' => ['required_if:activation_method,' . ActivationMethodEnum::ACTIVATION_CODE->value, 'nullable', 'string'],
             'source_id' => ['nullable', 'exists:payout_source_collections,id'], // assuming sources table
             'billing_cycle' => ['required', Rule::enum(SubscriptionBillingCycleEnum::class)],
-            'plan_id' => ['required', 'exists:plans,id'],
+            'plan_id' => [
+                'required',
+                Rule::exists(Plan::class, 'id')->whereNull('deleted_at')
+            ],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'payment_status' => ['required', Rule::enum(SubscriptionPaymentStatusEnum::class)],
@@ -40,7 +43,7 @@ class StoreSubscriptionRequest extends FormRequest
             ],
             'auto_renew' => ['boolean'], // 0|1
             'notes' => ['nullable', 'string', 'max:2000'],
-            'file' => ['nullable', 'string'],
+            'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,txt,png,jpg,jpeg', 'max:10240'],
         ];
     }
 }

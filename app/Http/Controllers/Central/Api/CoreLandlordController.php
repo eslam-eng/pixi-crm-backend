@@ -41,6 +41,7 @@ class CoreLandlordController extends Controller
     {
         $filters = $request->all();
         $filters['is_active'] = true;
+        $filters['is_trial'] = false;
 
         $plans = $this->planService->activePlans(filters: $filters);
 

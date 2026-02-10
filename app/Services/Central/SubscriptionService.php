@@ -192,4 +192,99 @@ class SubscriptionService extends BaseService
 
         return $count;
     }
+
+    public function statics()
+    {
+        $now = now();
+        $startOfMonth = $now->copy()->startOfMonth();
+        $startOfLastMonth = $now->copy()->subMonth()->startOfMonth();
+        $endOfLastMonth = $now->copy()->subMonth()->endOfMonth();
+
+        // Total Subscriptions
+        $totalSubscriptions = Subscription::count();
+        $lastMonthTotalSubscriptions = Subscription::where('created_at', '<', $startOfMonth)->count();
+        $totalSubscriptionsGrowth = $lastMonthTotalSubscriptions > 0
+            ? (($totalSubscriptions - $lastMonthTotalSubscriptions) / $lastMonthTotalSubscriptions) * 100
+            : ($totalSubscriptions > 0 ? 100 : 0);
+
+        // Active Subscriptions
+        $activeSubscriptions = Subscription::where('status', SubscriptionStatusEnum::ACTIVE->value)->count();
+        $lastMonthActiveSubscriptions = Subscription::where('status', SubscriptionStatusEnum::ACTIVE->value)
+            ->where('created_at', '<', $startOfMonth)
+            ->count();
+        $activeSubscriptionsGrowth = $lastMonthActiveSubscriptions > 0
+            ? (($activeSubscriptions - $lastMonthActiveSubscriptions) / $lastMonthActiveSubscriptions) * 100
+            : ($activeSubscriptions > 0 ? 100 : 0);
+
+        // Monthly Revenue (MRR)
+        $monthlyRevenue = Subscription::where('status', SubscriptionStatusEnum::ACTIVE->value)
+            ->get()
+            ->sum(function ($sub) {
+                return match ($sub->billing_cycle) {
+                    SubscriptionBillingCycleEnum::MONTHLY => (float) $sub->amount,
+                    SubscriptionBillingCycleEnum::ANNUAL => (float) $sub->amount / 12,
+                    SubscriptionBillingCycleEnum::LIFETIME => (float) $sub->amount / 36, // Assumption
+                    default => 0,
+                };
+            });
+
+        // Simplified Last Month MRR (checking subscriptions that existed at the end of last month)
+        $lastMonthMonthlyRevenue = Subscription::where('created_at', '<', $startOfMonth)
+            ->where(function ($q) use ($startOfMonth) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', $startOfMonth);
+            })
+            ->get()
+            ->sum(function ($sub) {
+                return match ($sub->billing_cycle) {
+                    SubscriptionBillingCycleEnum::MONTHLY => (float) $sub->amount,
+                    SubscriptionBillingCycleEnum::ANNUAL => (float) $sub->amount / 12,
+                    SubscriptionBillingCycleEnum::LIFETIME => (float) $sub->amount / 36,
+                    default => 0,
+                };
+            });
+
+        $monthlyRevenueGrowth = $lastMonthMonthlyRevenue > 0
+            ? (($monthlyRevenue - $lastMonthMonthlyRevenue) / $lastMonthMonthlyRevenue) * 100
+            : ($monthlyRevenue > 0 ? 100 : 0);
+
+        // Renewal Rate (Simplified: active / (active + expired) in the last 30 days)
+        // Or strictly: (Number of renewals) / (Number of expected renewals)
+        // For UI purposes, let's use a simpler heuristic if we don't have a renewal log.
+        // Let's assume renewal rate is related to subscriptions that were due to end and stayed active.
+
+        $dueToRenew = Subscription::whereBetween('ends_at', [$now->copy()->subDays(30), $now])->count();
+        $renewed = Subscription::whereBetween('ends_at', [$now->copy()->subDays(30), $now])
+            ->where('status', SubscriptionStatusEnum::ACTIVE->value)
+            ->count();
+
+        $renewalRate = $dueToRenew > 0 ? ($renewed / $dueToRenew) * 100 : 0;
+
+        // Last 30-60 days for comparison
+        $dueToRenewLast = Subscription::whereBetween('ends_at', [$now->copy()->subDays(60), $now->copy()->subDays(30)])->count();
+        $renewedLast = Subscription::whereBetween('ends_at', [$now->copy()->subDays(60), $now->copy()->subDays(30)])
+            ->where('status', SubscriptionStatusEnum::ACTIVE->value)
+            ->count();
+        $renewalRateLast = $dueToRenewLast > 0 ? ($renewedLast / $dueToRenewLast) * 100 : 0;
+
+        $renewalRateGrowth = $renewalRate - $renewalRateLast; // Point change instead of percentage change for rates is common
+
+        return [
+            'total_subscriptions' => [
+                'value' => $totalSubscriptions,
+                'growth' => round($totalSubscriptionsGrowth, 2),
+            ],
+            'active_subscriptions' => [
+                'value' => $activeSubscriptions,
+                'growth' => round($activeSubscriptionsGrowth, 2),
+            ],
+            'monthly_revenue' => [
+                'value' => round($monthlyRevenue, 2),
+                'growth' => round($monthlyRevenueGrowth, 2),
+            ],
+            'renewal_rate' => [
+                'value' => round($renewalRate, 2),
+                'growth' => round($renewalRateGrowth, 2),
+            ]
+        ];
+    }
 }

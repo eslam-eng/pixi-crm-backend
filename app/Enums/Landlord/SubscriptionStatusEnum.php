@@ -23,6 +23,7 @@ enum SubscriptionStatusEnum: string
         return match ($this) {
             self::PENDING => __('app.subscription.pending'),
             self::ACTIVE => __('app.subscription.active'),
+            self::TRIAL => __('app.subscription.trial'),
             self::CANCELED => __('app.subscription.canceled'),
             self::EXPIRED => __('app.subscription.expired'),
             self::SUSPENDED => __('app.subscription.suspended'),
@@ -34,6 +35,7 @@ enum SubscriptionStatusEnum: string
     {
         return [
             self::PENDING->value,
+            self::TRIAL->value,
             self::CANCELED->value,
             self::EXPIRED->value,
             self::PAST_DUE->value,
