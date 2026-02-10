@@ -14,6 +14,12 @@ return array(
   'hi' => 'مرحبا',
   'import instructions' => 'التعليمات',
   'online' => 'أونلاين',
+  'draft' => 'مسودة',
+  'pending' => 'قيد الانتظار',
+  'paid' => 'دفع',
+  'failed' => 'فشل',
+  'refunded' => 'مسترجع',
+  'cancelled' => 'ملغي',
   'support_and_docs' => 'الدعم و المقالات',
   'there_is_an_error_in_change_awbs_status' => 'مشكلة',
   'translation' => 'الترجمة',
@@ -104,5 +110,9 @@ return array(
       'trial' => 'تجريبي',
       'expired' => 'منتهي',
     ],
+  ],
+  'payment_method' => [
+    'activation_code' => 'كود التفعيل',
+    'card' => 'بطاقة ائتمان',
   ],
 );

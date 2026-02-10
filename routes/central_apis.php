@@ -9,6 +9,7 @@ use App\Http\Controllers\Central\Api\CurrencyController;
 use App\Http\Controllers\Central\Api\DiscountCodeController;
 use App\Http\Controllers\Central\Api\FeatureController;
 use App\Http\Controllers\Central\Api\CoreLandlordController;
+use App\Http\Controllers\Central\Api\InvoiceController;
 use App\Http\Controllers\Central\Api\LocaleController;
 use App\Http\Controllers\Central\Api\PayoutSourceController;
 use App\Http\Controllers\Central\Api\PlanController;
@@ -16,10 +17,7 @@ use App\Http\Controllers\Central\Api\RoleController as RoleCentralController;
 use App\Http\Controllers\Central\Api\SourceController;
 use App\Http\Controllers\Central\Api\TimeZoneController;
 use App\Http\Controllers\Central\Api\Auth\RegisterController;
-use App\Http\Controllers\Central\Api\AuthController as centralAuthController;
 use App\Http\Controllers\Central\Api\Auth\PasswordSetupController;
-use App\Http\Controllers\Central\Api\PaymentController;
-use App\Http\Controllers\Central\Api\SettingController;
 use App\Http\Controllers\Central\Api\SubscriptionController;
 use App\Http\Controllers\Central\Api\TenantLookupController;
 use App\Http\Controllers\Central\Api\ClientController;
@@ -113,6 +111,9 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::post('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew']);
             Route::get('subscriptions/statics', [SubscriptionController::class, 'statics']);
             Route::apiResource('subscriptions', SubscriptionController::class);
+
+            Route::get('invoices/statics', [InvoiceController::class, 'statics']);
+            Route::apiResource('invoices', InvoiceController::class);
 
         });
         Route::group(['prefix' => 'core'], function () {

@@ -19,6 +19,12 @@ return array(
   'add_receiver' => 'Add receiver',
   'add_status' => 'Add status',
   'add_user' => 'Add user',
+  'draft' => 'Draft',
+  'pending' => 'Pending',
+  'paid' => 'Paid',
+  'failed' => 'Failed',
+  'refunded' => 'Refunded',
+  'cancelled' => 'Cancelled',
   'additional_kg_price' => 'Additional kg price',
   'address' => 'Address',
   'address1' => 'Address1',
@@ -425,5 +431,9 @@ return array(
       'trial' => 'Trial',
       'expired' => 'Expired',
     ],
+  ],
+  'payment_method' => [
+    'activation_code' => 'Activation Code',
+    'card' => 'Credit Card',
   ],
 );

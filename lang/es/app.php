@@ -17,6 +17,12 @@ return array(
   'add_receiver' => 'Add receiver',
   'add_status' => 'Add status',
   'add_user' => 'Add user',
+  'draft' => 'Borrador',
+  'pending' => 'Pendiente',
+  'paid' => 'Pagado',
+  'failed' => 'Fallido',
+  'refunded' => 'Reembolsado',
+  'cancelled' => 'Cancelado',
   'additional_kg_price' => 'Additional kg price',
   'address' => 'Address',
   'address1' => 'Address1',
@@ -411,5 +417,9 @@ return array(
       'trial' => 'Prueba',
       'expired' => 'Expirado',
     ],
+  ],
+  'payment_method' => [
+    'activation_code' => 'Código de activación',
+    'card' => 'Tarjeta de crédito',
   ],
 );

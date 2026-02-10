@@ -212,4 +212,52 @@ class InvoiceService extends BaseService
 
         return $this->create($invoiceDTO);
     }
+    public function statics()
+    {
+        $now = now();
+        $startOfMonth = $now->copy()->startOfMonth();
+
+        // Total Transactions
+        $totalTransactions = Invoice::count();
+        $lastMonthTotalTransactions = Invoice::where('created_at', '<', $startOfMonth)->count();
+        $totalTransactionsGrowth = $lastMonthTotalTransactions > 0
+            ? (($totalTransactions - $lastMonthTotalTransactions) / $lastMonthTotalTransactions) * 100
+            : ($totalTransactions > 0 ? 100 : 0);
+
+        // Successful Payments
+        $successfulPayments = Invoice::where('status', InvoiceStatusEnum::PAID->value)->count();
+        $successRate = $totalTransactions > 0 ? ($successfulPayments / $totalTransactions) * 100 : 0;
+
+        // Total Revenue
+        $totalRevenue = Invoice::where('status', InvoiceStatusEnum::PAID->value)->sum('total');
+        $lastMonthTotalRevenue = Invoice::where('status', InvoiceStatusEnum::PAID->value)
+            ->where('created_at', '<', $startOfMonth)
+            ->sum('total');
+        $revenueGrowth = $lastMonthTotalRevenue > 0
+            ? (($totalRevenue - $lastMonthTotalRevenue) / $lastMonthTotalRevenue) * 100
+            : ($totalRevenue > 0 ? 100 : 0);
+
+        // Pending/Failed Payments
+        $pendingPayments = Invoice::where('status', InvoiceStatusEnum::PENDING->value)->count();
+        $failedPayments = Invoice::where('status', InvoiceStatusEnum::FAILED->value)->count();
+
+        return [
+            'total_transactions' => [
+                'value' => $totalTransactions,
+                'growth' => round($totalTransactionsGrowth, 2),
+            ],
+            'successful_payments' => [
+                'value' => $successfulPayments,
+                'rate' => round($successRate, 2),
+            ],
+            'total_revenue' => [
+                'value' => round((float) $totalRevenue, 2),
+                'growth' => round($revenueGrowth, 2),
+            ],
+            'pending_payments' => [
+                'value' => $pendingPayments,
+                'failed_count' => $failedPayments,
+            ]
+        ];
+    }
 }
