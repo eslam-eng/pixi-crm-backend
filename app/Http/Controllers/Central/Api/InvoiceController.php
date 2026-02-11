@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Central\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Central\InvoiceResource;
+use App\Http\Resources\Central\InvoiceShowResource;
 use App\Services\Central\Invoice\InvoiceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,11 +49,11 @@ class InvoiceController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $invoice = $this->invoiceService->findById($id, ['tenant', 'subscription', 'items']);
+        $invoice = $this->invoiceService->findById($id, ['tenant.owner', 'subscription', 'items']);
 
         return apiResponse(
             message: 'Invoice retrieved successfully',
-            data: new InvoiceResource($invoice)
+            data: new InvoiceShowResource($invoice)
         );
     }
 }

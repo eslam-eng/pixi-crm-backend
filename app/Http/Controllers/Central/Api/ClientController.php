@@ -9,19 +9,19 @@ use App\Enums\Landlord\TenantStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Central\ClientRequest;
 use App\Http\Resources\Central\ClientResource;
-use App\Models\Central\ActivationCode;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Services\Central\ClientService;
 use App\Services\Central\SubscriptionService;
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
     public function __construct(
-        private readonly ClientService $clientServie,
+        private readonly ClientService $clientService,
         private readonly SubscriptionService $subscriptionService,
         private readonly \App\Services\Central\ActivationCode\ActivationCodeService $activationCodeService
     ) {
@@ -31,7 +31,7 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         try {
-            $client = $this->clientServie->paginate($request->all());
+            $client = $this->clientService->paginate($request->all());
             $data = ClientResource::collection($client)->response()->getData(true);
             return ApiResponse($data, 'Clients retrieved successfully');
         } catch (\Exception $e) {
@@ -43,7 +43,7 @@ class ClientController extends Controller
     {
         try {
             $clientDTO = ClientDTO::fromRequest($request);
-            $this->clientServie->create($clientDTO);
+            $this->clientService->create($clientDTO);
             return ApiResponse(message: 'Tenant created successfully');
         } catch (\Throwable $e) {
             return ApiResponse(
@@ -56,7 +56,7 @@ class ClientController extends Controller
     public function show(string $id)
     {
         try {
-            $tenant = $this->clientServie->findById($id);
+            $tenant = $this->clientService->findById($id);
             $data = new ClientResource($tenant);
             return ApiResponse(data: $data, message: 'Tenant retrieved successfully');
         } catch (Exception $e) {
@@ -200,6 +200,20 @@ class ClientController extends Controller
             }
 
             return ApiResponse(message: $message);
+        } catch (Exception $e) {
+            return ApiResponse(message: $e->getMessage(), code: 500);
+        }
+    }
+    public function sendPasswordReset(Request $request): JsonResponse
+    {
+        $request->validate([
+            'tenant_id' => 'required|exists:tenants,id',
+        ]);
+
+        try {
+            $this->clientService->sendPasswordReset($request->tenant_id);
+
+            return ApiResponse(message: 'Password reset link sent successfully.');
         } catch (Exception $e) {
             return ApiResponse(message: $e->getMessage(), code: 500);
         }

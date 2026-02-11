@@ -11,9 +11,9 @@ enum SubscriptionBillingCycleEnum: string
     public function getLabel(): string
     {
         return match ($this) {
-            self::MONTHLY => __('app.subscription.monthly'),
-            self::ANNUAL => __('app.subscription.yearly'),
-            self::LIFETIME => __('app.subscription.lifetime'),
+            self::MONTHLY => __('app.monthly'),
+            self::ANNUAL => __('app.yearly'),
+            self::LIFETIME => __('app.lifetime'),
         };
     }
 

@@ -85,6 +85,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::post('/add-trial-days', [ClientController::class, 'addTrialDays']);
                 Route::post('/renew-subscribtion', [ClientController::class, 'renewSubscription']);
                 Route::post('/change-status', [ClientController::class, 'changeStatus']);
+                Route::post('/send-password-reset', [ClientController::class, 'sendPasswordReset']);
             });
             Route::group(['prefix' => 'source-collections'], function () {
                 Route::get('/', [PayoutSourceController::class, 'index']);

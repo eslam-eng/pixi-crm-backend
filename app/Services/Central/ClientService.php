@@ -6,22 +6,18 @@ use App\DTO\Central\ClientDTO;
 use App\DTO\Central\UserDTO;
 use App\Enums\Landlord\ActivationMethodEnum;
 use App\Notifications\Central\SetupPasswordNotification;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Enums\Landlord\TenantStatusEnum;
 use App\Enums\Landlord\ActivationStatusEnum;
 use App\Enums\Landlord\InvoiceStatusEnum;
 use App\Enums\Landlord\PaymentMethodEnum;
-use App\Enums\Landlord\SubscriptionBillingCycleEnum;
-use App\Enums\Landlord\SubscriptionStatusEnum;
+use App\Notifications\Central\TenantResetPasswordNotification;
 use App\Models\Central\Filters\TenantFilters;
-use App\Models\Central\Subscription;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantUser;
 use App\Services\Central\BaseService;
 use App\Services\Central\SubscriptionService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ClientService extends BaseService
@@ -29,7 +25,8 @@ class ClientService extends BaseService
     public function __construct(
         public UserService $userService,
         public PlanService $planService,
-        public SubscriptionService $subscriptionService
+        public SubscriptionService $subscriptionService,
+        public PasswordResetTokenService $passwordResetTokenService
     ) {
     }
 
@@ -133,18 +130,27 @@ class ClientService extends BaseService
             ]);
 
             if ($clientDTO->send_password_setup_email) {
-                $token = Str::random(60);
-                DB::table('password_reset_tokens')->updateOrInsert(
-                    ['email' => $user->email],
-                    [
-                        'token' => $token,
-                        'created_at' => now(),
-                    ]
-                );
+                $token = $this->passwordResetTokenService->createToken($user->email);
                 $user->notify(new SetupPasswordNotification($token, $user->email));
             }
 
             return $tenant;
         });
     }
+
+    public function sendPasswordReset(string $tenantId): void
+    {
+        $tenant = $this->findById($tenantId, ['owner']);
+        $user = $tenant->owner;
+
+        if (!$user) {
+            throw new \Exception('Tenant owner not found.');
+        }
+
+        $token = $this->passwordResetTokenService->createToken($user->email);
+
+        $user->notify(new TenantResetPasswordNotification($token, $user->email));
+
+    }
+
 }
