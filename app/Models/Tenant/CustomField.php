@@ -12,22 +12,49 @@ use Illuminate\Database\Eloquent\Model;
 class CustomField extends Model
 {
     use Filterable;
-    protected $fillable=
-    [
-        'name',
-        'type',
-        'options',
-        'module',
-        'is_required',
-        'is_active',
-        'label',
-        'placeholder',
-        'help_text',
-    ];
+    protected $fillable =
+        [
+            'form_section_id',
+            'module',
+            'type',
+            'name',
+            'label',
+            'placeholder',
+            'help_text',
+            'options',
+            'validation_rules',
+            'is_required',
+            'is_active',
+            'ordering',
+        ];
 
     protected $casts = [
-        'options' => 'array', // Cast JSON to array
+        'label' => 'array',
+        'placeholder' => 'array',
+        'help_text' => 'array',
+        'options' => 'array',
+        'validation_rules' => 'array',
+        'is_required' => 'boolean',
+        'is_active' => 'boolean',
+        'ordering' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    public function formSection()
+    {
+        return $this->belongsTo(FormSection::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeByModule($query, string $module)
+    {
+        return $query->where('module', $module);
+    }
 
     // A custom field can belong to many clients
     public function contacts()

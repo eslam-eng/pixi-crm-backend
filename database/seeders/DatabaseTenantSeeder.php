@@ -41,6 +41,7 @@ class DatabaseTenantSeeder extends Seeder
             // ItemStatusSeeder::class,
             // ItemCategorySeeder::class,
             // AppSettingsSeeder::class,
+            \Database\Seeders\Tenant\FormSectionSeeder::class,
         ]);
     }
 }
