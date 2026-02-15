@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AttendanceController;
 
 use App\Http\Controllers\Api\Automation\AutomationConditionController;
+use App\Http\Controllers\Api\CustomFieldsController;
 use App\Http\Controllers\Api\Integrations\{
     FacebookController,
     IntegratedFormController,
@@ -394,6 +395,11 @@ Route::middleware([
         Route::post('templates/send', [TemplatesController::class, 'send']);
         Route::get('templates/get-contact-variables', [TemplatesController::class, 'getContactKeys']);
         Route::apiResource('templates', TemplatesController::class);
+
+        // custom_fields routes
+        Route::get('form-sections', [\App\Http\Controllers\Api\FormSectionsController::class, 'index']);
+        Route::get('custom-field-types', [\App\Http\Controllers\Api\CustomFieldTypesController::class, 'index']);
+        Route::apiResource('custom_fields', CustomFieldsController::class);
 
         // pipeline and stage routes
         Route::apiResource('pipelines', PipelineController::class);
