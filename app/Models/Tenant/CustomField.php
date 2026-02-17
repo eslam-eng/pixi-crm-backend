@@ -8,10 +8,11 @@ use App\Models\Tenant\Lead;
 use App\Models\Tenant\Task;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Translatable\HasTranslations;
 
 class CustomField extends Model
 {
-    use Filterable;
+    use Filterable,HasTranslations;
     protected $fillable =
         [
             'form_section_id',
@@ -40,6 +41,8 @@ class CustomField extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public $translatable = ['label', 'placeholder', 'help_text'];
 
     public function formSection()
     {

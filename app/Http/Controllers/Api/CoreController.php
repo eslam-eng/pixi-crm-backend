@@ -41,6 +41,9 @@ use App\Services\Tenant\Users\DepartmentService;
 use App\Services\Tenant\Users\PermissionService;
 use App\Services\Tenant\Users\RoleService;
 use App\Services\Tenant\Users\UserService;
+use App\Services\Tenant\CustomFieldsService;
+use App\Http\Resources\CustomFieldResource;
+use App\Http\Resources\Tenant\CustomField\CustomFieldListResource;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,10 +87,35 @@ class CoreController extends Controller
     {
         try {
             $templates = $this->templateService->queryGet()->get();
-            $data =TemplateDDLResource::collection($templates);
+            $data = TemplateDDLResource::collection($templates);
             return apiResponse(
                 $data,
                 'Templates retrieved successfully',
+                200
+            );
+        } catch (Exception $e) {
+            return apiResponse(
+                message: $e->getMessage(),
+                code: 500
+            );
+        }
+    }
+
+    /**
+     * Get custom fields by module
+     */
+    public function getCustomFields(CustomFieldsService $customFieldsService): JsonResponse
+    {
+        try {
+            $filters = array_filter($this->request->all(), function ($value) {
+                return ($value !== null && $value !== false && $value !== '');
+            });
+            $customFields = $customFieldsService->queryGet(filters: $filters, withRelations: ['formSection'])->get();
+            $data = CustomFieldListResource::collection($customFields);
+
+            return apiResponse(
+                $data,
+                'Custom fields retrieved successfully',
                 200
             );
         } catch (Exception $e) {
@@ -192,14 +220,14 @@ class CoreController extends Controller
         }
     }
 
-    public function getContacts(ContactService $contactService) : JsonResponse 
+    public function getContacts(ContactService $contactService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
         });
 
-        $contacts = $contactService->queryGet(filters: $filters,withRelations:['contactPhones'])
-            ->select('id', 'first_name','last_name','company_name','email')->get();
+        $contacts = $contactService->queryGet(filters: $filters, withRelations: ['contactPhones'])
+            ->select('id', 'first_name', 'last_name', 'company_name', 'email')->get();
 
         $data = ContactDDLResource::collection($contacts);
         return apiResponse(
@@ -209,7 +237,7 @@ class CoreController extends Controller
         );
     }
 
-    public function getTeams(TeamService $teamService) : JsonResponse 
+    public function getTeams(TeamService $teamService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -224,13 +252,13 @@ class CoreController extends Controller
         );
     }
 
-    public function getItems(ItemService $itemService) : JsonResponse 
+    public function getItems(ItemService $itemService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
         });
 
-        $teams = $itemService->queryGet(filters: $filters)->select('id', 'name','price')->get();
+        $teams = $itemService->queryGet(filters: $filters)->select('id', 'name', 'price')->get();
         $data = ItemDDLResource::collection($teams);
         return apiResponse(
             $data,
@@ -239,13 +267,13 @@ class CoreController extends Controller
         );
     }
 
-    public function getPriorities(PriorityService $priorityService) : JsonResponse 
+    public function getPriorities(PriorityService $priorityService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
         });
 
-        $priorities = $priorityService->queryGet(filters: $filters,withRelations:['color'])->get();
+        $priorities = $priorityService->queryGet(filters: $filters, withRelations: ['color'])->get();
         $data = PriorityResource::collection($priorities);
         return apiResponse(
             $data,
@@ -254,7 +282,7 @@ class CoreController extends Controller
         );
     }
 
-    public function getTaskTypes(TaskTypeService $taskTypeService) : JsonResponse 
+    public function getTaskTypes(TaskTypeService $taskTypeService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -269,7 +297,7 @@ class CoreController extends Controller
         );
     }
 
-    public function getItemCategories(ItemCategoryService $itemCategoryService) : JsonResponse 
+    public function getItemCategories(ItemCategoryService $itemCategoryService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -284,7 +312,7 @@ class CoreController extends Controller
         );
     }
 
-    public function getPipelines(PipelineService $pipelineService) : JsonResponse 
+    public function getPipelines(PipelineService $pipelineService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -298,8 +326,8 @@ class CoreController extends Controller
             200
         );
     }
-    
-    public function getStagesPipeline(StageService $stageService) : JsonResponse 
+
+    public function getStagesPipeline(StageService $stageService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -313,8 +341,8 @@ class CoreController extends Controller
             200
         );
     }
-    
-    public function getSources(ResourceService $stageService) : JsonResponse 
+
+    public function getSources(ResourceService $stageService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -328,8 +356,8 @@ class CoreController extends Controller
             200
         );
     }
-    
-    public function getRoles(RoleService $roleService) : JsonResponse 
+
+    public function getRoles(RoleService $roleService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -343,8 +371,8 @@ class CoreController extends Controller
             200
         );
     }
-    
-    public function getPermissions(PermissionService $permissionService) : JsonResponse 
+
+    public function getPermissions(PermissionService $permissionService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -358,8 +386,8 @@ class CoreController extends Controller
             200
         );
     }
-    
-    public function getDepartments(DepartmentService $departmentService) : JsonResponse 
+
+    public function getDepartments(DepartmentService $departmentService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
@@ -374,13 +402,13 @@ class CoreController extends Controller
         );
     }
 
-    public function getOpportunities(LeadService $opportunityService) : JsonResponse 
+    public function getOpportunities(LeadService $opportunityService): JsonResponse
     {
         $filters = array_filter($this->request->all(), function ($value) {
             return ($value !== null && $value !== false && $value !== '');
         });
 
-        $relations= ['items', 'contact:id,first_name,last_name'];
+        $relations = ['items', 'contact:id,first_name,last_name'];
         $opportunitys = $opportunityService->queryGet(filters: $filters, withRelations: $relations)->get();
         $data = OpportunityDDLResource::collection($opportunitys);
         return apiResponse(

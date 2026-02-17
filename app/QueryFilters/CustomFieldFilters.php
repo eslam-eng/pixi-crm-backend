@@ -18,7 +18,12 @@ class CustomFieldFilters extends QueryFilter
 
     public function type($term)
     {
-        return $this->builder->where('type','LIKE', "%$term%");
+        return $this->builder->where('type', 'LIKE', "%$term%");
+    }
+
+    public function module($term)
+    {
+        return $this->builder->where('module', $term);
     }
 
 

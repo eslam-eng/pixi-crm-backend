@@ -209,6 +209,7 @@ Route::middleware([
             Route::get('/users', [CoreController::class, 'getUsers']);
             Route::post('upload-media', MediaController::class);
             Route::get('opportunities/{opportunity}/items', [OpportunityController::class, 'getItems']);
+            Route::get('custom_fields', [CoreController::class, 'getCustomFields']);
         });
 
         Route::prefix('settings')->group(function () {
