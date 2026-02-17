@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Lead;
 
 use App\DTO\Tenant\LeadDTO;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 
-class UpdateLeadRequest extends FormRequest
+class UpdateLeadRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,6 +13,13 @@ class UpdateLeadRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->validateRequiredCustomFields($validator, 'leads');
+        });
     }
 
     /**
@@ -33,9 +40,9 @@ class UpdateLeadRequest extends FormRequest
             'services' => 'nullable|array',
             'services.*.service_id' => 'integer|exists:services,id',
             'services.*.category_id' => 'nullable|integer|exists:categories,id',
-            'customFields' => 'nullable|array',
-            'customFields.*.custom_field_id' => 'integer|exists:custom_fields,id',
-            'customFields.*.value' => 'required|string',
+            'custom_fields' => 'nullable|array',
+            'custom_fields.*.custom_field_id' => 'integer|exists:custom_fields,id',
+            'custom_fields.*.value' => 'required|string',
             'stage_id' => 'nullable|exists:stages,id',
             'pipeline_id' => 'nullable|exists:pipelines,id',
         ];

@@ -8,6 +8,13 @@ use Illuminate\Validation\Rule;
 
 class TaskRequest extends BaseRequest
 {
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->validateRequiredCustomFields($validator, 'tasks');
+        });
+    }
+
     public function rules(): array
     {
         return [

@@ -3,10 +3,10 @@
 namespace App\Http\Requests\Lead;
 
 use App\Enums\OpportunityStatus;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class StoreLeadRequest extends FormRequest
+class StoreLeadRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -14,6 +14,13 @@ class StoreLeadRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->validateRequiredCustomFields($validator, 'leads');
+        });
     }
 
     /**

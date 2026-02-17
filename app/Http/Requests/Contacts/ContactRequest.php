@@ -6,14 +6,21 @@ use App\Enums\CompanySizes;
 use App\Enums\ContactMethods;
 use App\Enums\ContactStatus;
 use App\Enums\IndustryStatus;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class ContactRequest extends FormRequest
+class ContactRequest extends BaseRequest
 {
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $this->validateRequiredCustomFields($validator, 'contacts');
+        });
     }
 
     public function rules(): array
@@ -62,9 +69,9 @@ class ContactRequest extends FormRequest
             'notes' => 'nullable|string|max:255',
 
             // custom fields
-            'customFields' => 'nullable|array',
-            'customFields.*.custom_field_id' => 'integer|exists:custom_fields,id',
-            'customFields.*.value' => 'required|string',
+            'custom_fields' => 'nullable|array',
+            'custom_fields.*.custom_field_id' => 'integer|exists:custom_fields,id',
+            'custom_fields.*.value' => 'required|string',
         ];
     }
 

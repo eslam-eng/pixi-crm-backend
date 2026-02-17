@@ -6,10 +6,10 @@ use App\Enums\BillingCycleEnum;
 use App\Enums\DiscountTypeEnum;
 use App\Enums\PaymentStatusEnum;
 use App\Settings\DealsSettings;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class DealRequest extends FormRequest
+class DealRequest extends BaseRequest
 {
 
     public function authorize(): bool
@@ -66,6 +66,7 @@ class DealRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            $this->validateRequiredCustomFields($validator, 'deals');
             // Validate partial payment amount against minimum percentage
             if ($this->input('payment_status') === PaymentStatusEnum::PARTIAL->value) {
                 $partialAmountPaid = $this->input('partial_amount_paid');

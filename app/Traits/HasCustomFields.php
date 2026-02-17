@@ -30,7 +30,18 @@ trait HasCustomFields
 
         $syncData = [];
 
-        foreach ($customFields as $identifier => $value) {
+        foreach ($customFields as $identifier => $data) {
+            // Handle format: [ ['custom_field_id' => ..., 'value' => ...], ... ]
+            if (is_array($data) && isset($data['custom_field_id'])) {
+                $fieldId = $data['custom_field_id'];
+                $value = $data['value'] ?? null;
+                $formattedValue = is_array($value) ? json_encode($value) : $value;
+                $syncData[$fieldId] = ['value' => $formattedValue];
+                continue;
+            }
+
+            // Handle format: [ name/id => value ]
+            $value = $data;
             $field = is_numeric($identifier)
                 ? CustomField::find($identifier)
                 : CustomField::where('name', $identifier)
