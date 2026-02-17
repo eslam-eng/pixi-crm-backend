@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Tenant\Tasks;
 
 use Carbon\Carbon;
+use App\Http\Resources\Tenant\CustomField\CustomFieldValueResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,8 @@ class TaskResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'escalation_sent' => (bool) $this->escalation_sent,
+            'custom_fields' => CustomFieldValueResource::collection($this->whenLoaded('customFields')),
             'description' => $this->description,
             'lead_id' => $this->lead_id,
             'status' => $this->status,

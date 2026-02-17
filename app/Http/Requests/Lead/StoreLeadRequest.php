@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Lead;
 
-use App\DTO\Lead\LeadDTO;
 use App\Enums\OpportunityStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

@@ -60,6 +60,11 @@ class ContactRequest extends FormRequest
 
             // notes
             'notes' => 'nullable|string|max:255',
+
+            // custom fields
+            'customFields' => 'nullable|array',
+            'customFields.*.custom_field_id' => 'integer|exists:custom_fields,id',
+            'customFields.*.value' => 'required|string',
         ];
     }
 

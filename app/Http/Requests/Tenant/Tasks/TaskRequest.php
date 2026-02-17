@@ -27,6 +27,9 @@ class TaskRequest extends BaseRequest
             'additional_notes' => 'nullable|string',
             'reminders' => 'nullable|array',
             'reminders.*' => 'required|exists:reminders,id',
+            'custom_fields' => 'nullable|array',
+            'custom_fields.*.custom_field_id' => 'integer|exists:custom_fields,id',
+            'custom_fields.*.value' => 'required|string',
         ];
     }
 

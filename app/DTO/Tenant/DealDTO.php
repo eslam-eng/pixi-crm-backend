@@ -24,7 +24,9 @@ class DealDTO extends BaseDTO
         public ?string $approval_status = null,
         public ?array $items = null,
         public ?array $attachments = null,
-    ) {}
+        public ?array $custom_fields = null,
+    ) {
+    }
 
     public static function fromRequest($request): BaseDTO
     {
@@ -45,6 +47,7 @@ class DealDTO extends BaseDTO
             approval_status: $request->input('approval_status'),
             items: $request->input('items'),
             attachments: $request->file('attachments'),
+            custom_fields: $request->input('custom_fields'),
         );
     }
 
@@ -67,6 +70,7 @@ class DealDTO extends BaseDTO
             'approval_status' => $this->approval_status,
             'items' => $this->items,
             'attachments' => $this->attachments,
+            'custom_fields' => $this->custom_fields,
         ];
     }
 
@@ -89,6 +93,7 @@ class DealDTO extends BaseDTO
             approval_status: Arr::get($data, 'approval_status'),
             items: Arr::get($data, 'items'),
             attachments: Arr::get($data, 'attachments'),
+            custom_fields: Arr::get($data, 'custom_fields'),
         );
     }
 }

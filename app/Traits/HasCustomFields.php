@@ -2,79 +2,64 @@
 
 namespace App\Traits;
 
-use App\Models\CustomField;
-use App\Models\CustomFieldValue;
+use App\Models\Tenant\CustomField;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 trait HasCustomFields
 {
-    public function customFields()
+    /**
+     * Get the custom fields associated with the model.
+     */
+    public function customFields(): BelongsToMany
     {
-        return $this->morphMany(CustomFieldValue::class, 'model');
+        return $this->belongsToMany(CustomField::class, $this->getCustomFieldsPivotTable())
+            ->withPivot('value')
+            ->withTimestamps();
     }
 
-    public function getCustomFieldsAttribute(): array
+    /**
+     * Sync custom field values.
+     *
+     * @param array|null $customFields Array of [field_name => value] or [field_id => value]
+     */
+    public function syncCustomFields(?array $customFields): void
     {
-        $fields = CustomField::query()
-            ->where('model_type', get_class($this))
-            ->get();
-
-        $result = [];
-
-        foreach ($fields as $field) {
-            $value = $this->customFields->where('custom_field_id', $field->id)->first();
-            $result[$field->field_name] = $value ? $value->value : null;
+        if (empty($customFields)) {
+            return;
         }
 
-        return $result;
+        $syncData = [];
+
+        foreach ($customFields as $identifier => $value) {
+            $field = is_numeric($identifier)
+                ? CustomField::find($identifier)
+                : CustomField::where('name', $identifier)
+                    ->where('module', $this->getCustomFieldsModule())
+                    ->first();
+
+            if ($field) {
+                // If value is array (for multi-select/checkboxes), cast to JSON
+                $formattedValue = is_array($value) ? json_encode($value) : $value;
+                $syncData[$field->id] = ['value' => $formattedValue];
+            }
+        }
+
+        if (!empty($syncData)) {
+            $this->customFields()->syncWithoutDetaching($syncData);
+        }
     }
 
-    public function setCustomField($fieldName, $value)
+    /**
+     * Get the module name for custom fields (e.g., 'contacts', 'leads').
+     */
+    abstract protected function getCustomFieldsModule(): string;
+
+    /**
+     * Get the pivot table name (e.g., 'contact_custom_fields').
+     */
+    protected function getCustomFieldsPivotTable(): string
     {
-        $field = CustomField::where('tenant_id', $this->tenant_id)
-            ->where('model_type', get_class($this))
-            ->where('field_name', $fieldName)
-            ->firstOrFail();
-
-        $customFieldValue = $this->customFields()
-            ->where('custom_field_id', $field->id)
-            ->firstOrNew();
-
-        $customFieldValue->value = $value;
-        $customFieldValue->save();
-
-        return $this;
-    }
-
-    protected function getValidationRulesForField(CustomField $field): array
-    {
-        $rules = [];
-
-        // Add required rule if field is marked as required
-        if ($field->is_required) {
-            $rules[] = 'required';
-        } else {
-            $rules[] = 'nullable';
-        }
-
-        // Add type-specific rules
-        switch ($field->field_type) {
-            case 'number':
-                $rules[] = 'numeric';
-                break;
-            case 'boolean':
-                $rules[] = 'boolean';
-                break;
-            case 'date':
-                $rules[] = 'date';
-                break;
-            case 'email':
-                $rules[] = 'email';
-                break;
-            case 'string':
-            default:
-                $rules[] = 'string|max:255';
-        }
-
-        return $rules;
+        $module = \Illuminate\Support\Str::singular($this->getCustomFieldsModule());
+        return "{$module}_custom_fields";
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Tenant\Deals;
 
+use App\Http\Resources\Tenant\CustomField\CustomFieldValueResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,9 @@ class DealShowResource extends JsonResource
             'id' => $this->id,
             'deal_type' => $this->deal_type,
             'deal_name' => $this->deal_name,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'custom_fields' => \App\Http\Resources\Tenant\CustomField\CustomFieldValueResource::collection($this->whenLoaded('customFields')),
             'lead_id' => $this->lead_id,
             'sale_date' => $this->sale_date,
             'discount_type' => $this->discount_type,
@@ -114,7 +118,7 @@ class DealShowResource extends JsonResource
                         'id' => $payment->id,
                         'amount' => $payment->amount,
                         'pay_date' => $payment->pay_date,
-                        'payment_method' =>  $payment->payment_method->name,
+                        'payment_method' => $payment->payment_method->name,
                     ];
                 });
             }),

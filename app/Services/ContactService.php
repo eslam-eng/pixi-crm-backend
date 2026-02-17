@@ -80,7 +80,12 @@ class ContactService extends BaseService
         foreach ($admins as $admin) {
             $admin->notify(new CreateNewContactNotification($contact));
         }
-        $contact->load('country', 'city', 'user', 'source', 'contactPhones');
+
+        if (isset($contactDTO->custom_fields)) {
+            $contact->syncCustomFields($contactDTO->custom_fields);
+        }
+
+        $contact->load('country', 'city', 'user', 'source', 'contactPhones', 'customFields');
         return $contact;
     }
 
@@ -151,7 +156,11 @@ class ContactService extends BaseService
             }
         }
 
-        return $contact->load('contactPhones', 'country', 'city', 'user', 'source');
+        if (isset($contactDTO->custom_fields)) {
+            $contact->syncCustomFields($contactDTO->custom_fields);
+        }
+
+        return $contact->load('contactPhones', 'country', 'city', 'user', 'source', 'customFields');
     }
 
     public function updateMerge(int $id, ContactDTO $contactDTO)

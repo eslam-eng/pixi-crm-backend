@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Tenant\Deals;
 
 use App\Enums\BillingCycleEnum;
-use App\Enums\DealTypeEnum;
 use App\Enums\DiscountTypeEnum;
 use App\Enums\PaymentStatusEnum;
 use App\Settings\DealsSettings;
@@ -46,6 +45,9 @@ class DealRequest extends FormRequest
             'items.*.billing_cycle' => ['nullable', Rule::in(BillingCycleEnum::values())],
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:png,jpg,jpeg,pdf,doc,docx|max:' . $this->getMaxAttachmentSize(),
+            'custom_fields' => 'nullable|array',
+            'custom_fields.*.custom_field_id' => 'integer|exists:custom_fields,id',
+            'custom_fields.*.value' => 'required|string',
         ];
     }
 

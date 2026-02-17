@@ -39,7 +39,8 @@ class DealService extends BaseService
         public DealPaymentService $dealPaymentService,
         public UserService $userService,
         public LeadService $leadService,
-    ) {}
+    ) {
+    }
 
     public function getModel(): Deal
     {
@@ -215,7 +216,11 @@ class DealService extends BaseService
                 $this->leadService->markAsWon($deal->lead_id);
             }
 
-            return $deal->load('items', 'lead', 'attachments', 'payments');
+            if (isset($dealDTO->custom_fields)) {
+                $deal->syncCustomFields($dealDTO->custom_fields);
+            }
+
+            return $deal->load('items', 'lead', 'attachments', 'payments', 'customFields');
         });
     }
 
@@ -266,7 +271,7 @@ class DealService extends BaseService
             $user = $this->userService->findById($dealDTO->assigned_to_id);
             if ($user->activeChair()->exists()) {
                 $deal->chair_id = $user->activeChair()->value('id');
-            }else{
+            } else {
                 $deal->chair_id = null;
             }
             $deal->save();
@@ -279,7 +284,11 @@ class DealService extends BaseService
                 $this->handleAttachments($deal, $dealDTO->attachments);
             }
 
-            return $deal->load('items', 'attachments');
+            if (isset($dealDTO->custom_fields)) {
+                $deal->syncCustomFields($dealDTO->custom_fields);
+            }
+
+            return $deal->load('items', 'attachments', 'customFields');
         });
     }
 

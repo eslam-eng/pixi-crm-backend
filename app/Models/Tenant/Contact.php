@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\Source;
 use App\Models\Tenant\ContactPhone;
 use App\Traits\Filterable;
+use App\Traits\HasCustomFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,35 +16,35 @@ use Illuminate\Notifications\Notifiable;
 
 class Contact extends Model
 {
-    use Filterable, Notifiable;
+    use Filterable, Notifiable, HasCustomFields;
     protected $fillable =
-    [
-        'external_lead_id',
-        'first_name',
-        'last_name',
-        'email',
-        'job_title',
-        'department_id',
-        'status',
-        'source_id',
-        'contact_method',
-        'email_permission',
-        'phone_permission',
-        'whatsapp_permission',
-        'company_name',
-        'campaign_name',
-        'website',
-        'industry',
-        'company_size',
-        'address',
-        'country_id',
-        'city_id',
-        'state',
-        'zip_code',
-        'user_id',
-        'tags',
-        'notes',
-    ];
+        [
+            'external_lead_id',
+            'first_name',
+            'last_name',
+            'email',
+            'job_title',
+            'department_id',
+            'status',
+            'source_id',
+            'contact_method',
+            'email_permission',
+            'phone_permission',
+            'whatsapp_permission',
+            'company_name',
+            'campaign_name',
+            'website',
+            'industry',
+            'company_size',
+            'address',
+            'country_id',
+            'city_id',
+            'state',
+            'zip_code',
+            'user_id',
+            'tags',
+            'notes',
+        ];
 
     protected $casts = [
         'tags' => 'array', // Automatically handle JSON encoding/decoding
@@ -131,5 +132,10 @@ class Contact extends Model
     public function getPhoneAttribute()
     {
         return $this->phone()->value('phone'); // returns string, not object
+    }
+
+    protected function getCustomFieldsModule(): string
+    {
+        return 'contacts';
     }
 }

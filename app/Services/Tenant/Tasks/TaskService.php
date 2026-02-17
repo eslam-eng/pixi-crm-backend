@@ -63,8 +63,12 @@ class TaskService extends BaseService
                 $this->syncReminders($data, $taskDTO->reminders);
             }
 
+            if (isset($taskDTO->custom_fields)) {
+                $data->syncCustomFields($taskDTO->custom_fields);
+            }
+
             DB::commit();
-            return $data;
+            return $data->load('customFields');
         } catch (\Exception $e) {
             DB::rollBack();
             throw new GeneralException('Failed to create task: ' . $e->getMessage());
@@ -102,8 +106,12 @@ class TaskService extends BaseService
                 }
             }
 
+            if (isset($taskDTO->custom_fields)) {
+                $task->syncCustomFields($taskDTO->custom_fields);
+            }
+
             DB::commit();
-            return $task->fresh();
+            return $task->fresh()->load('customFields');
         } catch (\Exception $e) {
             DB::rollBack();
             throw new GeneralException('Failed to update task: ' . $e->getMessage());

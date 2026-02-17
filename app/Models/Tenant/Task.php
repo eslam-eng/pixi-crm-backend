@@ -5,6 +5,7 @@ namespace App\Models\Tenant;
 use App\Models\TaskReminder;
 use App\Observers\TaskObserver;
 use App\Traits\Filterable;
+use App\Traits\HasCustomFields;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 #[ObservedBy([TaskObserver::class])]
 class Task extends Model
 {
-    use Filterable;
+    use Filterable, HasCustomFields;
     protected $fillable = [
         'title',
         'description',
@@ -130,5 +131,10 @@ class Task extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('created_at', 'desc');
+    }
+
+    protected function getCustomFieldsModule(): string
+    {
+        return 'tasks';
     }
 }

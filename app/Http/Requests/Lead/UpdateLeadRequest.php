@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Lead;
 
-use App\DTO\Lead\LeadDTO;
+use App\DTO\Tenant\LeadDTO;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateLeadRequest extends FormRequest
@@ -24,10 +24,10 @@ class UpdateLeadRequest extends FormRequest
     {
         return [
             'contact_id' => 'required|exists:contacts,id',
-            'reason_id'  => 'nullable|exists:reasons,id',
-            'user_id'    => 'required|exists:users,id',
-            'value'      => 'nullable|numeric|min:0',
-            'status'     => 'required|in:open,lost,won,abandoned',
+            'reason_id' => 'nullable|exists:reasons,id',
+            'user_id' => 'required|exists:users,id',
+            'value' => 'nullable|numeric|min:0',
+            'status' => 'required|in:open,lost,won,abandoned',
             'industries' => 'nullable|array',
             'industries.*' => 'integer|exists:industries,id',
             'services' => 'nullable|array',

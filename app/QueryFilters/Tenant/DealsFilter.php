@@ -191,4 +191,23 @@ class DealsFilter extends QueryFilter
         }
         return $this->builder->where('assigned_to_id', $user->id);
     }
+
+    public function custom_fields($fields)
+    {
+        if (!is_array($fields)) {
+            return $this->builder;
+        }
+
+        foreach ($fields as $name => $value) {
+            if (empty($value))
+                continue;
+
+            $this->builder->whereHas('customFields', function ($query) use ($name, $value) {
+                $query->where('name', $name)
+                    ->where('value', 'LIKE', "%{$value}%");
+            });
+        }
+
+        return $this->builder;
+    }
 }

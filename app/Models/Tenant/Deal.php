@@ -4,6 +4,7 @@ namespace App\Models\Tenant;
 
 use App\Observers\DealObserver;
 use App\Traits\Filterable;
+use App\Traits\HasCustomFields;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[ObservedBy([DealObserver::class])]
 class Deal extends Model implements HasMedia
 {
-    use Filterable, InteractsWithMedia;
+    use Filterable, InteractsWithMedia, HasCustomFields;
     protected $fillable = [
         'deal_name',
         'lead_id',
@@ -106,5 +107,10 @@ class Deal extends Model implements HasMedia
             ->height(300)
             ->sharpen(10)
             ->nonQueued();
+    }
+
+    protected function getCustomFieldsModule(): string
+    {
+        return 'deals';
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Resources\Opportunity;
 use App\Http\Resources\ContactResource;
 use App\Http\Resources\StageResource;
 use App\Http\Resources\Tenant\Users\UserResource;
+use App\Http\Resources\Tenant\CustomField\CustomFieldValueResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -58,6 +59,8 @@ class OpportunityResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'tags' => $this->tags,
+            'custom_fields' => CustomFieldValueResource::collection($this->whenLoaded('customFields')),
             'status' => $this->status,
             'is_qualifying' => $this->is_qualifying,
             'deal_value' => $this->deal_value,

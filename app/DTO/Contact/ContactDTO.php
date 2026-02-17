@@ -34,7 +34,9 @@ class ContactDTO extends BaseDTO
         public ?string $tags = null,
         public ?string $notes = null,
         public ?array $contact_merge_phones = null,
-    ) {}
+        public ?array $custom_fields = null,
+    ) {
+    }
 
     public static function fromRequest($request): BaseDTO
     {
@@ -64,6 +66,7 @@ class ContactDTO extends BaseDTO
             user_id: $request->input('user_id'),
             tags: json_encode($request->input('tags')),
             notes: $request->input('notes'),
+            custom_fields: $request->input('custom_fields'),
         );
     }
 
@@ -135,6 +138,7 @@ class ContactDTO extends BaseDTO
             'user_id' => $this->user_id,
             'tags' => $this->tags,
             'notes' => $this->notes,
+            'custom_fields' => $this->custom_fields,
         ];
     }
 
@@ -166,6 +170,7 @@ class ContactDTO extends BaseDTO
             user_id: Arr::get($data, 'user_id'),
             tags: Arr::get($data, 'tags'),
             notes: Arr::get($data, 'notes'),
+            custom_fields: Arr::get($data, 'custom_fields'),
         );
     }
 

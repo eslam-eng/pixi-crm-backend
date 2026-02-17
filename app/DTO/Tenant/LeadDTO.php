@@ -19,7 +19,9 @@ class LeadDTO extends BaseDTO
         public ?string $notes,
         public ?string $description,
         public ?array $items,
-    ) {}
+        public ?array $custom_fields = null,
+    ) {
+    }
 
     public static function fromRequest($request): BaseDTO
     {
@@ -35,6 +37,7 @@ class LeadDTO extends BaseDTO
             notes: $request->notes,
             description: $request->description,
             items: $request->items,
+            custom_fields: $request->custom_fields,
         );
     }
 
@@ -51,6 +54,7 @@ class LeadDTO extends BaseDTO
             'win_probability' => $this->win_probability,
             'expected_close_date' => $this->expected_close_date,
             'status' => $this->status,
+            'custom_fields' => $this->custom_fields,
         ];
 
         // Fields that are allowed to be null in database
@@ -75,6 +79,7 @@ class LeadDTO extends BaseDTO
             expected_close_date: Arr::get($data, 'expected_close_date'),
             status: Arr::get($data, 'status'),
             items: Arr::get($data, 'items'),
+            custom_fields: Arr::get($data, 'custom_fields'),
         );
     }
 }

@@ -294,7 +294,7 @@ class TaskFilters extends QueryFilter
         return $this->builder->where('task_type_id', $term);
     }
 
-       public function dashboard_view($term)
+    public function dashboard_view($term)
     {
         $user = $term;
 
@@ -314,6 +314,25 @@ class TaskFilters extends QueryFilter
             return $this->builder->where('assigned_to_id', $user->id);
         }
 
-         return $this->builder->where('assigned_to_id', $user->id);
+        return $this->builder->where('assigned_to_id', $user->id);
+    }
+
+    public function custom_fields($fields)
+    {
+        if (!is_array($fields)) {
+            return $this->builder;
+        }
+
+        foreach ($fields as $name => $value) {
+            if (empty($value))
+                continue;
+
+            $this->builder->whereHas('customFields', function ($query) use ($name, $value) {
+                $query->where('name', $name)
+                    ->where('value', 'LIKE', "%{$value}%");
+            });
+        }
+
+        return $this->builder;
     }
 }

@@ -102,9 +102,9 @@ class Lead extends Model implements HasMedia
     }
 
     // Lead has many Custom Fields (Many-to-Many)
-    public function customFields()
+    protected function getCustomFieldsModule(): string
     {
-        return $this->belongsToMany(CustomField::class, 'lead_custom_fields')->withPivot('value')->withTimestamps();
+        return 'leads';
     }
 
     public function stage()

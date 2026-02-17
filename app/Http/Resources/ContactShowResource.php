@@ -7,6 +7,7 @@ use App\Http\Resources\landloardLocation\CountryResource;
 use App\Http\Resources\Tenant\Users\DepartmentDDLResource;
 use App\Http\Resources\Tenant\Users\UserResource;
 use App\Models\Tenant\Department;
+use App\Http\Resources\Tenant\CustomField\CustomFieldValueResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -44,8 +45,9 @@ class ContactShowResource extends JsonResource
             'state' => $this->state,
             'zip_code' => $this->zip_code,
             'user' => $this->whenLoaded('user', fn() => new UserResource($this->user)),
-            'tags' => json_decode($this->tags, true),
+            'tags' => $this->tags,
             'notes' => $this->notes,
+            'custom_fields' => CustomFieldValueResource::collection($this->whenLoaded('customFields')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Tenant\Deals;
 
+use App\Http\Resources\Tenant\CustomField\CustomFieldValueResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,8 @@ class DealListResource extends JsonResource
             'id' => $this->id,
             'deal_name' => $this->deal_name,
             'lead_id' => $this->lead->id,
+            'created_at' => $this->created_at,
+            'custom_fields' => CustomFieldValueResource::collection($this->whenLoaded('customFields')),
             'contact' => $this->lead->contact?->name,
             'payment_status' => $this->payment_status,
             'total_amount' => $this->total_amount,
@@ -25,7 +28,7 @@ class DealListResource extends JsonResource
             'approval_status' => $this->approval_status,
             'close_date' => $this->created_at->format('Y-m-d'),
             'assigned_to' => $this->assigned_to?->name,
-        
+
         ];
     }
 }

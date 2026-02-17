@@ -130,7 +130,11 @@ class LeadService extends BaseService
             $this->updateAssignedAt($lead, $leadDTO->assigned_to_id);
         });
 
-        return $lead->load('variants', 'items.product', 'items.service', 'items.category.parent');
+        if (isset($leadDTO->custom_fields)) {
+            $lead->syncCustomFields($leadDTO->custom_fields);
+        }
+
+        return $lead->load('variants', 'items.product', 'items.service', 'items.category.parent', 'customFields');
     }
 
     public function show(int $id)
@@ -205,7 +209,11 @@ class LeadService extends BaseService
 
         $lead->update($leadDTO->toArray());
 
-        return $lead->load('variants', 'items');
+        if (isset($leadDTO->custom_fields)) {
+            $lead->syncCustomFields($leadDTO->custom_fields);
+        }
+
+        return $lead->load('variants', 'items', 'customFields');
     }
 
     /**

@@ -22,7 +22,9 @@ class TaskDTO extends BaseDTO
         public ?bool $escalation_sent = false,
         public ?array $followers = null,
         public ?array $reminders = null,
-    ) {}
+        public ?array $custom_fields = null,
+    ) {
+    }
 
     public static function fromRequest($request): BaseDTO
     {
@@ -41,6 +43,7 @@ class TaskDTO extends BaseDTO
             escalation_sent: $request->input('escalation_sent', false),
             followers: $request->input('followers'),
             reminders: $request->input('reminders'),
+            custom_fields: $request->input('custom_fields'),
         );
     }
 
@@ -59,6 +62,7 @@ class TaskDTO extends BaseDTO
             'tags' => $this->tags,
             'additional_notes' => $this->additional_notes,
             'escalation_sent' => $this->escalation_sent,
+            'custom_fields' => $this->custom_fields,
         ];
     }
 
@@ -79,6 +83,7 @@ class TaskDTO extends BaseDTO
             escalation_sent: Arr::get($data, 'escalation_sent', false),
             followers: Arr::get($data, 'followers'),
             reminders: Arr::get($data, 'reminders'),
+            custom_fields: Arr::get($data, 'custom_fields'),
         );
     }
-} 
+}

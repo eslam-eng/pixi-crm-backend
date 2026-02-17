@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Tenant\Tasks;
 
+use App\Http\Resources\Tenant\CustomField\CustomFieldValueResource;
 use Illuminate\Http\Request;
 
 class TaskShowResource extends TaskResource
@@ -14,18 +15,19 @@ class TaskShowResource extends TaskResource
     public function toArray(Request $request): array
     {
         $data = parent::toArray($request);
-        
+
         // Add remaining fields for show resource
         $data['task_type_id'] = $this->task_type_id;
         $data['tags'] = $this->tags;
         $data['additional_notes'] = $this->additional_notes;
-        
+        $data['custom_fields'] = \App\Http\Resources\Tenant\CustomField\CustomFieldValueResource::collection($this->whenLoaded('customFields'));
+
         // Add followers information
         $data['followers'] = $this->followers->pluck('id');
-        
+
         // Add reminders information
         $data['reminders'] = $this->reminders->pluck('id');
-        
+
         return $data;
     }
-} 
+}
