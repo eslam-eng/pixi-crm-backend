@@ -14,7 +14,7 @@ class FormSectionSeeder extends Seeder
     {
         $sections = [
             'contacts' => [
-                'basic_info' => ['en' => 'Basic Contact Information', 'ar' => 'معلومات الاتصال الأساسية', 'fr' => 'Informations de contact de base', 'es' => 'Información básica de contacto'],
+                'contacts_basic_info' => ['en' => 'Basic Contact Information', 'ar' => 'معلومات الاتصال الأساسية', 'fr' => 'Informations de contact de base', 'es' => 'Información básica de contacto'],
                 'status_classification' => ['en' => 'Contact Status & Classification', 'ar' => 'حالة وتصنيف الاتصال', 'fr' => 'Statut et classification du contact', 'es' => 'Estado y clasificación del contacto'],
                 'communication_preferences' => ['en' => 'Communication Preferences', 'ar' => 'تفضيلات التواصل', 'fr' => 'Préférences de communication', 'es' => 'Preferencias de comunicación'],
                 'company_info' => ['en' => 'Company Information', 'ar' => 'معلومات الشركة', 'fr' => 'Informations sur l\'entreprise', 'es' => 'Información de la empresa'],
@@ -23,12 +23,12 @@ class FormSectionSeeder extends Seeder
                 'additional_info' => ['en' => 'Additional Information', 'ar' => 'معلومات إضافية', 'fr' => 'Informations supplémentaires', 'es' => 'Información adicional'],
             ],
             'leads' => [
-                'basic_info' => ['en' => 'Basic Information', 'ar' => 'المعلومات الأساسية', 'fr' => 'Informations de base', 'es' => 'Información básica'],
+                'leads_basic_info' => ['en' => 'Basic Information', 'ar' => 'المعلومات الأساسية', 'fr' => 'Informations de base', 'es' => 'Información básica'],
                 'opportunity_details' => ['en' => 'Opportunity Details', 'ar' => 'تفاصيل الفرصة', 'fr' => 'Détails de l\'opportunité', 'es' => 'Detalles de la oportunidad'],
                 'notes' => ['en' => 'Notes', 'ar' => 'ملاحظات', 'fr' => 'Remarques', 'es' => 'Notas'],
             ],
             'deals' => [
-                'basic_info' => ['en' => 'Basic Information', 'ar' => 'المعلومات الأساسية', 'fr' => 'Informations de base', 'es' => 'Información básica'],
+                'deals_basic_info' => ['en' => 'Basic Information', 'ar' => 'المعلومات الأساسية', 'fr' => 'Informations de base', 'es' => 'Información básica'],
                 'tax_discount' => ['en' => 'Tax & Discount', 'ar' => 'الضريبة والخصم', 'fr' => 'Taxes et remises', 'es' => 'Impuestos y descuentos'],
                 'deal_summary' => ['en' => 'Deal Summary', 'ar' => 'ملخص الصفقة', 'fr' => 'Résumé de l\'affaire', 'es' => 'Resumen del trato'],
                 'assignment' => ['en' => 'Assignment', 'ar' => 'التعيين', 'fr' => 'Affectation', 'es' => 'Asignación'],

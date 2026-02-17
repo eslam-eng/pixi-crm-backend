@@ -11,15 +11,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('form_sections', function (Blueprint $table) {
-            $table->id();
-            $table->string('module')->index(); // 'contacts', 'leads', 'deals', 'tasks'
-            $table->string('key');
-            $table->unique(['module', 'key']);
-            $table->json('name'); // Translatable name
-            $table->integer('ordering')->default(0);
-            $table->timestamps();
-        });
+ 
+        (new FormSectionSeeder())->run();
     }
 
     /**

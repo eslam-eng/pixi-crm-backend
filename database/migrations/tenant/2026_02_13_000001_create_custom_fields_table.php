@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('module')->index(); // 'contacts', 'leads', 'deals', 'tasks'
             $table->foreignId('form_section_id')->constrained('form_sections')->onDelete('cascade');
             $table->string('type'); // text, select, image, etc.
-            $table->string('name')->unique();
+            $table->string('name');
             $table->json('label'); // Translatable
             $table->json('placeholder')->nullable(); // Translatable
             $table->json('help_text')->nullable(); // Translatable

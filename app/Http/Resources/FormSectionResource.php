@@ -16,12 +16,8 @@ class FormSectionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'module' => $this->module,
             'key' => $this->key,
             'name' => $this->name,
-            'ordering' => $this->ordering,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
         ];
     }
 }

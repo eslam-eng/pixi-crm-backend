@@ -5,6 +5,8 @@ namespace App\Http\Requests\CustomFields;
 use App\DTO\CustomField\CustomFieldDTO;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
+use Illuminate\Validation\Rule;
+use App\Enums\CustomFieldTypeEnum;
 class StoreCustomFieldRequest extends FormRequest
 {
     /**
@@ -23,9 +25,18 @@ class StoreCustomFieldRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'form_section_id' => 'required|exists:form_sections,id',
             'name' => 'required|string|max:255',
-            'type' => 'required|in:text,number,date,dropdown',
-            'options' => 'nullable|array',//if type dropdown
+            'type' => ['required', Rule::enum(CustomFieldTypeEnum::class)],
+            'label' => 'required|array',
+            'label.*' => 'required|string',
+            'placeholder' => 'nullable|array',
+            'placeholder.*' => 'nullable|string',
+            'help_text' => 'nullable|array',
+            'help_text.*' => 'nullable|string',
+            'is_required' => 'required|boolean',
+            'is_active' => 'required|boolean',
+            'options' => 'nullable|array',
             'options.*' => 'string',
         ];
     }
@@ -34,7 +45,12 @@ class StoreCustomFieldRequest extends FormRequest
     public function withValidator(Validator $validator)
     {
         $validator->sometimes('options', 'required|array', function ($input) {
-            return $input->type === 'dropdown';
+            return in_array($input->type, [
+                CustomFieldTypeEnum::DROPDOWN->value,
+                CustomFieldTypeEnum::MULTI_SELECT->value,
+                CustomFieldTypeEnum::CHECKBOX->value,
+                CustomFieldTypeEnum::RADIO->value,
+            ]);
         });
     }
 

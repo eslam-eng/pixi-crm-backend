@@ -17,9 +17,6 @@ enum CustomFieldTypeEnum: string
     case RADIO = 'radio';
     case FILE = 'file';
     case URL = 'url';
-    case CURRENCY = 'currency';
-    case PERCENTAGE = 'percentage';
-    case RATING = 'rating';
     case BOOLEAN = 'boolean';
 
     public function label(): string
@@ -38,9 +35,6 @@ enum CustomFieldTypeEnum: string
             self::RADIO => 'Radio Buttons',
             self::FILE => 'File Upload',
             self::URL => 'URL',
-            self::CURRENCY => 'Currency',
-            self::PERCENTAGE => 'Percentage',
-            self::RATING => 'Rating',
             self::BOOLEAN => 'Yes/No',
         };
     }

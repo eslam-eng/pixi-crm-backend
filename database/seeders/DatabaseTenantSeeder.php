@@ -6,6 +6,7 @@ use Database\Seeders\Tenant\AttributeWithValueProductSeeder;
 use Database\Seeders\Tenant\ContactSeeder;
 use Database\Seeders\Tenant\DealSeeder;
 use Database\Seeders\Tenant\DepartmentSeeder;
+use Database\Seeders\Tenant\FormSectionSeeder;
 use Database\Seeders\Tenant\ItemCategorySeeder;
 use Database\Seeders\Tenant\ItemSeeder;
 use Database\Seeders\Tenant\UserSeeder;
@@ -41,7 +42,7 @@ class DatabaseTenantSeeder extends Seeder
             // ItemStatusSeeder::class,
             // ItemCategorySeeder::class,
             // AppSettingsSeeder::class,
-            \Database\Seeders\Tenant\FormSectionSeeder::class,
+            FormSectionSeeder::class,
         ]);
     }
 }
