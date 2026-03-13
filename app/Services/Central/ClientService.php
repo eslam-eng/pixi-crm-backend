@@ -55,7 +55,7 @@ class ClientService extends BaseService
 
     public function create(ClientDTO $clientDTO)
     {
-        return DB::connection('landlord')->transaction(function () use ($clientDTO) {
+       
             // 1. إنشاء المستخدم
             $user = $this->userService->create(UserDTO::fromArray([
                 'first_name' => $clientDTO->first_name,
@@ -135,7 +135,7 @@ class ClientService extends BaseService
             }
 
             return $tenant;
-        });
+        
     }
 
     public function sendPasswordReset(string $tenantId): void
