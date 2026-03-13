@@ -104,7 +104,7 @@ class TenancyServiceProvider extends ServiceProvider
 
         $this->makeTenancyMiddlewareHighestPriority();
 
-        \Stancl\Tenancy\Middleware\InitializeTenancyByPath::$tenantKey = 'tenant';
+        \Stancl\Tenancy\Resolvers\PathTenantResolver::$tenantParameterName = 'tenant';
     }
 
     protected function bootEvents()
