@@ -66,9 +66,8 @@ Route::get('/cors-test', function () {
 
 // //////////// tenant routes
 Route::middleware([
-    \Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain::class,
-    \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
-])->group(function () {
+    \Stancl\Tenancy\Middleware\InitializeTenancyByPath::class,
+])->prefix('{tenant}')->group(function () {
     // Route::group(['prefix' => 'authentication', 'middleware' => 'guest', 'name' => 'authentication.'], function () {
     //     Route::post('/signup', [AuthController::class, 'signup'])->name('tenant.signup');
     // });

@@ -25,11 +25,23 @@ use Stancl\Tenancy\Database\Concerns\HasDomains;
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     // use Filterable, HasFeatureLimits, HasUuids, SoftDeletes, UsesLandlordConnection;
-    use Filterable, HasFeatureLimits, HasUuids, HasDatabase, HasDomains;
+    use Filterable, HasFeatureLimits, HasDatabase, HasDomains;
 
     protected $keyType = 'string';
+    public $incrementing = false;
+
+    public function getIncrementing()
+    {
+        return false;
+    }
+
+    public function getKeyType()
+    {
+        return 'string';
+    }
 
     protected $fillable = [
+        'id',
         'name',
         'data',
         'status',

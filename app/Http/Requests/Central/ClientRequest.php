@@ -24,7 +24,7 @@ class ClientRequest extends BaseRequest
             'city_id' => ['nullable', 'integer', 'exists:cities,id'],
             'postal_code' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
-            'domain' => ['required', 'string', 'unique:tenants,name'],
+            'domain' => ['required', 'string', 'unique:domains,domain'],
             'plan_id' => ['required', 'integer', 'exists:plans,id'],
             'period_type' => ['required', Rule::enum(SubscriptionBillingCycleEnum::class)],
             'subscription_start' => ['required', 'date'],
