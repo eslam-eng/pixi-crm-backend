@@ -41,10 +41,11 @@ class ClientController extends Controller
 
     public function store(ClientRequest $request)
     {
+        set_time_limit(120); // Increase execution time limit to 120 seconds
         try {
             $clientDTO = ClientDTO::fromRequest($request);
-            $this->clientService->create($clientDTO);
-            return ApiResponse(message: 'Tenant created successfully');
+            $tenant = $this->clientService->create($clientDTO);
+            return ApiResponse(new ClientResource($tenant), 'Tenant created successfully');
         } catch (\Throwable $e) {
             return ApiResponse(
                 message: 'Tenant creation failed: ' . $e,
